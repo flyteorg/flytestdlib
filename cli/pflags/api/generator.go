@@ -201,12 +201,6 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			// will use json unmarshaler to fill in the final config object.
 			jsonUnmarshaler := isJSONUnmarshaler(t)
 
-			testValue := tag.DefaultValue
-			if len(tag.DefaultValue) == 0 {
-				tag.DefaultValue = `""`
-				testValue = `"1"`
-			}
-
 			defaultValue := tag.DefaultValue
 			if len(defaultValueAccessor) > 0 {
 				defaultValue = appendAccessors(defaultValueAccessor, fieldPath, v.Name())
@@ -217,6 +211,11 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 						" Will use fmt.Sprintf() to get its default value.", v.Name(), t.String())
 					defaultValue = fmt.Sprintf("fmt.Sprintf(\"%%v\",%s)", defaultValue)
 				}
+			}
+
+			testValue := defaultValue
+			if len(testValue) == 0 {
+				testValue = `"1"`
 			}
 
 			logger.Infof(ctx, "[%v] is of a Named type (struct) with default value [%v].", tag.Name, tag.DefaultValue)
