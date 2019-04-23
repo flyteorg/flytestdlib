@@ -177,7 +177,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 				defaultValue = appendAccessors(defaultValueAccessor, fieldPath, v.Name())
 
 				if isPtr {
-					defaultValue = fmt.Sprintf("cfg.elemValueOrNil(%s).(%s)", defaultValue, t.Name())
+					defaultValue = fmt.Sprintf("%s.elemValueOrNil(%s).(%s)", defaultValueAccessor, defaultValue, t.Name())
 				}
 			}
 
@@ -208,8 +208,8 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 					defaultValue = defaultValue + ".String()"
 				} else {
 					logger.Infof(ctx, "Field [%v] of type [%v] does not implement Stringer interface."+
-						" Will use fmt.Sprintf() to get its default value.", v.Name(), t.String())
-					defaultValue = fmt.Sprintf("fmt.Sprintf(\"%%v\",%s)", defaultValue)
+						" Will use %s.mustMarshalJSON() to get its default value.", defaultValueAccessor, v.Name(), t.String())
+					defaultValue = fmt.Sprintf("%s.mustMarshalJSON(%s)", defaultValueAccessor, defaultValue)
 				}
 			}
 
