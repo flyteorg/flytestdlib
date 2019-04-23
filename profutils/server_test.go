@@ -2,10 +2,11 @@ package profutils
 
 import (
 	"encoding/json"
-	"github.com/lyft/flytestdlib/version"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/lyft/flytestdlib/version"
 
 	"github.com/lyft/flytestdlib/internal/utils"
 
