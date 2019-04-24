@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lyft/flytestdlib/config"
 	"net/http"
+
+	"github.com/lyft/flytestdlib/config"
 
 	"github.com/lyft/flytestdlib/version"
 
@@ -28,8 +29,8 @@ const (
 )
 
 type BuildVersion struct {
-	Build     string    `json:"build"`
-	Version   string    `json:"version"`
+	Build     string `json:"build"`
+	Version   string `json:"version"`
 	Timestamp string `json:"timestamp,string"`
 }
 
