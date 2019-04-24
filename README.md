@@ -48,4 +48,12 @@ This library consists of:
  - version
 
 Contributing
-============
+------------
+
+## Versioning
+
+This repo follows [semantic versioning](https://semver.org/).
+
+## Releases
+
+This repository is hooked up with [goreleaser](https://goreleaser.com/). Maintainers are expected to create tags and let goreleaser compose the release message and create a release.
