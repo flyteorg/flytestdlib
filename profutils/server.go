@@ -7,10 +7,8 @@ import (
 	"net/http"
 
 	"github.com/lyft/flytestdlib/config"
-
-	"github.com/lyft/flytestdlib/version"
-
 	"github.com/lyft/flytestdlib/logger"
+	"github.com/lyft/flytestdlib/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	_ "net/http/pprof" // Import for pprof server
