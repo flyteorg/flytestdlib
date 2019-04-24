@@ -46,3 +46,6 @@ This library consists of:
 
  - utils
  - version
+
+Contributing
+============
