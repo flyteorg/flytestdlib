@@ -12,14 +12,14 @@ builds:
       - darwin
     ldflags:
      - -s -w -X github.com/lyft/flytestdlib/version.Version={{.Version}} -X github.com/lyft/flytestdlib/version.Build={{.ShortCommit}} -X github.com/lyft/flytestdlib/version.BuildTime={{.Date}}
-archive:
-  replacements:
-    darwin: macOS
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
-  format_overrides:
+archives:
+  - replacements:
+      darwin: macOS
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+    format_overrides:
     - goos: windows
       format: zip
 checksum:
