@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"time"
-
 	"github.com/lyft/flytestdlib/config"
+	"net/http"
 
 	"github.com/lyft/flytestdlib/version"
 
@@ -32,7 +30,7 @@ const (
 type BuildVersion struct {
 	Build     string    `json:"build"`
 	Version   string    `json:"version"`
-	Timestamp time.Time `json:"timestamp,string"`
+	Timestamp string `json:"timestamp,string"`
 }
 
 // Writes a string to the Http output stream
