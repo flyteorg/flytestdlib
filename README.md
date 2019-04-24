@@ -15,6 +15,18 @@ This library consists of:
  - cli/pflags
 
    Tool to generate a pflags for all fields in a given struct.
+   
+   #### Install
+   
+   On POISX systems, run: `curl -sfL https://raw.githubusercontent.com/lyft/flytestdlib/godownloader/godownloader.sh | sh`
+   
+   On Windows:
+   
+   Install scoop: `iex (new-object net.webclient).downloadstring('https://get.scoop.sh')`
+   
+   Run: `scoop bucket add flytestdlib https://github.com/lyft/flytestdlib.git`
+   
+   Run: `scoop install pflags`
 
  - storage
 
