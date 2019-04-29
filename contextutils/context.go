@@ -4,22 +4,24 @@ package contextutils
 import (
 	"context"
 	"fmt"
+	"runtime/pprof"
 )
 
 type Key string
 
 const (
-	AppNameKey    Key = "app_name"
-	NamespaceKey  Key = "ns"
-	TaskTypeKey   Key = "tasktype"
-	ProjectKey    Key = "project"
-	DomainKey     Key = "domain"
-	WorkflowIDKey Key = "wf"
-	NodeIDKey     Key = "node"
-	TaskIDKey     Key = "task"
-	ExecIDKey     Key = "exec_id"
-	JobIDKey      Key = "job_id"
-	PhaseKey      Key = "phase"
+	AppNameKey      Key = "app_name"
+	NamespaceKey    Key = "ns"
+	TaskTypeKey     Key = "tasktype"
+	ProjectKey      Key = "project"
+	DomainKey       Key = "domain"
+	WorkflowIDKey   Key = "wf"
+	NodeIDKey       Key = "node"
+	TaskIDKey       Key = "task"
+	ExecIDKey       Key = "exec_id"
+	JobIDKey        Key = "job_id"
+	PhaseKey        Key = "phase"
+	RoutineLabelKey Key = "routine"
 )
 
 func (k Key) String() string {
@@ -35,6 +37,7 @@ var logKeys = []Key{
 	WorkflowIDKey,
 	TaskTypeKey,
 	PhaseKey,
+	RoutineLabelKey,
 }
 
 // Gets a new context with namespace set.
@@ -98,6 +101,11 @@ func WithTaskType(ctx context.Context, taskType string) context.Context {
 	return context.WithValue(ctx, TaskTypeKey, taskType)
 }
 
+func WithRoutineLabel(ctx context.Context, routineLabel string) context.Context {
+	ctx = pprof.WithLabels(ctx, pprof.Labels(RoutineLabelKey.String(), routineLabel))
+	return context.WithValue(ctx, RoutineLabelKey, routineLabel)
+}
+
 func addFieldIfNotNil(ctx context.Context, m map[string]interface{}, fieldKey Key) {
 	val := ctx.Value(fieldKey)
 	if val != nil {
@@ -120,6 +128,8 @@ func GetLogFields(ctx context.Context) map[string]interface{} {
 	for _, k := range logKeys {
 		addFieldIfNotNil(ctx, res, k)
 	}
+
+	pprof.Labels()
 	return res
 }
 
