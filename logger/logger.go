@@ -44,7 +44,7 @@ func onConfigUpdated(cfg Config) {
 }
 
 func getSourceLocation() string {
-	if globalConfig.IncludeSourceCode {
+	if GetConfig().IncludeSourceCode {
 		_, file, line, ok := runtime.Caller(3)
 		if !ok {
 			file = "???"
@@ -65,7 +65,7 @@ func getSourceLocation() string {
 func wrapHeader(ctx context.Context, args ...interface{}) []interface{} {
 	args = append([]interface{}{getIndent(ctx)}, args...)
 
-	if globalConfig.IncludeSourceCode {
+	if GetConfig().IncludeSourceCode {
 		return append(
 			[]interface{}{
 				fmt.Sprintf("%v", getSourceLocation()),
@@ -79,7 +79,7 @@ func wrapHeader(ctx context.Context, args ...interface{}) []interface{} {
 func wrapHeaderForMessage(ctx context.Context, message string) string {
 	message = fmt.Sprintf("%v%v", getIndent(ctx), message)
 
-	if globalConfig.IncludeSourceCode {
+	if GetConfig().IncludeSourceCode {
 		return fmt.Sprintf("%v%v", getSourceLocation(), message)
 	}
 
@@ -88,7 +88,7 @@ func wrapHeaderForMessage(ctx context.Context, message string) string {
 
 func getLogger(ctx context.Context) *logrus.Entry {
 	entry := logrus.WithFields(logrus.Fields(contextutils.GetLogFields(ctx)))
-	entry.Level = logrus.Level(globalConfig.Level)
+	entry.Level = logrus.Level(GetConfig().Level)
 	return entry
 }
 
@@ -113,7 +113,7 @@ func IsLoggable(ctx context.Context, level Level) bool {
 
 // Debug logs a message at level Debug on the standard logger.
 func Debug(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -122,7 +122,7 @@ func Debug(ctx context.Context, args ...interface{}) {
 
 // Print logs a message at level Info on the standard logger.
 func Print(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -131,7 +131,7 @@ func Print(ctx context.Context, args ...interface{}) {
 
 // Info logs a message at level Info on the standard logger.
 func Info(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -140,7 +140,7 @@ func Info(ctx context.Context, args ...interface{}) {
 
 // Warn logs a message at level Warn on the standard logger.
 func Warn(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -149,7 +149,7 @@ func Warn(ctx context.Context, args ...interface{}) {
 
 // Warning logs a message at level Warn on the standard logger.
 func Warning(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -158,7 +158,7 @@ func Warning(ctx context.Context, args ...interface{}) {
 
 // Error logs a message at level Error on the standard logger.
 func Error(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -167,7 +167,7 @@ func Error(ctx context.Context, args ...interface{}) {
 
 // Panic logs a message at level Panic on the standard logger.
 func Panic(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -176,7 +176,7 @@ func Panic(ctx context.Context, args ...interface{}) {
 
 // Fatal logs a message at level Fatal on the standard logger.
 func Fatal(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -185,7 +185,7 @@ func Fatal(ctx context.Context, args ...interface{}) {
 
 // Debugf logs a message at level Debug on the standard logger.
 func Debugf(ctx context.Context, format string, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -194,7 +194,7 @@ func Debugf(ctx context.Context, format string, args ...interface{}) {
 
 // Printf logs a message at level Info on the standard logger.
 func Printf(ctx context.Context, format string, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -203,7 +203,7 @@ func Printf(ctx context.Context, format string, args ...interface{}) {
 
 // Infof logs a message at level Info on the standard logger.
 func Infof(ctx context.Context, format string, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -212,7 +212,7 @@ func Infof(ctx context.Context, format string, args ...interface{}) {
 
 // InfofNoCtx logs a formatted message without context.
 func InfofNoCtx(format string, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -221,7 +221,7 @@ func InfofNoCtx(format string, args ...interface{}) {
 
 // Warnf logs a message at level Warn on the standard logger.
 func Warnf(ctx context.Context, format string, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -230,7 +230,7 @@ func Warnf(ctx context.Context, format string, args ...interface{}) {
 
 // Warningf logs a message at level Warn on the standard logger.
 func Warningf(ctx context.Context, format string, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -239,7 +239,7 @@ func Warningf(ctx context.Context, format string, args ...interface{}) {
 
 // Errorf logs a message at level Error on the standard logger.
 func Errorf(ctx context.Context, format string, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -248,7 +248,7 @@ func Errorf(ctx context.Context, format string, args ...interface{}) {
 
 // Panicf logs a message at level Panic on the standard logger.
 func Panicf(ctx context.Context, format string, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -257,7 +257,7 @@ func Panicf(ctx context.Context, format string, args ...interface{}) {
 
 // Fatalf logs a message at level Fatal on the standard logger.
 func Fatalf(ctx context.Context, format string, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -266,7 +266,7 @@ func Fatalf(ctx context.Context, format string, args ...interface{}) {
 
 // Debugln logs a message at level Debug on the standard logger.
 func Debugln(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -275,7 +275,7 @@ func Debugln(ctx context.Context, args ...interface{}) {
 
 // Println logs a message at level Info on the standard logger.
 func Println(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -284,7 +284,7 @@ func Println(ctx context.Context, args ...interface{}) {
 
 // Infoln logs a message at level Info on the standard logger.
 func Infoln(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -293,7 +293,7 @@ func Infoln(ctx context.Context, args ...interface{}) {
 
 // Warnln logs a message at level Warn on the standard logger.
 func Warnln(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -302,7 +302,7 @@ func Warnln(ctx context.Context, args ...interface{}) {
 
 // Warningln logs a message at level Warn on the standard logger.
 func Warningln(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -311,7 +311,7 @@ func Warningln(ctx context.Context, args ...interface{}) {
 
 // Errorln logs a message at level Error on the standard logger.
 func Errorln(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -320,7 +320,7 @@ func Errorln(ctx context.Context, args ...interface{}) {
 
 // Panicln logs a message at level Panic on the standard logger.
 func Panicln(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 
@@ -329,7 +329,7 @@ func Panicln(ctx context.Context, args ...interface{}) {
 
 // Fatalln logs a message at level Fatal on the standard logger.
 func Fatalln(ctx context.Context, args ...interface{}) {
-	if globalConfig.Mute {
+	if GetConfig().Mute {
 		return
 	}
 

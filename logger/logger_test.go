@@ -14,10 +14,12 @@ import (
 )
 
 func init() {
-	SetConfig(Config{
+	if err := SetConfig(&Config{
 		Level:             InfoLevel,
 		IncludeSourceCode: true,
-	})
+	}); err != nil {
+		panic(err)
+	}
 }
 
 func Test_getSourceLocation(t *testing.T) {
