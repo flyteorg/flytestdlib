@@ -49,6 +49,8 @@ func onConfigUpdated(cfg Config) {
 }
 
 func getSourceLocation() string {
+	// The reason we pass 3 here: 0 means this function (getSourceLocation), 1 means the getLogger function (only caller
+	// to getSourceLocation, 2 means the logging function (e.g. Debugln), and 3 means the caller for the logging function.
 	_, file, line, ok := runtime.Caller(3)
 	if !ok {
 		file = "???"
