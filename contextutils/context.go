@@ -101,7 +101,10 @@ func WithTaskType(ctx context.Context, taskType string) context.Context {
 	return context.WithValue(ctx, TaskTypeKey, taskType)
 }
 
-func WithRoutineLabel(ctx context.Context, routineLabel string) context.Context {
+// Gets a new context with Go Routine label key set and a label assigned to the context using pprof.Labels.
+// You can then call pprof.SetGoroutineLabels(ctx) to annotate the current go-routine and have that show up in
+// pprof analysis.
+func WithGoroutineLabel(ctx context.Context, routineLabel string) context.Context {
 	ctx = pprof.WithLabels(ctx, pprof.Labels(RoutineLabelKey.String(), routineLabel))
 	return context.WithValue(ctx, RoutineLabelKey, routineLabel)
 }

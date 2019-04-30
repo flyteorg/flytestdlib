@@ -113,9 +113,9 @@ func TestValues(t *testing.T) {
 	assert.Equal(t, "", m[ProjectKey.String()])
 }
 
-func TestWithRoutineLabel(t *testing.T) {
+func TestWithGoroutineLabel(t *testing.T) {
 	ctx := context.Background()
-	ctx = WithRoutineLabel(ctx, "my_routine_123")
+	ctx = WithGoroutineLabel(ctx, "my_routine_123")
 	pprof.SetGoroutineLabels(ctx)
 	m := Values(ctx, RoutineLabelKey)
 	assert.Equal(t, 1, len(m))
