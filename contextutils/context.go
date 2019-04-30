@@ -121,6 +121,7 @@ func addStringFieldWithDefaults(ctx context.Context, m map[string]string, fieldK
 	if val == nil {
 		val = ""
 	}
+
 	m[fieldKey.String()] = val.(string)
 }
 
@@ -132,7 +133,6 @@ func GetLogFields(ctx context.Context) map[string]interface{} {
 		addFieldIfNotNil(ctx, res, k)
 	}
 
-	pprof.Labels()
 	return res
 }
 
@@ -141,6 +141,7 @@ func Value(ctx context.Context, key Key) string {
 	if val != nil {
 		return val.(string)
 	}
+
 	return ""
 }
 
@@ -149,5 +150,6 @@ func Values(ctx context.Context, keys ...Key) map[string]string {
 	for _, k := range keys {
 		addStringFieldWithDefaults(ctx, res, k)
 	}
+
 	return res
 }
