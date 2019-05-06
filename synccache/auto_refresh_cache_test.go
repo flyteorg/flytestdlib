@@ -87,9 +87,9 @@ func TestCacheTwo(t *testing.T) {
 		// Wait for all resync periods to complete
 		time.Sleep(50 * time.Millisecond)
 		for i := 1; i <= 10; i++ {
-			obj, err := cache.Get(fmt.Sprintf("%d", i))
-			assert.NoError(t, err)
-			assert.Nil(t, obj)
+			_, err := cache.Get(fmt.Sprintf("%d", i))
+			assert.Error(t, err)
+			assert.Equal(t, ErrNotFound, err)
 		}
 		cancel()
 	})
