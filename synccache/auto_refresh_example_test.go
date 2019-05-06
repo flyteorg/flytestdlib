@@ -1,9 +1,11 @@
-package utils
+package synccache
 
 import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/lyft/flytestdlib/utils"
 )
 
 type ExampleItemStatus string
@@ -61,12 +63,12 @@ func ExampleNewAutoRefreshCache() {
 
 	// Since number of items in the cache is dynamic, rate limiter is our knob to control resources we spend on
 	// sync.
-	rateLimiter := NewRateLimiter("ExampleRateLimiter", 10000, 1)
+	rateLimiter := utils.NewRateLimiter("ExampleRateLimiter", 10000, 1)
 
 	// since cache refreshes itself asynchronously, it may not notice that an object has been deleted immediately,
 	// so users of the cache should have the delete logic aware of this shortcoming (eg. not-exists may be a valid
 	// error during removal if based on status in cache).
-	cache, err := NewAutoRefreshCache(syncItemCb, rateLimiter, resyncPeriod, 100, nil)
+	cache, err := NewAutoRefreshCache(syncItemCb, rateLimiter, resyncPeriod, 100, 1, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +88,12 @@ func ExampleNewAutoRefreshCache() {
 
 	// wait for the cache to go through a few refresh cycles and then check status
 	time.Sleep(resyncPeriod * 10)
-	fmt.Printf("Current status for item1 is %v", cache.Get(item1.ID()).(*ExampleCacheItem).status)
+	item, err := cache.Get(item1.ID())
+	if err != nil {
+		fmt.Printf("Failed to retrieve item from cache. Error: %v", err)
+	}
+
+	fmt.Printf("Current status for item1 is %v", item.(*ExampleCacheItem).status)
 
 	// stop the cache
 	cancel()

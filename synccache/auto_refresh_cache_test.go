@@ -1,10 +1,12 @@
-package utils
+package synccache
 
 import (
 	"context"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/lyft/flytestdlib/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -36,11 +38,11 @@ func syncFakeItemAlwaysDelete(_ context.Context, obj CacheItem) (CacheItem, Cach
 
 func TestCacheTwo(t *testing.T) {
 	testResyncPeriod := time.Millisecond
-	rateLimiter := NewRateLimiter("mockLimiter", 100, 1)
+	rateLimiter := utils.NewRateLimiter("mockLimiter", 100, 1)
 
 	t.Run("normal operation", func(t *testing.T) {
 		// the size of the cache is at least as large as the number of items we're storing
-		cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, 10, nil)
+		cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, 10, 1, nil)
 		assert.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -58,7 +60,8 @@ func TestCacheTwo(t *testing.T) {
 		// Wait half a second for all resync periods to complete
 		time.Sleep(500 * time.Millisecond)
 		for i := 1; i <= 10; i++ {
-			item := cache.Get(fmt.Sprintf("%d", i))
+			item, err := cache.Get(fmt.Sprintf("%d", i))
+			assert.NoError(t, err)
 			assert.Equal(t, 10, item.(fakeCacheItem).val)
 		}
 		cancel()
@@ -66,7 +69,7 @@ func TestCacheTwo(t *testing.T) {
 
 	t.Run("deleting objects from cache", func(t *testing.T) {
 		// the size of the cache is at least as large as the number of items we're storing
-		cache, err := NewAutoRefreshCache(syncFakeItemAlwaysDelete, rateLimiter, testResyncPeriod, 10, nil)
+		cache, err := NewAutoRefreshCache(syncFakeItemAlwaysDelete, rateLimiter, testResyncPeriod, 10, 1, nil)
 		assert.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -84,7 +87,8 @@ func TestCacheTwo(t *testing.T) {
 		// Wait for all resync periods to complete
 		time.Sleep(50 * time.Millisecond)
 		for i := 1; i <= 10; i++ {
-			obj := cache.Get(fmt.Sprintf("%d", i))
+			obj, err := cache.Get(fmt.Sprintf("%d", i))
+			assert.NoError(t, err)
 			assert.Nil(t, obj)
 		}
 		cancel()
