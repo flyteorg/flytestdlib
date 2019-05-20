@@ -124,7 +124,7 @@ func (w *autoRefreshCache) sync(ctx context.Context) {
 		// which is fine, we can just ignore.
 		if value, ok := w.lruMap.Peek(k); ok {
 			wrapper := value.(cacheItemWrapper)
-			if wrapper.RetryCount >= w.maxRetries {
+			if wrapper.RetryCount > w.maxRetries {
 				logger.Infof(ctx, "Item [%v] exceeded max retries and will not be retried.", k)
 				continue
 			}
