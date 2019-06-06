@@ -149,8 +149,7 @@ func (v viperAccessor) updateConfig(ctx context.Context, r config.Section) error
 		})
 	}
 
-	forceSendUpdates := true
-	return v.RefreshFromConfig(ctx, r, forceSendUpdates)
+	return v.RefreshFromConfig(ctx, r, true)
 }
 
 func (v viperAccessor) UpdateConfig(ctx context.Context) error {
@@ -288,8 +287,7 @@ func decode(input interface{}, config *mapstructure.DecoderConfig) error {
 
 func (v viperAccessor) configChangeHandler() {
 	ctx := context.Background()
-	forceSendUpdates := false
-	err := v.RefreshFromConfig(ctx, v.rootConfig, forceSendUpdates)
+	err := v.RefreshFromConfig(ctx, v.rootConfig, false)
 	if err != nil {
 		// TODO: Retry? panic?
 		logger.Printf(ctx, "Failed to update config. Error: %v", err)

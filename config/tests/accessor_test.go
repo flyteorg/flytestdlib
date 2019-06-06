@@ -333,12 +333,12 @@ func TestAccessor_UpdateConfig(t *testing.T) {
 		t.Run(fmt.Sprintf("[%v] Change handler", provider(config.Options{}).ID()), func(t *testing.T) {
 			configFile := tempFileName("config-*.yaml")
 			defer func() { assert.NoError(t, os.Remove(configFile)) }()
-			_, err := populateConfigData(configFile)
+			cfg, err := populateConfigData(configFile)
 			assert.NoError(t, err)
 
 			reg := config.NewRootSection()
 			called := false
-			_, err = reg.RegisterSectionWithUpdates(MyComponentSectionKey, &MyComponentConfig{},
+			_, err = reg.RegisterSectionWithUpdates(MyComponentSectionKey, &cfg.MyComponentConfig,
 				func(ctx context.Context, newValue config.Config) {
 					called = true
 				})
