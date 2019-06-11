@@ -5,6 +5,7 @@ package logger
 
 import (
 	"context"
+	"io"
 
 	"github.com/lyft/flytestdlib/contextutils"
 
@@ -79,6 +80,11 @@ func getLogger(ctx context.Context) logrus.FieldLogger {
 	entry.Level = logrus.Level(cfg.Level)
 
 	return entry
+}
+
+func GetLogWriter(ctx context.Context) *io.PipeWriter {
+	logger := getLogger(ctx)
+	return logger.(*logrus.Entry).Writer()
 }
 
 func WithIndent(ctx context.Context, additionalIndent string) context.Context {
