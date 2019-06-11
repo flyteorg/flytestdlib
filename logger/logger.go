@@ -82,7 +82,7 @@ func getLogger(ctx context.Context) logrus.FieldLogger {
 	return entry
 }
 
-// Returns a PipeWriter that can be passed used to other libraries for logging
+// Returns a standard io.PipeWriter that logs using the same logger configurations in this package.
 func GetLogWriter(ctx context.Context) *io.PipeWriter {
 	logger := getLogger(ctx)
 	return logger.(*logrus.Entry).Writer()
