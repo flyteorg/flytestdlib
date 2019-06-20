@@ -87,8 +87,8 @@ func WithWorkflowID(ctx context.Context, workflow string) context.Context {
 }
 
 // Gets a new context with a launch plan ID set.
-func WithLaunchPlanID(ctx context.Context, launch_plan string) context.Context {
-	return context.WithValue(ctx, LaunchPlanIDKey, launch_plan)
+func WithLaunchPlanID(ctx context.Context, launchPlan string) context.Context {
+	return context.WithValue(ctx, LaunchPlanIDKey, launchPlan)
 }
 
 // Get new context with Project and Domain values set
