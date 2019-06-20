@@ -9,7 +9,7 @@ import (
 
 func TestMetricKeys(t *testing.T) {
 	input := []contextutils.Key{
-		contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey,
+		contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey, contextutils.LaunchPlanIDKey,
 	}
 
 	assert.NotPanics(t, func() { SetMetricKeys(input...) })

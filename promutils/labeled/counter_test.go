@@ -11,7 +11,7 @@ import (
 
 func TestLabeledCounter(t *testing.T) {
 	assert.NotPanics(t, func() {
-		SetMetricKeys(contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey)
+		SetMetricKeys(contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey, contextutils.LaunchPlanIDKey)
 	})
 
 	scope := promutils.NewTestScope()
@@ -26,6 +26,10 @@ func TestLabeledCounter(t *testing.T) {
 	c.Add(ctx, 1.0)
 
 	ctx = contextutils.WithTaskID(ctx, "task")
+	c.Inc(ctx)
+	c.Add(ctx, 1.0)
+
+	ctx = contextutils.WithLaunchPlanID(ctx, "lp")
 	c.Inc(ctx)
 	c.Add(ctx, 1.0)
 }
