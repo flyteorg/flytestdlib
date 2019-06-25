@@ -39,6 +39,7 @@ var logKeys = []Key{
 	TaskTypeKey,
 	PhaseKey,
 	RoutineLabelKey,
+	LaunchPlanIDKey,
 }
 
 // Gets a new context with namespace set.
