@@ -67,10 +67,6 @@
   name = "github.com/graymeta/stow"
   revision = "77c84b1dd69c41b74fe0a94ca8ee257d85947327"
 
-[[override]]
-  name = "gopkg.in/fsnotify.v1"
-  source = "https://github.com/fsnotify/fsnotify.git"
-
 [prune]
   go-tests = true
   unused-packages = true
