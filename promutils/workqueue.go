@@ -26,7 +26,11 @@ import (
 // prometheus metrics. To use this package, you just have to import it.
 
 func init() {
-	workqueue.SetProvider(prometheusMetricsProvider{})
+	var provider interface{}
+	provider = prometheusMetricsProvider{}
+	if p, casted := provider.(workqueue.MetricsProvider); casted {
+		workqueue.SetProvider(p)
+	}
 }
 
 type prometheusMetricsProvider struct{}
