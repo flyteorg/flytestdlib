@@ -27,60 +27,15 @@ import (
 
 func init() {
 	var provider interface{}
-	provider = prometheusMetricsProviderOld{}
-	if p, casted := provider.(workqueue.MetricsProvider); casted {
-		workqueue.SetProvider(p)
-	}
-
-	provider = prometheusMetricsProviderNew{}
+	provider = prometheusMetricsProvider{}
 	if p, casted := provider.(workqueue.MetricsProvider); casted {
 		workqueue.SetProvider(p)
 	}
 }
 
-type prometheusMetricsProviderNew struct{}
+type prometheusMetricsProvider struct{}
 
-func (prometheusMetricsProviderNew) NewDepthMetric(name string) workqueue.GaugeMetric {
-	depth := prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: name,
-		Name:      "depth",
-		Help:      "Current depth of workqueue: " + name,
-	})
-	prometheus.MustRegister(depth)
-	return depth
-}
-
-func (prometheusMetricsProviderNew) NewAddsMetric(name string) workqueue.CounterMetric {
-	adds := prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: name,
-		Name:      "adds",
-		Help:      "Total number of adds handled by workqueue: " + name,
-	})
-	prometheus.MustRegister(adds)
-	return adds
-}
-
-func (prometheusMetricsProviderNew) NewLatencyMetric(name string) workqueue.HistogramMetric {
-	latency := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Subsystem: name,
-		Name:      "queue_latency_us",
-		Help:      "How long an item stays in workqueue" + name + " before being requested.",
-	})
-	prometheus.MustRegister(latency)
-	return latency
-}
-
-func (prometheusMetricsProviderNew) NewWorkDurationMetric(name string) workqueue.HistogramMetric {
-	workDuration := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Subsystem: name,
-		Name:      "work_duration_us",
-		Help:      "How long processing an item from workqueue" + name + " takes.",
-	})
-	prometheus.MustRegister(workDuration)
-	return workDuration
-}
-
-func (prometheusMetricsProviderNew) NewUnfinishedWorkSecondsMetric(name string) workqueue.SettableGaugeMetric {
+func (prometheusMetricsProvider) NewUnfinishedWorkSecondsMetric(name string) workqueue.SettableGaugeMetric {
 	unfinishedWork := prometheus.NewGauge(prometheus.GaugeOpts{
 		Subsystem: name,
 		Name:      "unfinished_work_s",
@@ -90,109 +45,7 @@ func (prometheusMetricsProviderNew) NewUnfinishedWorkSecondsMetric(name string) 
 	return unfinishedWork
 }
 
-func (prometheusMetricsProviderNew) NewLongestRunningProcessorSecondsMetric(name string) workqueue.SettableGaugeMetric {
-	unfinishedWork := prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: name,
-		Name:      "longest_running_processor_s",
-		Help:      "How many seconds longest running processor from workqueue" + name + " takes.",
-	})
-	prometheus.MustRegister(unfinishedWork)
-	return unfinishedWork
-}
-
-func (prometheusMetricsProviderNew) NewRetriesMetric(name string) workqueue.CounterMetric {
-	retries := prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: name,
-		Name:      "retries",
-		Help:      "Total number of retries handled by workqueue: " + name,
-	})
-	prometheus.MustRegister(retries)
-	return retries
-}
-
-func (prometheusMetricsProviderNew) NewDeprecatedDepthMetric(name string) workqueue.GaugeMetric {
-	depth := prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: name,
-		Name:      "deprecated_depth",
-		Help:      "Deprecated: Current depth of workqueue: " + name,
-	})
-	prometheus.MustRegister(depth)
-	return depth
-}
-
-func (prometheusMetricsProviderNew) NewDeprecatedAddsMetric(name string) workqueue.CounterMetric {
-	adds := prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: name,
-		Name:      "deprecated_adds",
-		Help:      "Deprecated: Total number of adds handled by workqueue: " + name,
-	})
-	prometheus.MustRegister(adds)
-	return adds
-}
-
-func (prometheusMetricsProviderNew) NewDeprecatedLatencyMetric(name string) workqueue.SummaryMetric {
-	latency := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Subsystem: name,
-		Name:      "deprecated_queue_latency_us",
-		Help:      "Deprecated: How long an item stays in workqueue" + name + " before being requested.",
-	})
-	prometheus.MustRegister(latency)
-	return latency
-}
-
-func (prometheusMetricsProviderNew) NewDeprecatedWorkDurationMetric(name string) workqueue.SummaryMetric {
-	workDuration := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Subsystem: name,
-		Name:      "deprecated_work_duration_us",
-		Help:      "Deprecated: How long processing an item from workqueue" + name + " takes.",
-	})
-	prometheus.MustRegister(workDuration)
-	return workDuration
-}
-
-func (prometheusMetricsProviderNew) NewDeprecatedUnfinishedWorkSecondsMetric(name string) workqueue.SettableGaugeMetric {
-	unfinishedWork := prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: name,
-		Name:      "deprecated_unfinished_work_s",
-		Help:      "Deprecated: How many seconds of work in progress in workqueue: " + name,
-	})
-	prometheus.MustRegister(unfinishedWork)
-	return unfinishedWork
-}
-
-func (prometheusMetricsProviderNew) NewDeprecatedLongestRunningProcessorMicrosecondsMetric(name string) workqueue.SettableGaugeMetric {
-	unfinishedWork := prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: name,
-		Name:      "deprecated_longest_running_processor_s",
-		Help:      "Deprecated: How many seconds longest running processor from workqueue" + name + " takes.",
-	})
-	prometheus.MustRegister(unfinishedWork)
-	return unfinishedWork
-}
-
-func (prometheusMetricsProviderNew) NewDeprecatedRetriesMetric(name string) workqueue.CounterMetric {
-	retries := prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: name,
-		Name:      "deprecated_retries",
-		Help:      "Deprecated: Total number of retries handled by workqueue: " + name,
-	})
-	prometheus.MustRegister(retries)
-	return retries
-}
-
-type prometheusMetricsProviderOld struct{}
-
-func (prometheusMetricsProviderOld) NewUnfinishedWorkSecondsMetric(name string) workqueue.SettableGaugeMetric {
-	unfinishedWork := prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: name,
-		Name:      "unfinished_work_s",
-		Help:      "How many seconds of work in progress in workqueue: " + name,
-	})
-	prometheus.MustRegister(unfinishedWork)
-	return unfinishedWork
-}
-
-func (prometheusMetricsProviderOld) NewLongestRunningProcessorMicrosecondsMetric(name string) workqueue.SettableGaugeMetric {
+func (prometheusMetricsProvider) NewLongestRunningProcessorMicrosecondsMetric(name string) workqueue.SettableGaugeMetric {
 	unfinishedWork := prometheus.NewGauge(prometheus.GaugeOpts{
 		Subsystem: name,
 		Name:      "longest_running_processor_us",
@@ -202,7 +55,7 @@ func (prometheusMetricsProviderOld) NewLongestRunningProcessorMicrosecondsMetric
 	return unfinishedWork
 }
 
-func (prometheusMetricsProviderOld) NewDepthMetric(name string) workqueue.GaugeMetric {
+func (prometheusMetricsProvider) NewDepthMetric(name string) workqueue.GaugeMetric {
 	depth := prometheus.NewGauge(prometheus.GaugeOpts{
 		Subsystem: name,
 		Name:      "depth",
@@ -212,7 +65,7 @@ func (prometheusMetricsProviderOld) NewDepthMetric(name string) workqueue.GaugeM
 	return depth
 }
 
-func (prometheusMetricsProviderOld) NewAddsMetric(name string) workqueue.CounterMetric {
+func (prometheusMetricsProvider) NewAddsMetric(name string) workqueue.CounterMetric {
 	adds := prometheus.NewCounter(prometheus.CounterOpts{
 		Subsystem: name,
 		Name:      "adds",
@@ -222,7 +75,7 @@ func (prometheusMetricsProviderOld) NewAddsMetric(name string) workqueue.Counter
 	return adds
 }
 
-func (prometheusMetricsProviderOld) NewLatencyMetric(name string) workqueue.SummaryMetric {
+func (prometheusMetricsProvider) NewLatencyMetric(name string) workqueue.SummaryMetric {
 	latency := prometheus.NewSummary(prometheus.SummaryOpts{
 		Subsystem: name,
 		Name:      "queue_latency_us",
@@ -232,7 +85,7 @@ func (prometheusMetricsProviderOld) NewLatencyMetric(name string) workqueue.Summ
 	return latency
 }
 
-func (prometheusMetricsProviderOld) NewWorkDurationMetric(name string) workqueue.SummaryMetric {
+func (prometheusMetricsProvider) NewWorkDurationMetric(name string) workqueue.SummaryMetric {
 	workDuration := prometheus.NewSummary(prometheus.SummaryOpts{
 		Subsystem: name,
 		Name:      "work_duration_us",
@@ -242,7 +95,7 @@ func (prometheusMetricsProviderOld) NewWorkDurationMetric(name string) workqueue
 	return workDuration
 }
 
-func (prometheusMetricsProviderOld) NewRetriesMetric(name string) workqueue.CounterMetric {
+func (prometheusMetricsProvider) NewRetriesMetric(name string) workqueue.CounterMetric {
 	retries := prometheus.NewCounter(prometheus.CounterOpts{
 		Subsystem: name,
 		Name:      "retries",
