@@ -17,6 +17,7 @@ limitations under the License.
 package promutils
 
 import (
+	"fmt"
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -30,6 +31,9 @@ func init() {
 	provider = prometheusMetricsProvider{}
 	if p, casted := provider.(workqueue.MetricsProvider); casted {
 		workqueue.SetProvider(p)
+	} else {
+		// This case happens in future versions of client-go where the interface has added methods
+		fmt.Println("Warn: No metricsProvider set for the workqueue")
 	}
 }
 
