@@ -26,7 +26,7 @@ import (
 // prometheus metrics. To use this package, you just have to import it.
 
 func init() {
-	var provider interface{}
+	var provider interface{} //nolint:gosimple
 	provider = prometheusMetricsProvider{}
 	if p, casted := provider.(workqueue.MetricsProvider); casted {
 		workqueue.SetProvider(p)
