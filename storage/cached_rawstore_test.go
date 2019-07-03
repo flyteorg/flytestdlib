@@ -19,6 +19,7 @@ import (
 )
 
 func init() {
+	labeled.UnsetMetricKeys()
 	labeled.SetMetricKeys(contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey)
 }
 

@@ -8,6 +8,7 @@ import (
 )
 
 func TestMetricKeys(t *testing.T) {
+	UnsetMetricKeys()
 	input := []contextutils.Key{
 		contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey, contextutils.LaunchPlanIDKey,
 	}
