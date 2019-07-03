@@ -17,6 +17,8 @@ limitations under the License.
 package promutils
 
 import (
+	"fmt"
+
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -26,10 +28,37 @@ import (
 // prometheus metrics. To use this package, you just have to import it.
 
 func init() {
-	workqueue.SetProvider(prometheusMetricsProvider{})
+	var provider interface{} //nolint
+	provider = prometheusMetricsProvider{}
+	if p, casted := provider.(workqueue.MetricsProvider); casted {
+		workqueue.SetProvider(p)
+	} else {
+		// This case happens in future versions of client-go where the interface has added methods
+		fmt.Println("Warn: No metricsProvider set for the workqueue")
+	}
 }
 
 type prometheusMetricsProvider struct{}
+
+func (prometheusMetricsProvider) NewUnfinishedWorkSecondsMetric(name string) workqueue.SettableGaugeMetric {
+	unfinishedWork := prometheus.NewGauge(prometheus.GaugeOpts{
+		Subsystem: name,
+		Name:      "unfinished_work_s",
+		Help:      "How many seconds of work in progress in workqueue: " + name,
+	})
+	prometheus.MustRegister(unfinishedWork)
+	return unfinishedWork
+}
+
+func (prometheusMetricsProvider) NewLongestRunningProcessorMicrosecondsMetric(name string) workqueue.SettableGaugeMetric {
+	unfinishedWork := prometheus.NewGauge(prometheus.GaugeOpts{
+		Subsystem: name,
+		Name:      "longest_running_processor_us",
+		Help:      "How many microseconds longest running processor from workqueue" + name + " takes.",
+	})
+	prometheus.MustRegister(unfinishedWork)
+	return unfinishedWork
+}
 
 func (prometheusMetricsProvider) NewDepthMetric(name string) workqueue.GaugeMetric {
 	depth := prometheus.NewGauge(prometheus.GaugeOpts{
