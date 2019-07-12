@@ -3,6 +3,8 @@ package utils
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -32,6 +34,55 @@ func syncFakeItem(_ context.Context, obj CacheItem) (CacheItem, CacheSyncAction,
 
 func syncFakeItemAlwaysDelete(_ context.Context, obj CacheItem) (CacheItem, CacheSyncAction, error) {
 	return obj, Delete, nil
+}
+
+func BenchmarkCache(b *testing.B) {
+	testResyncPeriod := time.Millisecond
+	rateLimiter := NewRateLimiter("mockLimiter", 100, 1)
+	// the size of the cache is at least as large as the number of items we're storing
+	itemCount := b.N
+	cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, itemCount*2, nil)
+	assert.NoError(b, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cache.Start(ctx)
+
+	startIdx := 1
+
+	wg := sync.WaitGroup{}
+	for n := 0; n < b.N; n++ {
+		wg.Add(itemCount)
+		// Create items in the cache
+		for i := 1; i <= itemCount; i++ {
+			go func(itemId int) {
+				defer wg.Done()
+				_, err := cache.GetOrCreate(fakeCacheItem{
+					id:  fmt.Sprintf("%d", itemId),
+					val: itemId,
+				})
+
+				assert.NoError(b, err)
+			}(i + startIdx)
+		}
+
+		wg.Wait()
+
+		// Wait half a second for all resync periods to complete
+		wg.Add(itemCount)
+		for i := 1; i <= itemCount; i++ {
+			go func(itemId int) {
+				defer wg.Done()
+				item := cache.Get(fmt.Sprintf("%d", itemId))
+				assert.NotNil(b, item, "item #%v", itemId)
+				if item != nil {
+					assert.Equal(b, strconv.Itoa(itemId), item.(fakeCacheItem).ID())
+				}
+			}(i + startIdx)
+		}
+		wg.Wait()
+		startIdx += itemCount
+	}
 }
 
 func TestCacheTwo(t *testing.T) {
