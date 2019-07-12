@@ -44,9 +44,9 @@ func BenchmarkCache(b *testing.B) {
 	cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, itemCount*2, nil)
 	assert.NoError(b, err)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	cache.Start(ctx)
+	//cache.Start(ctx)
 
 	startIdx := 1
 
@@ -75,6 +75,14 @@ func BenchmarkCache(b *testing.B) {
 				defer wg.Done()
 				item := cache.Get(fmt.Sprintf("%d", itemId))
 				assert.NotNil(b, item, "item #%v", itemId)
+				if item == nil {
+					_, err = cache.GetOrCreate(fakeCacheItem{
+						id:  fmt.Sprintf("%d", itemId),
+						val: itemId,
+					})
+
+					assert.NoError(b, err)
+				}
 				if item != nil {
 					assert.Equal(b, strconv.Itoa(itemId), item.(fakeCacheItem).ID())
 				}
