@@ -75,14 +75,6 @@ func BenchmarkCache(b *testing.B) {
 				defer wg.Done()
 				item := cache.Get(fmt.Sprintf("%d", itemId))
 				assert.NotNil(b, item, "item #%v", itemId)
-				if item == nil {
-					_, err = cache.GetOrCreate(fakeCacheItem{
-						id:  fmt.Sprintf("%d", itemId),
-						val: itemId,
-					})
-
-					assert.NoError(b, err)
-				}
 				if item != nil {
 					assert.Equal(b, strconv.Itoa(itemId), item.(fakeCacheItem).ID())
 				}
