@@ -36,17 +36,21 @@ func syncFakeItemAlwaysDelete(_ context.Context, obj CacheItem) (CacheItem, Cach
 	return obj, Delete, nil
 }
 
+func noopSync(_ context.Context, obj CacheItem) (CacheItem, CacheSyncAction, error) {
+	return obj, Unchanged, nil
+}
+
 func BenchmarkCache(b *testing.B) {
 	testResyncPeriod := time.Millisecond
 	rateLimiter := NewRateLimiter("mockLimiter", 100, 1)
 	// the size of the cache is at least as large as the number of items we're storing
 	itemCount := b.N
-	cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, itemCount*2, nil)
+	cache, err := NewAutoRefreshCache(noopSync, rateLimiter, testResyncPeriod, itemCount*2, nil)
 	assert.NoError(b, err)
 
-	_, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	//cache.Start(ctx)
+	cache.Start(ctx)
 
 	startIdx := 1
 
@@ -80,6 +84,7 @@ func BenchmarkCache(b *testing.B) {
 				}
 			}(i + startIdx)
 		}
+
 		wg.Wait()
 		startIdx += itemCount
 	}
