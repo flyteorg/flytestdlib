@@ -2,9 +2,10 @@ package storage
 
 import (
 	"context"
-	"github.com/lyft/flytestdlib/errors"
 	"io"
 	"time"
+
+	"github.com/lyft/flytestdlib/errors"
 
 	"github.com/prometheus/client_golang/prometheus"
 

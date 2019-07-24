@@ -3,12 +3,12 @@ package storage
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"runtime/debug"
 	"testing"
-	"math/rand"
 
 	"github.com/lyft/flytestdlib/contextutils"
 	"github.com/lyft/flytestdlib/promutils/labeled"
@@ -96,7 +96,7 @@ func TestCachedRawStore(t *testing.T) {
 	bigK := DataReference("bigK")
 	d1 := []byte("abc")
 	d2 := []byte("xyz")
-	bigD := make([]byte, 1.5 * 1024 * 1024)
+	bigD := make([]byte, 1.5*1024*1024)
 	rand.Read(bigD)
 	writeCalled := false
 	readCalled := false
