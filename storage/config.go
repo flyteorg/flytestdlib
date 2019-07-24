@@ -3,6 +3,8 @@ package storage
 import (
 	"context"
 
+	"github.com/graymeta/stow"
+
 	"github.com/lyft/flytestdlib/config"
 	"github.com/lyft/flytestdlib/logger"
 )
@@ -20,6 +22,7 @@ const (
 	TypeS3     Type = "s3"
 	TypeLocal  Type = "local"
 	TypeMinio  Type = "minio"
+	TypeStow   Type = "stow"
 )
 
 const (
@@ -45,6 +48,7 @@ var (
 type Config struct {
 	Type          Type             `json:"type" pflag:",Sets the type of storage to configure [s3/minio/local/mem]."`
 	Connection    ConnectionConfig `json:"connection"`
+	Stow          *StowConfig      `json:"stow,omitempty"`
 	InitContainer string           `json:"container" pflag:",Initial container to create -if it doesn't exist-.'"`
 	// Caching is recommended to improve the performance of underlying systems. It caches the metadata and resolving
 	// inputs is accelerated. The size of the cache is large so understand how to configure the cache.
@@ -62,6 +66,11 @@ type ConnectionConfig struct {
 	SecretKey  string     `json:"secret-key" pflag:",Secret to use when accesskey is set."`
 	Region     string     `json:"region" pflag:",Region to connect to."`
 	DisableSSL bool       `json:"disable-ssl" pflag:",Disables SSL connection. Should only be used for development."`
+}
+
+type StowConfig struct {
+	Kind   string         `json:"kind"`
+	Config stow.ConfigMap `json:"config"`
 }
 
 type CachingConfig struct {

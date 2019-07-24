@@ -13,6 +13,7 @@ var stores = map[string]dataStoreCreateFn{
 	TypeLocal:  newLocalRawStore,
 	TypeMinio:  newS3RawStore,
 	TypeS3:     newS3RawStore,
+	TypeStow:   newStowRawStore,
 }
 
 // Creates a new Data Store with the supplied config.
