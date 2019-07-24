@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/lyft/flytestdlib/logger"
 	"github.com/lyft/flytestdlib/promutils"
 
 	"github.com/pkg/errors"
@@ -38,29 +40,64 @@ func newStowRawStore(cfg *Config, metricsScope promutils.Scope) (RawStore, error
 		return nil, fmt.Errorf("initContainer is required")
 	}
 
+	var cfgMap stow.ConfigMap
+	var kind string
 	if cfg.Stow != nil {
-		fn, ok := fQNFn[cfg.Stow.Kind]
-		if !ok {
-			return nil, errors.Errorf("unsupported stow.kind [%s], add support in flytestdlib?", cfg.Stow.Kind)
-		}
-		loc, err := stow.Dial(cfg.Stow.Kind, cfg.Stow.Config)
-		if err != nil {
-			return emptyStore, fmt.Errorf("unable to configure the storage for s3. Error: %v", err)
-		}
-
-		c, err := loc.Container(cfg.InitContainer)
-		if err != nil {
-			if IsNotFound(err) {
-				c, err := loc.CreateContainer(cfg.InitContainer)
-				if err != nil {
-					return emptyStore, fmt.Errorf("unable to initialize container [%v]. Error: %v", cfg.InitContainer, err)
-				}
-				return NewStowRawStore(fn(c.Name()), c, metricsScope)
-			}
-			return emptyStore, err
-		}
-
-		return NewStowRawStore(fn(c.Name()), c, metricsScope)
+		kind = cfg.Stow.Kind
+		cfgMap = stow.ConfigMap(cfg.Stow.Config)
+	} else {
+		logger.Warnf(context.TODO(), "stow configuration section missing, defaulting to legacy s3/minio connection config")
+		// This is for supporting legacy configurations which configure S3 via connection config
+		kind = s3.Kind
+		cfgMap = legacyS3ConfigMap(cfg.Connection)
 	}
-	return nil, errors.Errorf("stow configuration section is missing")
+
+	fn, ok := fQNFn[kind]
+	if !ok {
+		return nil, errors.Errorf("unsupported stow.kind [%s], add support in flytestdlib?", kind)
+	}
+	loc, err := stow.Dial(kind, cfgMap)
+	if err != nil {
+		return emptyStore, fmt.Errorf("unable to configure the storage for %s. Error: %v", kind, err)
+	}
+	c, err := loc.Container(cfg.InitContainer)
+	if err != nil {
+		if IsNotFound(err) || awsBucketIsNotFound(err) {
+			c, err := loc.CreateContainer(cfg.InitContainer)
+			// If the container's already created, move on. Otherwise, fail with error.
+			if err != nil && !awsBucketAlreadyExists(err) {
+				return emptyStore, fmt.Errorf("unable to initialize container [%v]. Error: %v", cfg.InitContainer, err)
+			}
+			return NewStowRawStore(fn(c.Name()), c, metricsScope)
+		}
+		return emptyStore, err
+	}
+	return NewStowRawStore(fn(c.Name()), c, metricsScope)
+}
+
+func legacyS3ConfigMap(cfg ConnectionConfig) stow.ConfigMap {
+	// Non-nullable fields
+	stowConfig := stow.ConfigMap{
+		s3.ConfigAuthType: cfg.AuthType,
+		s3.ConfigRegion:   cfg.Region,
+	}
+
+	// Fields that differ between minio and real S3
+	if endpoint := cfg.Endpoint.String(); endpoint != "" {
+		stowConfig[s3.ConfigEndpoint] = endpoint
+	}
+
+	if accessKey := cfg.AccessKey; accessKey != "" {
+		stowConfig[s3.ConfigAccessKeyID] = accessKey
+	}
+
+	if secretKey := cfg.SecretKey; secretKey != "" {
+		stowConfig[s3.ConfigSecretKey] = secretKey
+	}
+
+	if disableSsl := cfg.DisableSSL; disableSsl {
+		stowConfig[s3.ConfigDisableSSL] = "True"
+	}
+
+	return stowConfig
 }

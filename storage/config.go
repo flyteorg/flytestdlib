@@ -3,8 +3,6 @@ package storage
 import (
 	"context"
 
-	"github.com/graymeta/stow"
-
 	"github.com/lyft/flytestdlib/config"
 	"github.com/lyft/flytestdlib/logger"
 )
@@ -46,7 +44,7 @@ var (
 
 // A common storage config.
 type Config struct {
-	Type          Type             `json:"type" pflag:",Sets the type of storage to configure [s3/minio/local/mem]."`
+	Type          Type             `json:"type" pflag:",Sets the type of storage to configure [s3/minio/local/mem/stow]."`
 	Connection    ConnectionConfig `json:"connection"`
 	Stow          *StowConfig      `json:"stow,omitempty"`
 	InitContainer string           `json:"container" pflag:",Initial container to create -if it doesn't exist-.'"`
@@ -69,8 +67,8 @@ type ConnectionConfig struct {
 }
 
 type StowConfig struct {
-	Kind   string         `json:"kind"`
-	Config stow.ConfigMap `json:"config"`
+	Kind   string            `json:"kind,omitempty"`
+	Config map[string]string `json:"config,omitempty"`
 }
 
 type CachingConfig struct {

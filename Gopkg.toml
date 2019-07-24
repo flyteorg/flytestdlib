@@ -55,6 +55,10 @@
   branch = "master"
   name = "golang.org/x/time"
 
+[[override]]
+  branch = "master"
+  name = "golang.org/x/net"
+
 [[constraint]]
   name = "k8s.io/apimachinery"
   version = "kubernetes-1.13.1"
