@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/lyft/flytestdlib/errors"
 	"io"
 	"time"
 
@@ -116,7 +117,7 @@ func (s *StowStore) ReadRaw(ctx context.Context, reference DataReference) (io.Re
 	}
 
 	if sizeBytes/MiB > GetConfig().Limits.GetLimitMegabytes {
-		return nil, ErrExceedsLimit
+		return nil, errors.Wrapf(ErrExceedsLimit, err, "limit exceeded")
 	}
 
 	return item.Open()
