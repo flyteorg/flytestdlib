@@ -97,6 +97,7 @@ func TestCachedRawStore(t *testing.T) {
 	d1 := []byte("abc")
 	d2 := []byte("xyz")
 	bigD := make([]byte, 1.5 * 1024 * 1024)
+	rand.Read(bigD)
 	writeCalled := false
 	readCalled := false
 	store := &dummyStore{
