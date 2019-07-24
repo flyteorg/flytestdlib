@@ -32,7 +32,7 @@ type DefaultProtobufStore struct {
 
 func (s DefaultProtobufStore) ReadProtobuf(ctx context.Context, reference DataReference, msg proto.Message) error {
 	rc, err := s.ReadRaw(ctx, reference)
-	if err != nil {
+	if err != nil && !IsFailedWriteToCache(err) {
 		return errs.Wrap(err, fmt.Sprintf("path:%v", reference))
 	}
 
@@ -68,7 +68,11 @@ func (s DefaultProtobufStore) WriteProtobuf(ctx context.Context, reference DataR
 		return err
 	}
 
-	return s.WriteRaw(ctx, reference, int64(len(raw)), opts, bytes.NewReader(raw))
+	err = s.WriteRaw(ctx, reference, int64(len(raw)), opts, bytes.NewReader(raw))
+	if err != nil && !IsFailedWriteToCache(err) {
+		return err
+	}
+	return nil
 }
 
 func NewDefaultProtobufStore(store RawStore, metricsScope promutils.Scope) DefaultProtobufStore {
