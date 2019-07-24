@@ -3,10 +3,10 @@ package storage
 import (
 	"bytes"
 	"context"
-	"math/rand"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"runtime/debug"
 	"testing"
 
