@@ -3,7 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
+	"math/rand"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -97,6 +97,7 @@ func TestCachedRawStore(t *testing.T) {
 	d1 := []byte("abc")
 	d2 := []byte("xyz")
 	bigD := make([]byte, 1.5*1024*1024)
+	// #nosec G404
 	rand.Read(bigD)
 	writeCalled := false
 	readCalled := false
