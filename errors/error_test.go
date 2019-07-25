@@ -37,11 +37,11 @@ func TestIsCausedBy(t *testing.T) {
 }
 
 func TestIsCausedByError(t *testing.T) {
-	e_root := Errorf("Code1", "msg")
-	assert.NotNil(t, e_root)
-	e1 := Wrapf("Code2", e_root, "msg")
-	assert.True(t, IsCausedByError(e1, e_root))
+	eRoot := Errorf("Code1", "msg")
+	assert.NotNil(t, eRoot)
+	e1 := Wrapf("Code2", eRoot, "msg")
+	assert.True(t, IsCausedByError(e1, eRoot))
 	e2 := Wrapf("Code3", e1, "msg")
-	assert.True(t, IsCausedByError(e2, e_root))
+	assert.True(t, IsCausedByError(e2, eRoot))
 	assert.True(t, IsCausedByError(e2, e1))
 }
