@@ -39,7 +39,6 @@ func (m mockBigDataProtoMessage) String() string {
 func (mockBigDataProtoMessage) ProtoMessage() {
 }
 
-
 func TestDefaultProtobufStore_ReadProtobuf(t *testing.T) {
 	t.Run("Read after Write", func(t *testing.T) {
 		testScope := promutils.NewTestScope()
