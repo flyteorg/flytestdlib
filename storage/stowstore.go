@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	awsS3 "github.com/aws/aws-sdk-go/service/s3"
+
 	"github.com/lyft/flytestdlib/logger"
 	"github.com/lyft/flytestdlib/promutils"
 
@@ -33,6 +36,30 @@ var fQNFn = map[string]func(string) DataReference{
 	azure.Kind: func(bucket string) DataReference {
 		return DataReference(fmt.Sprintf("afs://%s", bucket))
 	},
+}
+
+func awsBucketIsNotFound(err error) bool {
+	if IsNotFound(err) {
+		return true
+	}
+
+	if awsErr, errOk := errors.Cause(err).(awserr.Error); errOk {
+		return awsErr.Code() == awsS3.ErrCodeNoSuchBucket
+	}
+
+	return false
+}
+
+func awsBucketAlreadyExists(err error) bool {
+	if IsExists(err) {
+		return true
+	}
+
+	if awsErr, errOk := errors.Cause(err).(awserr.Error); errOk {
+		return awsErr.Code() == awsS3.ErrCodeBucketAlreadyOwnedByYou
+	}
+
+	return false
 }
 
 func newStowRawStore(cfg *Config, metricsScope promutils.Scope) (RawStore, error) {
