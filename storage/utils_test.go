@@ -1,15 +1,14 @@
-
 package storage
 
 import (
-	"github.com/graymeta/stow"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"syscall"
 	"testing"
-)
 
+	"github.com/graymeta/stow"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+)
 
 func TestIsNotFound(t *testing.T) {
 	sysError := &os.PathError{Err: syscall.ENOENT}
