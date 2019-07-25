@@ -71,17 +71,17 @@ func TestDefaultProtobufStore_BigDataReadAfterWrite(t *testing.T) {
 		assert.NoError(t, err)
 
 		bigD := make([]byte, 1.5*1024*1024)
-
 		// #nosec G404
 		rand.Read(bigD)
 
 		mockMessage := &mockBigDataProtoMessage{X: bigD}
+
 		err = s.WriteProtobuf(context.TODO(), DataReference("bigK"), Options{}, mockMessage)
-		assert.True(t, IsFailedWriteToCache(err))
+		assert.NoError(t, err)
 
 		m := &mockBigDataProtoMessage{}
 		err = s.ReadProtobuf(context.TODO(), DataReference("bigK"), m)
-		assert.True(t, IsFailedWriteToCache(err))
+		assert.NoError(t, err)
 		assert.Equal(t, bigD, m.X)
 
 	})
