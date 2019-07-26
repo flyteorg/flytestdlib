@@ -2,12 +2,15 @@ package storage
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"math/rand"
 	"testing"
 
 	"github.com/lyft/flytestdlib/promutils"
 
 	"github.com/golang/protobuf/proto"
+	errs "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -83,5 +86,38 @@ func TestDefaultProtobufStore_BigDataReadAfterWrite(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, bigD, m.X)
 
+	})
+}
+
+func TestDefaultProtobufStore_HardErrors(t *testing.T) {
+	ctx := context.TODO()
+	k1 := DataReference("k1")
+	dummyHeadErrorMsg := "Dummy head error"
+	dummyWriteErrorMsg := "Dummy write error"
+	dummyReadErrorMsg := "Dummy read error"
+	store := &dummyStore{
+		HeadCb: func(ctx context.Context, reference DataReference) (Metadata, error) {
+			return MemoryMetadata{}, fmt.Errorf(dummyHeadErrorMsg)
+		},
+		WriteRawCb: func(ctx context.Context, reference DataReference, size int64, opts Options, raw io.Reader) error {
+			return fmt.Errorf(dummyWriteErrorMsg)
+		},
+		ReadRawCb: func(ctx context.Context, reference DataReference) (io.ReadCloser, error) {
+			return nil, fmt.Errorf(dummyReadErrorMsg)
+		},
+	}
+	testScope := promutils.NewTestScope()
+	pbErroneousStore := NewDefaultProtobufStore(store, testScope)
+	t.Run("Test if hard write errors are handled correctly", func(t *testing.T) {
+		err := pbErroneousStore.WriteProtobuf(ctx, k1, Options{}, &mockProtoMessage{X: 5})
+		assert.False(t, IsFailedWriteToCache(err))
+		assert.Equal(t, dummyWriteErrorMsg, errs.Cause(err).Error())
+	})
+
+	t.Run("Test if hard read errors are handled correctly", func(t *testing.T) {
+		m := &mockProtoMessage{}
+		err := pbErroneousStore.ReadProtobuf(ctx, k1, m)
+		assert.False(t, IsFailedWriteToCache(err))
+		assert.Equal(t, dummyReadErrorMsg, errs.Cause(err).Error())
 	})
 }
