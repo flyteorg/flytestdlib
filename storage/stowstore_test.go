@@ -43,8 +43,8 @@ func Test_newStowRawStore(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := newStowRawStore(tt.args.cfg, tt.args.metricsScope)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("newStowRawStore() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err, "newStowRawStore() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			assert.NotNil(t, got, "Expected rawstore, found nil!")

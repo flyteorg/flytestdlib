@@ -5,6 +5,7 @@ package logger
 
 import (
 	"context"
+	"io"
 	"reflect"
 	"testing"
 
@@ -581,6 +582,573 @@ func Test_onConfigUpdated(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			onConfigUpdated(tt.args.cfg)
+		})
+	}
+}
+
+func Test_getSourceLocation(t *testing.T) {
+	tests := []struct {
+		name string
+		want string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getSourceLocation(); got != tt.want {
+				t.Errorf("getSourceLocation() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetLogWriter(t *testing.T) {
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name string
+		args args
+		want *io.PipeWriter
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetLogWriter(tt.args.ctx); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetLogWriter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNoopLogger_WithField(t *testing.T) {
+	type args struct {
+		key   string
+		value interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+		want *logrus.Entry
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			if got := n.WithField(tt.args.key, tt.args.value); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NoopLogger.WithField() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNoopLogger_WithFields(t *testing.T) {
+	type args struct {
+		fields logrus.Fields
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+		want *logrus.Entry
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			if got := n.WithFields(tt.args.fields); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NoopLogger.WithFields() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNoopLogger_WithError(t *testing.T) {
+	type args struct {
+		err error
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+		want *logrus.Entry
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			if got := n.WithError(tt.args.err); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NoopLogger.WithError() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNoopLogger_Debugf(t *testing.T) {
+	type args struct {
+		format string
+		args   []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Debugf(tt.args.format, tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Infof(t *testing.T) {
+	type args struct {
+		format string
+		args   []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Infof(tt.args.format, tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Warnf(t *testing.T) {
+	type args struct {
+		format string
+		args   []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Warnf(tt.args.format, tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Warningf(t *testing.T) {
+	type args struct {
+		format string
+		args   []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Warningf(tt.args.format, tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Errorf(t *testing.T) {
+	type args struct {
+		format string
+		args   []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Errorf(tt.args.format, tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Debug(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Debug(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Info(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Info(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Warn(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Warn(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Warning(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Warning(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Error(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Error(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Debugln(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Debugln(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Infoln(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Infoln(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Warnln(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Warnln(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Warningln(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Warningln(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Errorln(t *testing.T) {
+	type args struct {
+		args []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Errorln(tt.args.args...)
+		})
+	}
+}
+
+func TestNoopLogger_Print(t *testing.T) {
+	type args struct {
+		in0 []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Print(tt.args.in0...)
+		})
+	}
+}
+
+func TestNoopLogger_Printf(t *testing.T) {
+	type args struct {
+		in0 string
+		in1 []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Printf(tt.args.in0, tt.args.in1...)
+		})
+	}
+}
+
+func TestNoopLogger_Println(t *testing.T) {
+	type args struct {
+		in0 []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Println(tt.args.in0...)
+		})
+	}
+}
+
+func TestNoopLogger_Fatal(t *testing.T) {
+	type args struct {
+		in0 []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Fatal(tt.args.in0...)
+		})
+	}
+}
+
+func TestNoopLogger_Fatalf(t *testing.T) {
+	type args struct {
+		in0 string
+		in1 []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Fatalf(tt.args.in0, tt.args.in1...)
+		})
+	}
+}
+
+func TestNoopLogger_Fatalln(t *testing.T) {
+	type args struct {
+		in0 []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Fatalln(tt.args.in0...)
+		})
+	}
+}
+
+func TestNoopLogger_Panic(t *testing.T) {
+	type args struct {
+		in0 []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Panic(tt.args.in0...)
+		})
+	}
+}
+
+func TestNoopLogger_Panicf(t *testing.T) {
+	type args struct {
+		in0 string
+		in1 []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Panicf(tt.args.in0, tt.args.in1...)
+		})
+	}
+}
+
+func TestNoopLogger_Panicln(t *testing.T) {
+	type args struct {
+		in0 []interface{}
+	}
+	tests := []struct {
+		name string
+		n    NoopLogger
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := NoopLogger{}
+			n.Panicln(tt.args.in0...)
 		})
 	}
 }
