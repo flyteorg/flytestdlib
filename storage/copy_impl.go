@@ -1,13 +1,13 @@
 package storage
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"github.com/lyft/flytestdlib/logger"
-	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"time"
+
+	"github.com/lyft/flytestdlib/logger"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/lyft/flytestdlib/ioutils"
 	"github.com/lyft/flytestdlib/promutils"
@@ -21,8 +21,8 @@ type copyImpl struct {
 }
 
 type copyMetrics struct {
-	CopyLatency          labeled.StopWatch
-	ComputeLengthLatency labeled.StopWatch
+	CopyLatency                  labeled.StopWatch
+	ComputeLengthLatency         labeled.StopWatch
 	WriteFailureUnrelatedToCache prometheus.Counter
 	ReadFailureUnrelatedToCache  prometheus.Counter
 }
@@ -66,8 +66,8 @@ func (c copyImpl) CopyRaw(ctx context.Context, source, destination DataReference
 
 func newCopyMetrics(scope promutils.Scope) copyMetrics {
 	return copyMetrics{
-		CopyLatency:          labeled.NewStopWatch("overall", "Overall copy latency", time.Millisecond, scope, labeled.EmitUnlabeledMetric),
-		ComputeLengthLatency: labeled.NewStopWatch("length", "Latency involved in computing length of content before writing.", time.Millisecond, scope, labeled.EmitUnlabeledMetric),
+		CopyLatency:                  labeled.NewStopWatch("overall", "Overall copy latency", time.Millisecond, scope, labeled.EmitUnlabeledMetric),
+		ComputeLengthLatency:         labeled.NewStopWatch("length", "Latency involved in computing length of content before writing.", time.Millisecond, scope, labeled.EmitUnlabeledMetric),
 		WriteFailureUnrelatedToCache: scope.MustNewCounter("write_failure_unrelated_to_cache", "Raw store write failures that are not caused by ErrFailedToWriteCache"),
 		ReadFailureUnrelatedToCache:  scope.MustNewCounter("read_failure_unrelated_to_cache", "Raw store read failures that are not caused by ErrFailedToWriteCache"),
 	}
