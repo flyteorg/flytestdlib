@@ -15,6 +15,7 @@ import (
 )
 
 type ItemID = string
+type Batch = []Item
 
 // AutoRefresh with regular GetOrCreate and Delete along with background asynchronous refresh. Caller provides
 // callbacks for create, refresh and delete item.
@@ -59,12 +60,12 @@ const (
 //   1. The new Item, and
 //   2. What action should be taken.  The sync function has no insight into your object, and needs to be
 //      told explicitly if the new item is different from the old one.
-type SyncFunc func(ctx context.Context, batch []Item) (
+type SyncFunc func(ctx context.Context, batch Batch) (
 	updatedBatch []ItemSyncResponse, err error)
 
 // Your implementation of this function for your cache instance is responsible for subdividing
 // the list of cache items into batches.
-type CreateBatchesFunc func(ctx context.Context, snapshot []Item) (batches [][]Item, err error)
+type CreateBatchesFunc func(ctx context.Context, snapshot []Item) (batches []Batch, err error)
 
 // Thread-safe general purpose auto-refresh cache that watches for updates asynchronously for the keys after they are added to
 // the cache. An item can be inserted only once.

@@ -24,7 +24,7 @@ func (f fakeCacheItem) ID() string {
 	return f.id
 }
 
-func syncFakeItem(_ context.Context, batch []Item) ([]ItemSyncResponse, error) {
+func syncFakeItem(_ context.Context, batch Batch) ([]ItemSyncResponse, error) {
 	items := make([]ItemSyncResponse, 0, len(batch))
 	for _, obj := range batch {
 		item := obj.(fakeCacheItem)
