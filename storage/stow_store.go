@@ -2,8 +2,11 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
+
+	"github.com/lyft/flytestdlib/logger"
 
 	"github.com/lyft/flytestdlib/errors"
 
@@ -50,10 +53,12 @@ func (s StowMetadata) Exists() bool {
 	return s.exists
 }
 
-func (s *StowStore) getContainer(container string) (c stow.Container, err error) {
+func (s *StowStore) getContainer(ctx context.Context, container string) (c stow.Container, err error) {
 	if s.Container.Name() != container {
 		s.metrics.BadContainer.Inc()
-		return nil, errs.Wrapf(stow.ErrNotFound, "Conf container:%v != Passed Container:%v", s.Container.Name(), container)
+		errMsg := fmt.Sprintf("Conf container:%v != Passed Container:%v", s.Container.Name(), container)
+		logger.Error(ctx, errMsg)
+		return nil, errs.Wrapf(stow.ErrNotFound, errMsg)
 	}
 
 	return s.Container, nil
@@ -66,7 +71,7 @@ func (s *StowStore) Head(ctx context.Context, reference DataReference) (Metadata
 		return nil, err
 	}
 
-	container, err := s.getContainer(c)
+	container, err := s.getContainer(ctx, c)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +104,7 @@ func (s *StowStore) ReadRaw(ctx context.Context, reference DataReference) (io.Re
 		return nil, err
 	}
 
-	container, err := s.getContainer(c)
+	container, err := s.getContainer(ctx, c)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +136,7 @@ func (s *StowStore) WriteRaw(ctx context.Context, reference DataReference, size 
 		return err
 	}
 
-	container, err := s.getContainer(c)
+	container, err := s.getContainer(ctx, c)
 	if err != nil {
 		return err
 	}
