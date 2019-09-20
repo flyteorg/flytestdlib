@@ -16,26 +16,21 @@ import (
 const fakeCacheItemValueLimit = 10
 
 type fakeCacheItem struct {
-	id  string
 	val int
-}
-
-func (f fakeCacheItem) ID() string {
-	return f.id
 }
 
 func syncFakeItem(_ context.Context, batch Batch) ([]ItemSyncResponse, error) {
 	items := make([]ItemSyncResponse, 0, len(batch))
 	for _, obj := range batch {
-		item := obj.(fakeCacheItem)
+		item := obj.GetItem().(fakeCacheItem)
 		if item.val == fakeCacheItemValueLimit {
 			// After the item has gone through ten update cycles, leave it unchanged
 			continue
 		}
 
 		items = append(items, ItemSyncResponse{
+			ID: obj.GetID(),
 			Item: fakeCacheItem{
-				id:  item.id,
 				val: item.val + 1,
 			},
 			Action: Update,
@@ -59,8 +54,7 @@ func TestCacheTwo(t *testing.T) {
 
 		// Create ten items in the cache
 		for i := 1; i <= 10; i++ {
-			_, err := cache.GetOrCreate(fakeCacheItem{
-				id:  fmt.Sprintf("%d", i),
+			_, err := cache.GetOrCreate(fmt.Sprintf("%d", i), fakeCacheItem{
 				val: 0,
 			})
 			assert.NoError(t, err)

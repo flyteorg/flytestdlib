@@ -50,13 +50,14 @@ func ExampleNewAutoRefreshCache() {
 	exampleService := newExampleService()
 
 	// define a sync method that the cache can use to auto-refresh in background
-	syncItemCb := func(ctx context.Context, batch []Item) ([]ItemSyncResponse, error) {
+	syncItemCb := func(ctx context.Context, batch []ItemWrapper) ([]ItemSyncResponse, error) {
 		updatedItems := make([]ItemSyncResponse, 0, len(batch))
 		for _, obj := range batch {
-			oldItem := obj.(*ExampleCacheItem)
+			oldItem := obj.GetItem().(*ExampleCacheItem)
 			newItem := exampleService.getStatus(oldItem.ID())
 			if newItem.status != oldItem.status {
 				updatedItems = append(updatedItems, ItemSyncResponse{
+					ID:     oldItem.ID(),
 					Item:   newItem,
 					Action: Update,
 				})
@@ -89,8 +90,8 @@ func ExampleNewAutoRefreshCache() {
 	// creating objects that go through a couple of state transitions to reach the final state.
 	item1 := &ExampleCacheItem{status: ExampleStatusNotStarted, id: "item1"}
 	item2 := &ExampleCacheItem{status: ExampleStatusNotStarted, id: "item2"}
-	_, err1 := cache.GetOrCreate(item1)
-	_, err2 := cache.GetOrCreate(item2)
+	_, err1 := cache.GetOrCreate(item1.id, item1)
+	_, err2 := cache.GetOrCreate(item2.id, item2)
 	if err1 != nil || err2 != nil {
 		fmt.Printf("unexpected error in create; err1: %v, err2: %v", err1, err2)
 	}
