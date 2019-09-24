@@ -152,6 +152,7 @@ func (w *autoRefresh) Get(id ItemID) (Item, error) {
 	if val, ok := w.lruMap.Get(id); ok {
 		return val.(Item), nil
 	}
+
 	return nil, errors.Errorf(ErrNotFound, "Item with id [%v] not found.", id)
 }
 

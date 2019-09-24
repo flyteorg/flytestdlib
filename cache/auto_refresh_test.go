@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lyft/flytestdlib/errors"
+
 	"github.com/lyft/flytestdlib/promutils"
 
 	"github.com/lyft/flytestdlib/utils"
@@ -67,6 +69,35 @@ func TestCacheTwo(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, 10, item.(fakeCacheItem).val)
 		}
+		cancel()
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		// the size of the cache is at least as large as the number of items we're storing
+		cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, 2, promutils.NewTestScope())
+		assert.NoError(t, err)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		assert.NoError(t, cache.Start(ctx))
+
+		// Create ten items in the cache
+		for i := 1; i <= 10; i++ {
+			_, err := cache.GetOrCreate(fmt.Sprintf("%d", i), fakeCacheItem{
+				val: 0,
+			})
+			assert.NoError(t, err)
+		}
+
+		notFound := 0
+		for i := 1; i <= 10; i++ {
+			_, err := cache.Get(fmt.Sprintf("%d", i))
+			if err != nil && errors.IsCausedBy(err, ErrNotFound) {
+				notFound++
+			}
+		}
+
+		assert.Equal(t, 8, notFound)
+
 		cancel()
 	})
 }
