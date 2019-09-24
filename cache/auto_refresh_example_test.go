@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/client-go/util/workqueue"
+
 	"github.com/lyft/flytestdlib/errors"
 
 	"github.com/lyft/flytestdlib/promutils"
-
-	"github.com/lyft/flytestdlib/utils"
 )
 
 type ExampleItemStatus string
@@ -75,12 +75,12 @@ func ExampleNewAutoRefreshCache() {
 
 	// Since number of items in the cache is dynamic, rate limiter is our knob to control resources we spend on
 	// sync.
-	rateLimiter := utils.NewRateLimiter("ExampleRateLimiter", 10000, 1)
+	rateLimiter := workqueue.DefaultControllerRateLimiter()
 
 	// since cache refreshes itself asynchronously, it may not notice that an object has been deleted immediately,
 	// so users of the cache should have the delete logic aware of this shortcoming (eg. not-exists may be a valid
 	// error during removal if based on status in cache).
-	cache, err := NewAutoRefreshCache(syncItemCb, rateLimiter, resyncPeriod, 100, promutils.NewTestScope())
+	cache, err := NewAutoRefreshCache(syncItemCb, rateLimiter, resyncPeriod, 10, 100, promutils.NewTestScope())
 	if err != nil {
 		panic(err)
 	}

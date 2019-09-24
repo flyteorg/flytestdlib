@@ -2,13 +2,16 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	"github.com/lyft/flytestdlib/contextutils"
+
+	"k8s.io/client-go/util/workqueue"
 
 	"github.com/lyft/flytestdlib/errors"
 
 	"github.com/lyft/flytestdlib/logger"
-
-	"github.com/lyft/flytestdlib/utils"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/lyft/flytestdlib/promutils"
@@ -105,8 +108,9 @@ type autoRefresh struct {
 	syncCb          SyncFunc
 	createBatchesCb CreateBatchesFunc
 	lruMap          *lru.Cache
-	syncRateLimiter utils.RateLimiter
 	syncPeriod      time.Duration
+	workqueue       workqueue.RateLimitingInterface
+	parallelizm     int
 }
 
 func getEvictionFunction(counter prometheus.Counter) func(key interface{}, value interface{}) {
@@ -133,13 +137,17 @@ func newMetrics(scope promutils.Scope) metrics {
 }
 
 func (w *autoRefresh) Start(ctx context.Context) error {
-	go wait.Until(func() {
-		err := w.syncRateLimiter.Wait(ctx)
-		if err != nil {
-			logger.Errorf(ctx, "Failed to get sync token. Error: %v", err)
-		}
+	for i := 0; i < w.parallelizm; i++ {
+		go func(ctx context.Context) {
+			err := w.sync(ctx)
+			if err != nil {
+				logger.Errorf(ctx, "Failed to sync. Error: %v", err)
+			}
+		}(contextutils.WithGoroutineLabel(ctx, fmt.Sprintf("worker-%v", i)))
+	}
 
-		err = w.sync(ctx)
+	go wait.Until(func() {
+		err := w.enqueueBatches(ctx)
 		if err != nil {
 			logger.Errorf(ctx, "Failed to sync. Error: %v", err)
 		}
@@ -170,15 +178,8 @@ func (w *autoRefresh) GetOrCreate(id ItemID, item Item) (Item, error) {
 // This function is called internally by its own timer. Roughly, it will,
 //  - List keys
 //  - Create batches of keys based on createBatchesCb
-//  - For each batch of the keys, call syncCb, which tells us if the items have been updated
-//    - If any has, then overwrite the item in the cache.
-//
-// What happens when the number of things that a user is trying to keep track of exceeds the size
-// of the cache?  Trivial case where the cache is size 1 and we're trying to keep track of two things.
-//  * Plugin asks for update on item 1 - cache evicts item 2, stores 1 and returns it unchanged
-//  * Plugin asks for update on item 2 - cache evicts item 1, stores 2 and returns it unchanged
-//  * Sync loop updates item 2, repeat
-func (w *autoRefresh) sync(ctx context.Context) error {
+//  - Enqueue all the batches into the workqueue
+func (w *autoRefresh) enqueueBatches(ctx context.Context) error {
 	keys := w.lruMap.Keys()
 	snapshot := make([]ItemWrapper, 0, len(keys))
 	for _, k := range keys {
@@ -198,7 +199,31 @@ func (w *autoRefresh) sync(ctx context.Context) error {
 	}
 
 	for _, batch := range batches {
-		updatedBatch, err := w.syncCb(ctx, batch)
+		b := batch
+		w.workqueue.Add(&b)
+	}
+
+	return nil
+}
+
+// There are w.parallelizm instances of this function running all the time, each one will:
+//  - Retrieve an item from the workqueue
+//  - For each batch of the keys, call syncCb, which tells us if the items have been updated
+//    - If any has, then overwrite the item in the cache.
+//
+// What happens when the number of things that a user is trying to keep track of exceeds the size
+// of the cache?  Trivial case where the cache is size 1 and we're trying to keep track of two things.
+//  * Plugin asks for update on item 1 - cache evicts item 2, stores 1 and returns it unchanged
+//  * Plugin asks for update on item 2 - cache evicts item 1, stores 2 and returns it unchanged
+//  * Sync loop updates item 2, repeat
+func (w *autoRefresh) sync(ctx context.Context) error {
+	for {
+		item, shutdown := w.workqueue.Get()
+		if shutdown {
+			return nil
+		}
+
+		updatedBatch, err := w.syncCb(ctx, *item.(*Batch))
 		if err != nil {
 			logger.Error(ctx, "failed to get latest copy of a batch. Error: %v", err)
 			continue
@@ -211,13 +236,11 @@ func (w *autoRefresh) sync(ctx context.Context) error {
 			}
 		}
 	}
-
-	return nil
 }
 
 // Instantiates a new AutoRefresh Cache that syncs items in batches.
-func NewAutoRefreshBatchedCache(createBatches CreateBatchesFunc, syncCb SyncFunc, syncRateLimiter utils.RateLimiter,
-	resyncPeriod time.Duration, size int, scope promutils.Scope) (AutoRefresh, error) {
+func NewAutoRefreshBatchedCache(createBatches CreateBatchesFunc, syncCb SyncFunc, syncRateLimiter workqueue.RateLimiter,
+	resyncPeriod time.Duration, parallelizm, size int, scope promutils.Scope) (AutoRefresh, error) {
 
 	metrics := newMetrics(scope)
 	lruCache, err := lru.NewWithEvict(size, getEvictionFunction(metrics.Evictions))
@@ -227,19 +250,20 @@ func NewAutoRefreshBatchedCache(createBatches CreateBatchesFunc, syncCb SyncFunc
 
 	cache := &autoRefresh{
 		metrics:         metrics,
+		parallelizm:     parallelizm,
 		createBatchesCb: createBatches,
 		syncCb:          syncCb,
 		lruMap:          lruCache,
-		syncRateLimiter: syncRateLimiter,
 		syncPeriod:      resyncPeriod,
+		workqueue:       workqueue.NewNamedRateLimitingQueue(syncRateLimiter, scope.CurrentScope()),
 	}
 
 	return cache, nil
 }
 
 // Instantiates a new AutoRefresh Cache that syncs items periodically.
-func NewAutoRefreshCache(syncCb SyncFunc, syncRateLimiter utils.RateLimiter, resyncPeriod time.Duration,
-	size int, scope promutils.Scope) (AutoRefresh, error) {
+func NewAutoRefreshCache(syncCb SyncFunc, syncRateLimiter workqueue.RateLimiter, resyncPeriod time.Duration,
+	parallelizm, size int, scope promutils.Scope) (AutoRefresh, error) {
 
-	return NewAutoRefreshBatchedCache(SingleItemBatches, syncCb, syncRateLimiter, resyncPeriod, size, scope)
+	return NewAutoRefreshBatchedCache(SingleItemBatches, syncCb, syncRateLimiter, resyncPeriod, parallelizm, size, scope)
 }

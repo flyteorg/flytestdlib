@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/client-go/util/workqueue"
+
 	"github.com/lyft/flytestdlib/errors"
 
 	"github.com/lyft/flytestdlib/promutils"
-
-	"github.com/lyft/flytestdlib/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -44,11 +44,11 @@ func syncFakeItem(_ context.Context, batch Batch) ([]ItemSyncResponse, error) {
 
 func TestCacheTwo(t *testing.T) {
 	testResyncPeriod := time.Millisecond
-	rateLimiter := utils.NewRateLimiter("mockLimiter", 100, 100)
+	rateLimiter := workqueue.DefaultControllerRateLimiter()
 
 	t.Run("normal operation", func(t *testing.T) {
 		// the size of the cache is at least as large as the number of items we're storing
-		cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, 10, promutils.NewTestScope())
+		cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, 10, 10, promutils.NewTestScope())
 		assert.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -74,7 +74,7 @@ func TestCacheTwo(t *testing.T) {
 
 	t.Run("Not Found", func(t *testing.T) {
 		// the size of the cache is at least as large as the number of items we're storing
-		cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, 2, promutils.NewTestScope())
+		cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, 10, 2, promutils.NewTestScope())
 		assert.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
