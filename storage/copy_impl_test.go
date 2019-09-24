@@ -135,7 +135,8 @@ func TestCopyRaw_CachingErrorHandling(t *testing.T) {
 		}
 
 		copier := newCopyImpl(&store, promutils.NewTestScope())
-		assert.NoError(t, copier.CopyRaw(context.Background(), DataReference("source.pb"), DataReference("dest.pb"), Options{}))
+		err = copier.CopyRaw(context.Background(), DataReference("source.pb"), DataReference("dest.pb"), Options{})
+		assert.Error(t, err)
 		assert.True(t, readerCalled)
 		// writerCalled should be false because CopyRaw should error out right after c.rawstore.ReadRaw() when the underlying error is a hard error
 		assert.False(t, writerCalled)
