@@ -12,7 +12,7 @@ type AutoRefresh struct {
 }
 
 // Get provides a mock function with given fields: id
-func (_m *AutoRefresh) Get(id string) cache.Item {
+func (_m *AutoRefresh) Get(id string) (cache.Item, error) {
 	ret := _m.Called(id)
 
 	var r0 cache.Item
@@ -24,7 +24,14 @@ func (_m *AutoRefresh) Get(id string) cache.Item {
 		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetOrCreate provides a mock function with given fields: id, item
@@ -51,6 +58,15 @@ func (_m *AutoRefresh) GetOrCreate(id string, item cache.Item) (cache.Item, erro
 }
 
 // Start provides a mock function with given fields: ctx
-func (_m *AutoRefresh) Start(ctx context.Context) {
-	_m.Called(ctx)
+func (_m *AutoRefresh) Start(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }

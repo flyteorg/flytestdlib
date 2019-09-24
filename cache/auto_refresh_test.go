@@ -50,7 +50,7 @@ func TestCacheTwo(t *testing.T) {
 		assert.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
-		cache.Start(ctx)
+		assert.NoError(t, cache.Start(ctx))
 
 		// Create ten items in the cache
 		for i := 1; i <= 10; i++ {
@@ -63,7 +63,8 @@ func TestCacheTwo(t *testing.T) {
 		// Wait half a second for all resync periods to complete
 		time.Sleep(500 * time.Millisecond)
 		for i := 1; i <= 10; i++ {
-			item := cache.Get(fmt.Sprintf("%d", i))
+			item, err := cache.Get(fmt.Sprintf("%d", i))
+			assert.NoError(t, err)
 			assert.Equal(t, 10, item.(fakeCacheItem).val)
 		}
 		cancel()

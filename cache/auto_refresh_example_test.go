@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lyft/flytestdlib/errors"
+
 	"github.com/lyft/flytestdlib/promutils"
 
 	"github.com/lyft/flytestdlib/utils"
@@ -85,7 +87,10 @@ func ExampleNewAutoRefreshCache() {
 
 	// start the cache with a context that would be to stop the cache by cancelling the context
 	ctx, cancel := context.WithCancel(context.Background())
-	cache.Start(ctx)
+	err = cache.Start(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	// creating objects that go through a couple of state transitions to reach the final state.
 	item1 := &ExampleCacheItem{status: ExampleStatusNotStarted, id: "item1"}
@@ -98,7 +103,12 @@ func ExampleNewAutoRefreshCache() {
 
 	// wait for the cache to go through a few refresh cycles and then check status
 	time.Sleep(resyncPeriod * 10)
-	fmt.Printf("Current status for item1 is %v", cache.Get(item1.ID()).(*ExampleCacheItem).status)
+	item, err := cache.Get(item1.ID())
+	if err != nil && errors.IsCausedBy(err, ErrNotFound) {
+		fmt.Printf("Item1 is no longer in the cache")
+	} else {
+		fmt.Printf("Current status for item1 is %v", item.(*ExampleCacheItem).status)
+	}
 
 	// stop the cache
 	cancel()

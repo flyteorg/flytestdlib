@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/lyft/flytestdlib/errors"
+
 	"github.com/lyft/flytestdlib/logger"
 
 	"github.com/lyft/flytestdlib/utils"
@@ -17,19 +19,23 @@ import (
 type ItemID = string
 type Batch = []ItemWrapper
 
+const (
+	ErrNotFound errors.ErrorCode = "NOT_FOUND"
+)
+
 //go:generate mockery -all
 
 // AutoRefresh with regular GetOrCreate and Delete along with background asynchronous refresh. Caller provides
 // callbacks for create, refresh and delete item.
 // The cache doesn't provide apis to update items.
 type AutoRefresh interface {
-	// starts background refresh of items
-	Start(ctx context.Context)
+	// starts background refresh of items.
+	Start(ctx context.Context) error
 
-	// Get item by id if exists else null
-	Get(id ItemID) Item
+	// Get item by id.
+	Get(id ItemID) (Item, error)
 
-	// Get object if exists else create it
+	// Get object if exists else create it.
 	GetOrCreate(id ItemID, item Item) (Item, error)
 }
 
@@ -41,11 +47,13 @@ type metrics struct {
 
 type Item interface{}
 
+// Items are wrapped inside an ItemWrapper to be stored in the cache.
 type ItemWrapper interface {
 	GetID() ItemID
 	GetItem() Item
 }
 
+// Represents the response for the sync func
 type ItemSyncResponse struct {
 	ID     ItemID
 	Item   Item
@@ -124,7 +132,7 @@ func newMetrics(scope promutils.Scope) metrics {
 	}
 }
 
-func (w *autoRefresh) Start(ctx context.Context) {
+func (w *autoRefresh) Start(ctx context.Context) error {
 	go wait.Until(func() {
 		err := w.syncRateLimiter.Wait(ctx)
 		if err != nil {
@@ -136,13 +144,15 @@ func (w *autoRefresh) Start(ctx context.Context) {
 			logger.Errorf(ctx, "Failed to sync. Error: %v", err)
 		}
 	}, w.syncPeriod, ctx.Done())
+
+	return nil
 }
 
-func (w *autoRefresh) Get(id ItemID) Item {
+func (w *autoRefresh) Get(id ItemID) (Item, error) {
 	if val, ok := w.lruMap.Get(id); ok {
-		return val.(Item)
+		return val.(Item), nil
 	}
-	return nil
+	return nil, errors.Errorf(ErrNotFound, "Item with id [%v] not found.", id)
 }
 
 // Return the item if exists else create it.
@@ -204,8 +214,9 @@ func (w *autoRefresh) sync(ctx context.Context) error {
 	return nil
 }
 
-func NewAutoRefreshBatchedCache(createBatches CreateBatchesFunc, syncCb SyncFunc, syncRateLimiter utils.RateLimiter, resyncPeriod time.Duration,
-	size int, scope promutils.Scope) (AutoRefresh, error) {
+// Instantiates a new AutoRefresh Cache that syncs items in batches.
+func NewAutoRefreshBatchedCache(createBatches CreateBatchesFunc, syncCb SyncFunc, syncRateLimiter utils.RateLimiter,
+	resyncPeriod time.Duration, size int, scope promutils.Scope) (AutoRefresh, error) {
 
 	metrics := newMetrics(scope)
 	lruCache, err := lru.NewWithEvict(size, getEvictionFunction(metrics.Evictions))
@@ -225,7 +236,9 @@ func NewAutoRefreshBatchedCache(createBatches CreateBatchesFunc, syncCb SyncFunc
 	return cache, nil
 }
 
+// Instantiates a new AutoRefresh Cache that syncs items periodically.
 func NewAutoRefreshCache(syncCb SyncFunc, syncRateLimiter utils.RateLimiter, resyncPeriod time.Duration,
 	size int, scope promutils.Scope) (AutoRefresh, error) {
+
 	return NewAutoRefreshBatchedCache(SingleItemBatches, syncCb, syncRateLimiter, resyncPeriod, size, scope)
 }
