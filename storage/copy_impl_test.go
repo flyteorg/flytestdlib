@@ -93,7 +93,8 @@ func TestCopyRaw_CachingErrorHandling(t *testing.T) {
 		writerCalled := false
 		bigD := make([]byte, 1.5*1024*1024)
 		// #nosec G404
-		rand.Read(bigD)
+		_, err := rand.Read(bigD)
+		assert.NoError(t, err)
 		dummyErrorMsg := "Dummy caching error"
 
 		store := dummyStore{
@@ -118,7 +119,8 @@ func TestCopyRaw_CachingErrorHandling(t *testing.T) {
 		writerCalled := false
 		bigD := make([]byte, 1.5*1024*1024)
 		// #nosec G404
-		rand.Read(bigD)
+		_, err := rand.Read(bigD)
+		assert.NoError(t, err)
 		dummyErrorMsg := "Dummy non-caching error"
 
 		store := dummyStore{
