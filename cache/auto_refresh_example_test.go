@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"k8s.io/client-go/util/workqueue"
@@ -31,17 +32,24 @@ func (e *ExampleCacheItem) ID() string {
 
 type ExampleService struct {
 	jobStatus map[string]ExampleItemStatus
+	lock      sync.RWMutex
 }
 
 func newExampleService() *ExampleService {
-	return &ExampleService{jobStatus: make(map[string]ExampleItemStatus)}
+	return &ExampleService{
+		jobStatus: make(map[string]ExampleItemStatus),
+		lock:      sync.RWMutex{},
+	}
 }
 
 // advance the status to next, and return
 func (f *ExampleService) getStatus(id string) *ExampleCacheItem {
+	f.lock.Lock()
+	defer f.lock.Unlock()
 	if _, ok := f.jobStatus[id]; !ok {
 		f.jobStatus[id] = ExampleStatusStarted
 	}
+
 	f.jobStatus[id] = ExampleStatusSucceeded
 	return &ExampleCacheItem{f.jobStatus[id], id}
 }
