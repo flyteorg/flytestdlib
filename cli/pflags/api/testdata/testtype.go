@@ -9,6 +9,7 @@ import (
 
 	"fmt"
 
+	"github.com/lyft/flytestdlib/config"
 	"github.com/spf13/pflag"
 )
 
@@ -60,5 +61,6 @@ func (cfg TestType) GetPFlagSet(prefix string) *pflag.FlagSet {
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "storage.cache.target_gc_percent"), DefaultTestType.StorageConfig.Cache.TargetGCPercent, "Sets the garbage collection target percentage.")
 	cmdFlags.Int64(fmt.Sprintf("%v%v", prefix, "storage.limits.maxDownloadMBs"), DefaultTestType.StorageConfig.Limits.GetLimitMegabytes, "Maximum allowed download size (in MBs) per call.")
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "i"), DefaultTestType.elemValueOrNil(DefaultTestType.IntValue).(int), "")
+	cmdFlags.Var(config.NewStringMapValueEmpty(), fmt.Sprintf("%v%v", prefix, "supported-map"), DefaultTestType.mustMarshalJSON(DefaultTestType.SupportedMap), "This is a map")
 	return cmdFlags
 }

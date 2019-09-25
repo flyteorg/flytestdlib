@@ -21,6 +21,7 @@ type FieldInfo struct {
 	DefaultValue   string
 	UsageString    string
 	FlagMethodName string
+	FlagMethodArgs []string
 	TestValue      string
 	TestStrategy   TestStrategy
 }

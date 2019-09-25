@@ -277,6 +277,49 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			}
 
 			fields = append(fields, f)
+		case *types.Map:
+			logger.Info(ctx, "[%v] is of a map type with default value [%v].", tag.Name, tag.DefaultValue)
+
+			kt, isBasic := t.Key().(*types.Basic)
+			if !isBasic || kt.Kind() != types.String {
+				logger.Errorf(ctx, "[%v]'s key must be of type string. It's of type [%v] instead.", tag.Name, t.Key().String())
+				return nil, fmt.Errorf("[%v]'s key must be of type string. It's of type [%v] instead", tag.Name, t.Key().String())
+			}
+
+			vt, isBasic := t.Key().(*types.Basic)
+			if !isBasic || vt.Kind() != types.String {
+				logger.Errorf(ctx, "[%v]'s value must be of type string. It's of type [%v] instead.", tag.Name, t.Elem().String())
+				return nil, fmt.Errorf("[%v]'s value must be of type string. It's of type [%v] instead", tag.Name, t.Elem().String())
+			}
+
+			defaultValue := tag.DefaultValue
+			if len(defaultValueAccessor) > 0 {
+				defaultValue = appendAccessors(defaultValueAccessor, fieldPath, v.Name())
+				if isStringer(t) {
+					defaultValue = defaultValue + ".String()"
+				} else {
+					logger.Infof(ctx, "Field [%v] of type [%v] does not implement Stringer interface."+
+						" Will use %s.mustMarshalJSON() to get its default value.", defaultValueAccessor, v.Name(), t.String())
+					defaultValue = fmt.Sprintf("%s.mustMarshalJSON(%s)", defaultValueAccessor, defaultValue)
+				}
+			}
+
+			testValue := defaultValue
+			if len(testValue) == 0 {
+				testValue = `map[string]string{}`
+			}
+
+			fields = append(fields, FieldInfo{
+				Name:           tag.Name,
+				GoName:         v.Name(),
+				Typ:            t,
+				FlagMethodName: "Var",
+				FlagMethodArgs: []string{"config.NewStringMapValueEmpty()"},
+				DefaultValue:   defaultValue,
+				UsageString:    tag.Usage,
+				TestValue:      testValue,
+				TestStrategy:   JSON,
+			})
 		default:
 			return nil, fmt.Errorf("unexpected type %v", t.String())
 		}

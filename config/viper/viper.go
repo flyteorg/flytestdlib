@@ -189,6 +189,25 @@ func jsonUnmarshallerHook(_, to reflect.Type, data interface{}) (interface{}, er
 	return data, nil
 }
 
+func stringToMapHookFunc(from, to reflect.Type, data interface{}) (interface{}, error) {
+	if from.Kind() != reflect.String || to.Kind() != reflect.Map {
+		return data, nil
+	}
+
+	raw := data.(string)
+	if raw == "" {
+		return map[string]string{}, nil
+	}
+
+	m := config.NewStringMapValueEmpty()
+	err := m.Set(raw)
+	if err != nil {
+		return map[string]string{}, nil
+	}
+
+	return m.Value(), nil
+}
+
 // Parses RootType config from parsed Viper settings. This should be called after viper has parsed config file/pflags...etc.
 func (v viperAccessor) parseViperConfig(root config.Section) error {
 	// We use AllSettings instead of AllKeys to get the root level keys folded.
@@ -266,6 +285,7 @@ func defaultDecoderConfig(output interface{}, opts ...viperLib.DecoderConfigOpti
 			jsonUnmarshallerHook,
 			mapstructure.StringToTimeDurationHookFunc(),
 			mapstructure.StringToSliceHookFunc(","),
+			stringToMapHookFunc,
 		),
 	}
 

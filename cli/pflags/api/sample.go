@@ -22,6 +22,7 @@ type TestType struct {
 	IgnoredMap       map[string]string `json:"ignored-map" pflag:"-,"`
 	StorageConfig    storage.Config    `json:"storage"`
 	IntValue         *int              `json:"i"`
+	SupportedMap     map[string]string `json:"supported-map" pflag:",This is a map"`
 }
 
 type NestedType struct {

@@ -517,4 +517,26 @@ func TestTestType_SetFlags(t *testing.T) {
 			}
 		})
 	})
+	t.Run("Test_supported-map", func(t *testing.T) {
+		t.Run("DefaultValue", func(t *testing.T) {
+			// Test that default value is set properly
+			if vVar, err := cmdFlags.GetVar("supported-map"); err == nil {
+				assert.Equal(t, map[string]string(DefaultTestType.mustMarshalJSON(DefaultTestType.SupportedMap)), vVar)
+			} else {
+				assert.FailNow(t, err.Error())
+			}
+		})
+
+		t.Run("Override", func(t *testing.T) {
+			testValue := DefaultTestType.mustMarshalJSON(DefaultTestType.SupportedMap)
+
+			cmdFlags.Set("supported-map", testValue)
+			if vVar, err := cmdFlags.GetVar("supported-map"); err == nil {
+				testDecodeJson_TestType(t, fmt.Sprintf("%v", vVar), &actual.SupportedMap)
+
+			} else {
+				assert.FailNow(t, err.Error())
+			}
+		})
+	})
 }

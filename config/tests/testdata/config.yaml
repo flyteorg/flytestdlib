@@ -9,3 +9,6 @@ other-component:
     - world
     - '!'
   url-value: http://something.com
+  strings-map:
+    - k1: val1
+    - k2: val2

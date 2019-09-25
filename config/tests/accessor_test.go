@@ -238,6 +238,8 @@ func TestAccessor_UpdateConfig(t *testing.T) {
 			reg := config.NewRootSection()
 			_, err := reg.RegisterSection(MyComponentSectionKey, &MyComponentConfig{})
 			assert.NoError(t, err)
+			_, err = reg.RegisterSection(OtherComponentSectionKey, &OtherComponentConfig{})
+			assert.NoError(t, err)
 
 			v := provider(config.Options{
 				SearchPaths: []string{filepath.Join("testdata", "config.yaml")},
@@ -247,6 +249,12 @@ func TestAccessor_UpdateConfig(t *testing.T) {
 			assert.NoError(t, v.UpdateConfig(context.TODO()))
 			r := reg.GetSection(MyComponentSectionKey).GetConfig().(*MyComponentConfig)
 			assert.Equal(t, "Hello World", r.StringValue)
+
+			r2 := reg.GetSection(OtherComponentSectionKey).GetConfig().(*OtherComponentConfig)
+			assert.Equal(t, map[string]string{
+				"k1": "val1",
+				"k2": "val2",
+			}, r2.MapValue)
 		})
 
 		t.Run(fmt.Sprintf("[%v] Nested", provider(config.Options{}).ID()), func(t *testing.T) {

@@ -19,12 +19,13 @@ type MyComponentConfig struct {
 }
 
 type OtherComponentConfig struct {
-	DurationValue           config.Duration `json:"duration-value"`
-	URLValue                config.URL      `json:"url-value"`
-	StringValue             string          `json:"string-value"`
-	IntValue                int             `json:"int-val"`
-	StringArray             []string        `json:"strings"`
-	StringArrayWithDefaults []string        `json:"strings-def"`
+	DurationValue           config.Duration   `json:"duration-value"`
+	URLValue                config.URL        `json:"url-value"`
+	StringValue             string            `json:"string-value"`
+	IntValue                int               `json:"int-val"`
+	StringArray             []string          `json:"strings"`
+	StringArrayWithDefaults []string          `json:"strings-def"`
+	MapValue                map[string]string `json:"strings-map"`
 }
 
 func (MyComponentConfig) GetPFlagSet(prefix string) *pflag.FlagSet {
@@ -42,6 +43,7 @@ func (OtherComponentConfig) GetPFlagSet(prefix string) *pflag.FlagSet {
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "int-val"), 4, "this is an important flag")
 	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "url-value"), "http://blah.com", "Sets the type of storage to configure [s3/minio/local/mem].")
 	cmdFlags.StringSlice(fmt.Sprintf("%v%v", prefix, "strings-def"), []string{"default value"}, "Sets the type of storage to configure [s3/minio/local/mem].")
+	cmdFlags.Var(config.NewStringMapValueEmpty(), fmt.Sprintf("%v%v", prefix, "strings-map"), "map of values")
 	return cmdFlags
 }
 
