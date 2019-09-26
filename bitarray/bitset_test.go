@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2018 Lyft. All rights reserved.
- */
-
 package bitarray
 
 import (

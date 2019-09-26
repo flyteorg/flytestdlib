@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2018 Lyft. All rights reserved.
- */
-
 // Contains efficient array that stores small-range values (up to uint64) in a bit array to optimize storage.
 package bitarray
 
@@ -10,7 +6,6 @@ import (
 	"fmt"
 	"math"
 	"unsafe"
-
 )
 
 // The biggest Item size that can fit in CompactArray.
