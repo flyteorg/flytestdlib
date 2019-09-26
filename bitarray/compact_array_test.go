@@ -47,28 +47,6 @@ func TestNewItemArray(t *testing.T) {
 	}
 }
 
-//
-//func TestPrint(t *testing.T) {
-//	itemArray, err := NewCompactArray(105, 3)
-//	assert.NoError(t, err)
-//
-//	itemArray.BitSet = (*BitSet)(&[]Block{
-//		-7905747460161236000,
-//		5270498306774157000,
-//		2635249153387078700,
-//		-7905747460161236000,
-//		82351536043346200,
-//	})
-//
-//	for _, item := range *itemArray.BitSet {
-//		t.Logf(strconv.FormatUint(uint64(item), 2))
-//	}
-//
-//	for idx, phase := range itemArray.GetItems() {
-//		t.Logf("Idx: %v, phase: %v, %b", idx, phase, phase)
-//	}
-//}
-
 func TestMarshal(t *testing.T) {
 	itemArray, err := NewCompactArray(105, 7)
 	assert.NoError(t, err)
