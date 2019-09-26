@@ -1,7 +1,6 @@
 package bitarray
 
 import (
-	"math"
 	"unsafe"
 )
 
@@ -67,7 +66,8 @@ func (s BitSet) DeepCopy() BitSet {
 }
 
 // Initializes a new BitSet of the specified size.
-func NewBitSet(size uint) *BitSet {
-	a := make(BitSet, int(math.Ceil(float64(size)/float64(blockSize))))
+func NewBitSet(desiredCap uint) *BitSet {
+	// Create enough blocks to contain the number of intended bits.
+	a := make(BitSet, ((desiredCap-1)/blockSize)+1)
 	return &a
 }
