@@ -1,11 +1,13 @@
 package bitarray
 
 import (
+	"math"
 	"unsafe"
 )
 
 /* #nosec */
 const blockSize = uint(unsafe.Sizeof(Block(0))) * 8
+const blockSizeF = float64(blockSize)
 
 type Block uint32
 
@@ -68,6 +70,6 @@ func (s BitSet) DeepCopy() BitSet {
 // Initializes a new BitSet of the specified size.
 func NewBitSet(desiredCap uint) *BitSet {
 	// Create enough blocks to contain the number of intended bits.
-	a := make(BitSet, ((desiredCap-1)/blockSize)+1)
+	a := make(BitSet, int(math.Ceil(float64(desiredCap)/blockSizeF)))
 	return &a
 }

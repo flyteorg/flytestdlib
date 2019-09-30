@@ -57,4 +57,10 @@ func TestBitSet_Cap(t *testing.T) {
 		b := NewBitSet(blockSize*2 + 20)
 		assert.Equal(t, int(blockSize*3), int(b.Cap()))
 	})
+
+	t.Run("0", func(t *testing.T) {
+		b := NewBitSet(0)
+		assert.Equal(t, 0, int(b.Cap()))
+
+	})
 }
