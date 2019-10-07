@@ -120,7 +120,7 @@ func NewWeightedRandom(entries []Entry, sortKey string) (WeightedRandom, error) 
 	}, nil
 }
 
-func (w weightedRandomImpl) get() interface{} {
+func (w *weightedRandomImpl) get() interface{} {
 	randomWeight := rand.Float32() * w.totalWeight
 	for _, e := range w.entries {
 		if e.currentTotal >= randomWeight && e.currentTotal > 0 {
@@ -131,7 +131,7 @@ func (w weightedRandomImpl) get() interface{} {
 }
 
 // Returns a random entry based on the weights
-func (w weightedRandomImpl) Get() interface{} {
+func (w *weightedRandomImpl) Get() interface{} {
 	w.mux.Lock()
 	defer w.mux.Unlock()
 
@@ -140,7 +140,7 @@ func (w weightedRandomImpl) Get() interface{} {
 }
 
 // For a given seed, the same entry will be returned all the time.
-func (w weightedRandomImpl) GetWithSeed(seed string) (interface{}, error) {
+func (w *weightedRandomImpl) GetWithSeed(seed string) (interface{}, error) {
 	w.mux.Lock()
 	defer w.mux.Unlock()
 
