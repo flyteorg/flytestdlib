@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type testData struct {
@@ -21,11 +22,11 @@ func TestDeterministicWeightedRandomStr(t *testing.T) {
 	}
 	entries := []Entry{
 		{
-			Item: item1,
+			Item:   item1,
 			Weight: 0.4,
 		},
 		{
-			Item: item2,
+			Item:   item2,
 			Weight: 0.6,
 		},
 	}
@@ -49,11 +50,11 @@ func TestDeterministicWeightedRandomInt(t *testing.T) {
 	}
 	entries := []Entry{
 		{
-			Item: item1,
+			Item:   item1,
 			Weight: 0.4,
 		},
 		{
-			Item: item2,
+			Item:   item2,
 			Weight: 0.6,
 		},
 	}
@@ -77,7 +78,7 @@ func TestDeterministicWeightedFewZeroWeight(t *testing.T) {
 	}
 	entries := []Entry{
 		{
-			Item: item1,
+			Item:   item1,
 			Weight: 0.4,
 		},
 		{
@@ -152,7 +153,7 @@ func TestDeterministicWeightInvalidWeights(t *testing.T) {
 	}
 	entries := []Entry{
 		{
-			Item: item1,
+			Item:   item1,
 			Weight: -3.0,
 		},
 		{

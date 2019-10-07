@@ -19,8 +19,8 @@ type WeightedRandom interface {
 }
 
 type Entry struct {
-	Item    interface{}
-	Weight  float32
+	Item   interface{}
+	Weight float32
 }
 
 type internalEntry struct {
@@ -99,14 +99,14 @@ func NewWeightedRandom(entries []Entry, sortKey string) (WeightedRandom, error) 
 		if totalWeight == 0 {
 			// This indicates that none of the entries have weight assigned.
 			// We will assign equal weights to everyone
-			currentTotal += 1.0/ float32(numberOfEntries)
+			currentTotal += 1.0 / float32(numberOfEntries)
 		} else if e.Weight == 0 {
 			// Entries which have zero weight are ignored
 			continue
 		}
 
 		currentTotal += e.Weight
-		internalEntries = append(internalEntries,internalEntry{
+		internalEntries = append(internalEntries, internalEntry{
 			entry:        e,
 			currentTotal: currentTotal,
 		})
@@ -125,7 +125,7 @@ func (w weightedRandomImpl) get() interface{} {
 			return e.entry.Item
 		}
 	}
-	return w.entries[len(w.entries) -1].entry.Item
+	return w.entries[len(w.entries)-1].entry.Item
 }
 
 func (w weightedRandomImpl) Get() interface{} {
