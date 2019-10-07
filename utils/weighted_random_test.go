@@ -31,11 +31,16 @@ func TestDeterministicWeightedRandomStr(t *testing.T) {
 		},
 	}
 	rand, err := NewWeightedRandom(entries, "key")
-	assert.Equal(t, item1, rand.GetWithSeed("ab"))
+	assert.Nil(t, err)
+	retItem, err := rand.GetWithSeed("ab")
+	assert.Nil(t, err)
+	assert.Equal(t, item1, retItem)
 
 	assert.Nil(t, err)
 	for i := 1; i <= 10; i++ {
-		assert.Equal(t, item2, rand.GetWithSeed("hi"))
+		retItem, err := rand.GetWithSeed("hi")
+		assert.Nil(t, err)
+		assert.Equal(t, item2, retItem)
 	}
 }
 
@@ -59,11 +64,15 @@ func TestDeterministicWeightedRandomInt(t *testing.T) {
 		},
 	}
 	rand, err := NewWeightedRandom(entries, "val")
-	assert.Equal(t, item2, rand.GetWithSeed("ab"))
-
 	assert.Nil(t, err)
+	retItem, err := rand.GetWithSeed("ab")
+	assert.Nil(t, err)
+	assert.Equal(t, item2, retItem)
+
 	for i := 1; i <= 10; i++ {
-		assert.Equal(t, item1, rand.GetWithSeed("hi"))
+		retItem, err := rand.GetWithSeed("hi")
+		assert.Nil(t, err)
+		assert.Equal(t, item1, retItem)
 	}
 }
 
@@ -86,11 +95,15 @@ func TestDeterministicWeightedFewZeroWeight(t *testing.T) {
 		},
 	}
 	rand, err := NewWeightedRandom(entries, "val")
-	assert.Equal(t, item1, rand.GetWithSeed("ab"))
-
 	assert.Nil(t, err)
+	retItem, err := rand.GetWithSeed("ab")
+	assert.Nil(t, err)
+	assert.Equal(t, item1, retItem)
+
 	for i := 1; i <= 10; i++ {
-		assert.Equal(t, item1, rand.GetWithSeed("hi"))
+		retItem, err := rand.GetWithSeed("hi")
+		assert.Nil(t, err)
+		assert.Equal(t, item1, retItem)
 	}
 }
 
@@ -112,11 +125,15 @@ func TestDeterministicWeightedAllZeroWeights(t *testing.T) {
 		},
 	}
 	rand, err := NewWeightedRandom(entries, "key")
-	assert.Equal(t, item2, rand.GetWithSeed("hi"))
-
 	assert.Nil(t, err)
+	retItem, err := rand.GetWithSeed("hi")
+	assert.Nil(t, err)
+	assert.Equal(t, item2, retItem)
+
 	for i := 1; i <= 10; i++ {
-		assert.Equal(t, item1, rand.GetWithSeed("ab"))
+		retItem, err := rand.GetWithSeed("ab")
+		assert.Nil(t, err)
+		assert.Equal(t, item1, retItem)
 	}
 }
 

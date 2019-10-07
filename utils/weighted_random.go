@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"reflect"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -15,7 +16,7 @@ var reflectFloat = reflect.TypeOf(float64(1))
 
 type WeightedRandom interface {
 	Get() interface{}
-	GetWithSeed(seed string) interface{}
+	GetWithSeed(seed string) (interface{}, error)
 }
 
 type Entry struct {
@@ -30,10 +31,11 @@ type internalEntry struct {
 
 // WeightedRandom selects elements randomly from the list taking into account individual weights.
 // Weight has to be assigned between 0 and 1.
-// Support deterministic result given a particular seed and sortKey
+// Support deterministic results given a particular seed and sortKey
 type weightedRandomImpl struct {
 	entries     []internalEntry
 	totalWeight float32
+	mux         sync.Mutex
 }
 
 func validateEntries(entries []Entry, sortKey string) error {
@@ -128,15 +130,26 @@ func (w weightedRandomImpl) get() interface{} {
 	return w.entries[len(w.entries)-1].entry.Item
 }
 
+// Returns a random entry based on the weights
 func (w weightedRandomImpl) Get() interface{} {
+	w.mux.Lock()
+	defer w.mux.Unlock()
+
 	rand.Seed(time.Now().UTC().UnixNano())
 	return w.get()
 }
 
-func (w weightedRandomImpl) GetWithSeed(seed string) interface{} {
+// For a given seed, the same entry will be returned all the time.
+func (w weightedRandomImpl) GetWithSeed(seed string) (interface{}, error) {
+	w.mux.Lock()
+	defer w.mux.Unlock()
+
 	h := fnv.New64a()
-	h.Write([]byte(seed))
+	_, err := h.Write([]byte(seed))
+	if err != nil {
+		return nil, err
+	}
 	hashedSeed := int64(h.Sum64())
 	rand.Seed(hashedSeed)
-	return w.get()
+	return w.get(), nil
 }
