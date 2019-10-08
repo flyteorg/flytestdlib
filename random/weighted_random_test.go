@@ -13,8 +13,8 @@ type testData struct {
 }
 
 func (t testData) Compare(to Comparable) bool {
-	if strings.Contains(t.key,"sort") {
-		return t.key <  to.(testData).key
+	if strings.Contains(t.key, "sort") {
+		return t.key < to.(testData).key
 	}
 	return t.val < to.(testData).val
 }
