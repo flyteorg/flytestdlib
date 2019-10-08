@@ -3,11 +3,13 @@ package storage
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"strings"
 
-	"github.com/lyft/flytestdlib/logger"
+	"github.com/pkg/errors"
+
 	"net/url"
+
+	"github.com/lyft/flytestdlib/logger"
 )
 
 const separator = "/"
