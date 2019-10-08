@@ -46,12 +46,12 @@ func IsFailedWriteToCache(err error) bool {
 }
 
 func MapStrings(mapper func(string) string, strings ...string) []string {
-	for i, str := range strings {
-		strings[i] = mapper(str)
-	}
-
 	if strings == nil {
 		return []string{}
+	}
+
+	for i, str := range strings {
+		strings[i] = mapper(str)
 	}
 
 	return strings
