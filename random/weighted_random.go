@@ -1,26 +1,30 @@
-package utils
+package random
 
 import (
 	"fmt"
 	"hash/fnv"
 	"math/rand"
-	"reflect"
 	"sort"
 	"sync"
 	"time"
 )
 
-var reflectInt = reflect.TypeOf(int(1))
-var reflectStr = reflect.TypeOf("a")
-var reflectFloat = reflect.TypeOf(float64(1))
+//go:generate mockery -all -case=underscore
 
+// Interface to use the Weighted Random
 type WeightedRandom interface {
 	Get() interface{}
 	GetWithSeed(seed string) (interface{}, error)
 }
 
+// Interface for items that can be used along with Weighted Random
+type Comparable interface {
+	Compare(to Comparable) bool
+}
+
+// Structure of each entry to select from
 type Entry struct {
-	Item   interface{}
+	Item   Comparable
 	Weight float32
 }
 
@@ -38,27 +42,13 @@ type weightedRandomImpl struct {
 	mux         sync.Mutex
 }
 
-func validateEntries(entries []Entry, sortKey string) error {
+func validateEntries(entries []Entry) error {
 	if len(entries) == 0 {
 		return fmt.Errorf("entries is empty")
 	}
 	for _, entry := range entries {
 		if entry.Weight < 0 || entry.Weight > float32(1) {
 			return fmt.Errorf("invalid weight %f", entry.Weight)
-		}
-
-		item := reflect.ValueOf(entry.Item)
-		f := reflect.Indirect(item).FieldByName(sortKey)
-		if !f.IsValid() {
-			return fmt.Errorf("invalid sort key")
-		}
-		switch f.Type() {
-		case reflectInt:
-		case reflectStr:
-		case reflectFloat:
-			continue
-		default:
-			return fmt.Errorf("unsupported type")
 		}
 	}
 	return nil
@@ -67,27 +57,14 @@ func validateEntries(entries []Entry, sortKey string) error {
 // Given a list of entries and sortKey, return WeightedRandom
 // The sortKey indicates the field in the object to be used for sorting.
 // This enables deterministic results for same seed and sortKey
-func NewWeightedRandom(entries []Entry, sortKey string) (WeightedRandom, error) {
-	err := validateEntries(entries, sortKey)
+func NewWeightedRandom(entries []Entry) (WeightedRandom, error) {
+	err := validateEntries(entries)
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(entries, func(i, j int) bool {
-		item1 := reflect.ValueOf(entries[i].Item)
-		field1 := reflect.Indirect(item1).FieldByName(sortKey)
 
-		item2 := reflect.ValueOf(entries[j].Item)
-		field2 := reflect.Indirect(item2).FieldByName(sortKey)
-		switch field1.Type() {
-		case reflectInt:
-			return field1.Int() < field2.Int()
-		case reflectStr:
-			return field1.String() < field2.String()
-		case reflectFloat:
-			return field1.Float() < field2.Float()
-		}
-		// Should not reach here.
-		return true
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Item.Compare(entries[j].Item)
 	})
 	var internalEntries []internalEntry
 	numberOfEntries := len(entries)
@@ -120,8 +97,8 @@ func NewWeightedRandom(entries []Entry, sortKey string) (WeightedRandom, error) 
 	}, nil
 }
 
-func (w *weightedRandomImpl) get() interface{} {
-	randomWeight := rand.Float32() * w.totalWeight
+func (w *weightedRandomImpl) get(generator *rand.Rand) interface{} {
+	randomWeight := generator.Float32() * w.totalWeight
 	for _, e := range w.entries {
 		if e.currentTotal >= randomWeight && e.currentTotal > 0 {
 			return e.entry.Item
@@ -132,24 +109,18 @@ func (w *weightedRandomImpl) get() interface{} {
 
 // Returns a random entry based on the weights
 func (w *weightedRandomImpl) Get() interface{} {
-	w.mux.Lock()
-	defer w.mux.Unlock()
-
-	rand.Seed(time.Now().UTC().UnixNano())
-	return w.get()
+	randGenerator := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+	return w.get(randGenerator)
 }
 
 // For a given seed, the same entry will be returned all the time.
 func (w *weightedRandomImpl) GetWithSeed(seed string) (interface{}, error) {
-	w.mux.Lock()
-	defer w.mux.Unlock()
-
 	h := fnv.New64a()
 	_, err := h.Write([]byte(seed))
 	if err != nil {
 		return nil, err
 	}
 	hashedSeed := int64(h.Sum64())
-	rand.Seed(hashedSeed)
-	return w.get(), nil
+	randGenerator := rand.New(rand.NewSource(hashedSeed))
+	return w.get(randGenerator), nil
 }

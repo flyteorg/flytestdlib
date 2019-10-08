@@ -1,6 +1,7 @@
-package utils
+package random
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,13 +12,20 @@ type testData struct {
 	val int
 }
 
+func (t testData) Compare(to Comparable) bool {
+	if strings.Contains(t.key,"sort") {
+		return t.key <  to.(testData).key
+	}
+	return t.val < to.(testData).val
+}
+
 func TestDeterministicWeightedRandomStr(t *testing.T) {
 	item1 := testData{
-		key: "key1",
+		key: "sort_key1",
 		val: 1,
 	}
 	item2 := testData{
-		key: "key2",
+		key: "sort_key2",
 		val: 2,
 	}
 	entries := []Entry{
@@ -30,7 +38,7 @@ func TestDeterministicWeightedRandomStr(t *testing.T) {
 			Weight: 0.6,
 		},
 	}
-	rand, err := NewWeightedRandom(entries, "key")
+	rand, err := NewWeightedRandom(entries)
 	assert.Nil(t, err)
 	retItem, err := rand.GetWithSeed("ab")
 	assert.Nil(t, err)
@@ -63,7 +71,7 @@ func TestDeterministicWeightedRandomInt(t *testing.T) {
 			Weight: 0.6,
 		},
 	}
-	rand, err := NewWeightedRandom(entries, "val")
+	rand, err := NewWeightedRandom(entries)
 	assert.Nil(t, err)
 	retItem, err := rand.GetWithSeed("ab")
 	assert.Nil(t, err)
@@ -94,7 +102,7 @@ func TestDeterministicWeightedFewZeroWeight(t *testing.T) {
 			Item: item2,
 		},
 	}
-	rand, err := NewWeightedRandom(entries, "val")
+	rand, err := NewWeightedRandom(entries)
 	assert.Nil(t, err)
 	retItem, err := rand.GetWithSeed("ab")
 	assert.Nil(t, err)
@@ -109,11 +117,11 @@ func TestDeterministicWeightedFewZeroWeight(t *testing.T) {
 
 func TestDeterministicWeightedAllZeroWeights(t *testing.T) {
 	item1 := testData{
-		key: "key1",
+		key: "sort_key1",
 		val: 4,
 	}
 	item2 := testData{
-		key: "key2",
+		key: "sort_key2",
 		val: 3,
 	}
 	entries := []Entry{
@@ -124,7 +132,7 @@ func TestDeterministicWeightedAllZeroWeights(t *testing.T) {
 			Item: item2,
 		},
 	}
-	rand, err := NewWeightedRandom(entries, "key")
+	rand, err := NewWeightedRandom(entries)
 	assert.Nil(t, err)
 	retItem, err := rand.GetWithSeed("hi")
 	assert.Nil(t, err)
@@ -135,28 +143,6 @@ func TestDeterministicWeightedAllZeroWeights(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, item1, retItem)
 	}
-}
-
-func TestDeterministicWeightInvalidSortKey(t *testing.T) {
-	item1 := testData{
-		key: "key1",
-		val: 4,
-	}
-	item2 := testData{
-		key: "key2",
-		val: 3,
-	}
-	entries := []Entry{
-		{
-			Item: item1,
-		},
-		{
-			Item: item2,
-		},
-	}
-	_, err := NewWeightedRandom(entries, "key1")
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, "invalid sort key")
 }
 
 func TestDeterministicWeightInvalidWeights(t *testing.T) {
@@ -177,7 +163,7 @@ func TestDeterministicWeightInvalidWeights(t *testing.T) {
 			Item: item2,
 		},
 	}
-	_, err := NewWeightedRandom(entries, "key")
+	_, err := NewWeightedRandom(entries)
 	assert.NotNil(t, err)
 	assert.EqualError(t, err, "invalid weight -3.000000")
 }
