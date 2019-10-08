@@ -5,7 +5,6 @@ import (
 	"hash/fnv"
 	"math/rand"
 	"sort"
-	"sync"
 	"time"
 )
 
@@ -39,7 +38,6 @@ type internalEntry struct {
 type weightedRandomImpl struct {
 	entries     []internalEntry
 	totalWeight float32
-	mux         sync.Mutex
 }
 
 func validateEntries(entries []Entry) error {
