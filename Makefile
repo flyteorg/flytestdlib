@@ -19,8 +19,9 @@ compile:
 	mkdir -p ./bin
 	go build -o pflags ./cli/pflags/main.go && mv ./pflags ./bin
 
-gen-config:
+generate:
 	which pflags || (go get github.com/lyft/flytestdlib/cli/pflags)
+	which mockery || (go get github.com/enghabu/mockery/cmd/mockery)
 	@go generate ./...
 
 .PHONY: test_unit_codecov
