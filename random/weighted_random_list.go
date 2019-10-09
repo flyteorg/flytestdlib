@@ -11,12 +11,13 @@ import (
 //go:generate mockery -all -case=underscore
 
 // Interface to use the Weighted Random
-type WeightedRandom interface {
+type WeightedRandomList interface {
 	Get() interface{}
 	GetWithSeed(seed string) (interface{}, error)
+	List() []interface{}
 }
 
-// Interface for items that can be used along with Weighted Random
+// Interface for items that can be used along with WeightedRandomList
 type Comparable interface {
 	Compare(to Comparable) bool
 }
@@ -32,10 +33,10 @@ type internalEntry struct {
 	currentTotal float32
 }
 
-// WeightedRandom selects elements randomly from the list taking into account individual weights.
+// WeightedRandomList selects elements randomly from the list taking into account individual weights.
 // Weight has to be assigned between 0 and 1.
 // Support deterministic results given a particular seed and sortKey
-type weightedRandomImpl struct {
+type weightedRandomListImpl struct {
 	entries     []internalEntry
 	totalWeight float32
 }
@@ -52,10 +53,10 @@ func validateEntries(entries []Entry) error {
 	return nil
 }
 
-// Given a list of entries and sortKey, return WeightedRandom
+// Given a list of entries and sortKey, return WeightedRandomList
 // The sortKey indicates the field in the object to be used for sorting.
 // This enables deterministic results for same seed and sortKey
-func NewWeightedRandom(entries []Entry) (WeightedRandom, error) {
+func NewWeightedRandom(entries []Entry) (WeightedRandomList, error) {
 	err := validateEntries(entries)
 	if err != nil {
 		return nil, err
@@ -89,13 +90,13 @@ func NewWeightedRandom(entries []Entry) (WeightedRandom, error) {
 		})
 	}
 
-	return &weightedRandomImpl{
+	return &weightedRandomListImpl{
 		entries:     internalEntries,
 		totalWeight: currentTotal,
 	}, nil
 }
 
-func (w *weightedRandomImpl) get(generator *rand.Rand) interface{} {
+func (w *weightedRandomListImpl) get(generator *rand.Rand) interface{} {
 	randomWeight := generator.Float32() * w.totalWeight
 	for _, e := range w.entries {
 		if e.currentTotal >= randomWeight && e.currentTotal > 0 {
@@ -106,13 +107,13 @@ func (w *weightedRandomImpl) get(generator *rand.Rand) interface{} {
 }
 
 // Returns a random entry based on the weights
-func (w *weightedRandomImpl) Get() interface{} {
+func (w *weightedRandomListImpl) Get() interface{} {
 	randGenerator := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 	return w.get(randGenerator)
 }
 
 // For a given seed, the same entry will be returned all the time.
-func (w *weightedRandomImpl) GetWithSeed(seed string) (interface{}, error) {
+func (w *weightedRandomListImpl) GetWithSeed(seed string) (interface{}, error) {
 	h := fnv.New64a()
 	_, err := h.Write([]byte(seed))
 	if err != nil {
@@ -121,4 +122,13 @@ func (w *weightedRandomImpl) GetWithSeed(seed string) (interface{}, error) {
 	hashedSeed := int64(h.Sum64())
 	randGenerator := rand.New(rand.NewSource(hashedSeed))
 	return w.get(randGenerator), nil
+}
+
+// Lists all the entries that are eligible for selection
+func (w *weightedRandomListImpl) List() []interface{} {
+	entries := make([]interface{}, 0, len(w.entries))
+	for index, indexedItem := range w.entries {
+		entries[index] = indexedItem.entry.Item
+	}
+	return entries
 }
