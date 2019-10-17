@@ -3,8 +3,12 @@ package cache
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"sync"
 	"testing"
 	"time"
+
+	"github.com/lyft/flytestdlib/atomic"
 
 	"k8s.io/client-go/util/workqueue"
 
@@ -100,4 +104,41 @@ func TestCacheTwo(t *testing.T) {
 
 		cancel()
 	})
+}
+
+func TestQueueBuildUp(t *testing.T) {
+	testResyncPeriod := time.Hour
+	rateLimiter := workqueue.DefaultControllerRateLimiter()
+
+	syncCount := atomic.NewInt32(0)
+	m := sync.Map{}
+	alwaysFailing := func(ctx context.Context, batch Batch) (
+		updatedBatch []ItemSyncResponse, err error) {
+		assert.Len(t, batch, 1)
+		_, existing := m.LoadOrStore(batch[0].GetID(), 0)
+		assert.False(t, existing, "Saw %v before", batch[0].GetID())
+		if existing {
+			t.FailNow()
+		}
+
+		syncCount.Inc()
+		return nil, fmt.Errorf("expected error")
+	}
+
+	size := 100
+	cache, err := NewAutoRefreshCache("fake2", alwaysFailing, rateLimiter, testResyncPeriod, 10, size, promutils.NewTestScope())
+	assert.NoError(t, err)
+
+	ctx := context.Background()
+	ctx, cancelNow := context.WithCancel(ctx)
+	defer cancelNow()
+
+	for i := 0; i < size; i++ {
+		_, err := cache.GetOrCreate(strconv.Itoa(i), "test")
+		assert.NoError(t, err)
+	}
+
+	assert.NoError(t, cache.Start(ctx))
+	time.Sleep(5 * time.Second)
+	assert.Equal(t, int32(size), syncCount.Load())
 }

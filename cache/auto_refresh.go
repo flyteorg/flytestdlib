@@ -32,7 +32,7 @@ const (
 // callbacks for create, refresh and delete item.
 // The cache doesn't provide apis to update items.
 type AutoRefresh interface {
-	// starts background refresh of items.
+	// Starts background refresh of items. To shutdown the cache, cancel the context.
 	Start(ctx context.Context) error
 
 	// Get item by id.
@@ -231,27 +231,38 @@ func (w *autoRefresh) enqueueBatches(ctx context.Context) error {
 //  * Sync loop updates item 2, repeat
 func (w *autoRefresh) sync(ctx context.Context) error {
 	for {
-		item, shutdown := w.workqueue.Get()
-		if shutdown {
+		select {
+		case <-ctx.Done():
 			return nil
-		}
-
-		t := w.metrics.SyncLatency.Start()
-		updatedBatch, err := w.syncCb(ctx, *item.(*Batch))
-		if err != nil {
-			w.metrics.SyncErrors.Inc()
-			logger.Error(ctx, "failed to get latest copy of a batch. Error: %v", err)
-			t.Stop()
-			continue
-		}
-
-		for _, item := range updatedBatch {
-			if item.Action == Update {
-				// Add adds the item if it has been evicted or updates an existing one.
-				w.lruMap.Add(item.ID, item.Item)
+		default:
+			item, shutdown := w.workqueue.Get()
+			if shutdown {
+				return nil
 			}
+
+			t := w.metrics.SyncLatency.Start()
+			updatedBatch, err := w.syncCb(ctx, *item.(*Batch))
+
+			// Since we create batches every time we sync, we will just remove the item from the queue here
+			// regardless of whether it succeeded the sync or not.
+			w.workqueue.Forget(item)
+			w.workqueue.Done(item)
+
+			if err != nil {
+				w.metrics.SyncErrors.Inc()
+				logger.Errorf(ctx, "failed to get latest copy of a batch. Error: %v", err)
+				t.Stop()
+				continue
+			}
+
+			for _, item := range updatedBatch {
+				if item.Action == Update {
+					// Add adds the item if it has been evicted or updates an existing one.
+					w.lruMap.Add(item.ID, item.Item)
+				}
+			}
+			t.Stop()
 		}
-		t.Stop()
 	}
 }
 
