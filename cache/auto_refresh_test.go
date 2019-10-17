@@ -48,7 +48,7 @@ func TestCacheTwo(t *testing.T) {
 
 	t.Run("normal operation", func(t *testing.T) {
 		// the size of the cache is at least as large as the number of items we're storing
-		cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, 10, 10, promutils.NewTestScope())
+		cache, err := NewAutoRefreshCache("fake1", syncFakeItem, rateLimiter, testResyncPeriod, 10, 10, promutils.NewTestScope())
 		assert.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -74,7 +74,7 @@ func TestCacheTwo(t *testing.T) {
 
 	t.Run("Not Found", func(t *testing.T) {
 		// the size of the cache is at least as large as the number of items we're storing
-		cache, err := NewAutoRefreshCache(syncFakeItem, rateLimiter, testResyncPeriod, 10, 2, promutils.NewTestScope())
+		cache, err := NewAutoRefreshCache("fake2", syncFakeItem, rateLimiter, testResyncPeriod, 10, 2, promutils.NewTestScope())
 		assert.NoError(t, err)
 
 		ctx, cancel := context.WithCancel(context.Background())
