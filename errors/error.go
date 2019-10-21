@@ -46,7 +46,7 @@ func (e *errorWithCause) Cause() error {
 	return e.cause
 }
 
-// Overrides Is to check for error code only. This enables the default package's errors.Unwrap().
+// Overrides Unwrap to retrieve the underlying error. This enables the default package's errors.Unwrap().
 func (e *errorWithCause) Unwrap() error {
 	return e.Cause()
 }
