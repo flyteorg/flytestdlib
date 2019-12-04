@@ -300,14 +300,10 @@ func NewGenerator(pkg, targetTypeName, defaultVariableName string) (*PFlagProvid
 		pkg = gogenutil.StripGopath(pkg)
 	}
 
-	config := &packages.Config{
-		Mode: packages.NeedTypes | packages.NeedTypesInfo,
-	}
-	loadedPkgs, err := packages.Load(config, pkg)
+	targetPackage, err := loadPackage(pkg)
 	if err != nil {
 		return nil, err
 	}
-	targetPackage := loadedPkgs[0].Types
 
 	obj := targetPackage.Scope().Lookup(targetTypeName)
 	if obj == nil {
@@ -339,6 +335,18 @@ func NewGenerator(pkg, targetTypeName, defaultVariableName string) (*PFlagProvid
 		pkg:        targetPackage,
 		defaultVar: defaultVar,
 	}, nil
+}
+
+func loadPackage(pkg string) (*types.Package, error) {
+	config := &packages.Config{
+		Mode: packages.NeedTypes | packages.NeedTypesInfo,
+	}
+	loadedPkgs, err := packages.Load(config, pkg)
+	if err != nil {
+		return nil, err
+	}
+	targetPackage := loadedPkgs[0].Types
+	return targetPackage, nil
 }
 
 func (g PFlagProviderGenerator) GetTargetPackage() *types.Package {
