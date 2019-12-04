@@ -46,7 +46,7 @@ require (
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094 // indirect
 	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
 	golang.org/x/time v0.0.0-20190921001708-c4c64cad1fd0
-	golang.org/x/tools v0.0.0-20191018212557-ed542cd5b28a
+	golang.org/x/tools v0.0.0-20191204011308-9611592c72f6
 	google.golang.org/api v0.11.1-0.20191020000718-bf72a15fd9e9 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/grpc v1.24.0 // indirect
