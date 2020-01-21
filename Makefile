@@ -19,7 +19,8 @@ compile:
 	mkdir -p ./bin
 	go build -o pflags ./cli/pflags/main.go && mv ./pflags ./bin
 
-gen-config: download_tooling
+gen-config:
+	which pflags || (go get github.com/lyft/flytestdlib/cli/pflags)
 	@go generate ./...
 
 .PHONY: test_unit_codecov
