@@ -20,6 +20,7 @@ compile:
 	go build -o pflags ./cli/pflags/main.go && mv ./pflags ./bin
 
 gen-config:
+	# Note that installing it via download_tooling.sh doesn't work
 	which pflags || (go get github.com/lyft/flytestdlib/cli/pflags)
 	@go generate ./...
 
