@@ -39,4 +39,4 @@ test_unit_cover:
 
 .PHONY: test_unit_visual
 test_unit_visual:
-	go test ./... -coverprofile /tmp/cover.out -covermode=count; go tool cover -html=/tmp/cover.out 
+	go test ./... -coverprofile /tmp/cover.out -covermode=count; go tool cover -html=/tmp/cover.out
