@@ -22,6 +22,7 @@ go_install_tool () {
 # List of tools to go get
 # In the format of "<cli>:<package>" or ":<package>" if no cli
 tools=(
+  "pflags:github.com/lyft/flytestdlib/cli/pflags"
   "golangci-lint:github.com/golangci/golangci-lint/cmd/golangci-lint"
 )
 
