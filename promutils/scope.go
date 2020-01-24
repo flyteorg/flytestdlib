@@ -12,6 +12,11 @@ import (
 const defaultScopeDelimiterStr = ":"
 const defaultMetricDelimiterStr = "_"
 
+var (
+	defaultObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
+	defaultBuckets    = []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10}
+)
+
 func panicIfError(err error) {
 	if err != nil {
 		panic("Failed to register metrics. Error: " + err.Error())
@@ -224,7 +229,7 @@ func (m metricsScope) NewSummary(name, description string) (prometheus.Summary, 
 		prometheus.SummaryOpts{
 			Name:       m.NewScopedMetricName(name),
 			Help:       description,
-			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+			Objectives: defaultObjectives,
 		},
 	)
 
@@ -242,7 +247,7 @@ func (m metricsScope) NewSummaryVec(name, description string, labelNames ...stri
 		prometheus.SummaryOpts{
 			Name:       m.NewScopedMetricName(name),
 			Help:       description,
-			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+			Objectives: defaultObjectives,
 		},
 		labelNames,
 	)
@@ -260,7 +265,7 @@ func (m metricsScope) NewHistogram(name, description string) (prometheus.Histogr
 		prometheus.HistogramOpts{
 			Name:    m.NewScopedMetricName(name),
 			Help:    description,
-			Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
+			Buckets: defaultBuckets,
 		},
 	)
 	return h, prometheus.Register(h)
@@ -277,7 +282,7 @@ func (m metricsScope) NewHistogramVec(name, description string, labelNames ...st
 		prometheus.HistogramOpts{
 			Name:    m.NewScopedMetricName(name),
 			Help:    description,
-			Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
+			Buckets: defaultBuckets,
 		},
 		labelNames,
 	)
