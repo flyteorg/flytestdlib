@@ -25,6 +25,9 @@ mod_download: #download dependencies (including test deps) for the package
 .PHONY: install
 install: download_tooling mod_download
 
+.PHONY: show
+show: go list -m all
+
 .PHONY: test_unit
 test_unit:
 	go test -cover ./... -race
@@ -39,4 +42,5 @@ test_unit_cover:
 
 .PHONY: test_unit_visual
 test_unit_visual:
-	go test ./... -coverprofile /tmp/cover.out -covermode=count; go tool cover -html=/tmp/cover.out
+	go test ./... -coverprofile /tmp/cover.out -covermode=count; go tool cover -html=/tmp/cover.out 
+
