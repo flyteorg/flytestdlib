@@ -133,6 +133,11 @@ type Scope interface {
 	NewSummary(name, description string) (prometheus.Summary, error)
 	MustNewSummary(name, description string) prometheus.Summary
 
+	// Creates new prometheus.Summary metric with a custom set of objectives
+	// Refer to https://prometheus.io/docs/concepts/metric_types/ for more information
+	NewSummaryWithCustomObjectives(name, description string, objectives map[float64]float64) (prometheus.Summary, error)
+	MustNewSummaryWithCustomObjectives(name, description string, objectives map[float64]float64) prometheus.Summary
+
 	// Creates new prometheus.SummaryVec metric with the prefix as the CurrentScope
 	// Refer to https://prometheus.io/docs/concepts/metric_types/ for more information
 	NewSummaryVec(name, description string, labelNames ...string) (*prometheus.SummaryVec, error)
@@ -225,19 +230,29 @@ func (m metricsScope) MustNewGaugeVec(name, description string, labelNames ...st
 }
 
 func (m metricsScope) NewSummary(name, description string) (prometheus.Summary, error) {
+	return m.NewSummaryWithCustomObjectives(name, description, defaultObjectives)
+}
+
+func (m metricsScope) MustNewSummary(name, description string) prometheus.Summary {
+	s, err := m.NewSummary(name, description)
+	panicIfError(err)
+	return s
+}
+
+func (m metricsScope) NewSummaryWithCustomObjectives(name, description string, objective map[float64]float64) (prometheus.Summary, error) {
 	s := prometheus.NewSummary(
 		prometheus.SummaryOpts{
 			Name:       m.NewScopedMetricName(name),
 			Help:       description,
-			Objectives: defaultObjectives,
+			Objectives: objective,
 		},
 	)
 
 	return s, prometheus.Register(s)
 }
 
-func (m metricsScope) MustNewSummary(name, description string) prometheus.Summary {
-	s, err := m.NewSummary(name, description)
+func (m metricsScope) MustNewSummaryWithCustomObjectives(name, description string, objective map[float64]float64) prometheus.Summary {
+	s, err := m.NewSummaryWithCustomObjectives(name, description, objective)
 	panicIfError(err)
 	return s
 }
