@@ -137,7 +137,7 @@ type Scope interface {
 	NewSummary(name, description string) (prometheus.Summary, error)
 	MustNewSummary(name, description string) prometheus.Summary
 
-	// Creates new prometheus.Summary metric with a custom set of objectives
+	// Creates new prometheus.Summary metric with custom options, such as a custom set of objectives (i.e., target quantiles).
 	// Refer to https://prometheus.io/docs/concepts/metric_types/ for more information
 	NewSummaryWithOptions(name, description string, options SummaryOptions) (prometheus.Summary, error)
 	MustNewSummaryWithOptions(name, description string, options SummaryOptions) prometheus.Summary
