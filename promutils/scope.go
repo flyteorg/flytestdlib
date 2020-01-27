@@ -113,7 +113,10 @@ func (s Timer) Stop() float64 {
 	return scaled
 }
 
+// A SummaryOptions represents a set of options that can be supplied when creating a new prometheus summary metric
 type SummaryOptions struct {
+	// An Objectives defines the quantile rank estimates with their respective absolute errors.
+	// Refer to https://godoc.org/github.com/prometheus/client_golang/prometheus#SummaryOpts for details
 	Objectives map[float64]float64
 }
 
