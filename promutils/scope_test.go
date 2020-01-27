@@ -74,7 +74,7 @@ func TestMetricsScope(t *testing.T) {
 	t.Run("Summary", func(t *testing.T) {
 		m := s.MustNewSummary("xs", description)
 		assert.Equal(t, `Desc{fqName: "test:xs", help: "some x", constLabels: {}, variableLabels: []}`, m.Desc().String())
-		mco, err := s.NewSummaryWithCustomObjectives("xsco", description, map[float64]float64{0.5: 0.05, 1.0: 0.0})
+		mco, err := s.NewSummaryWithOptions("xsco", description, SummaryOptions{Objectives: map[float64]float64{0.5: 0.05, 1.0: 0.0}})
 		assert.Nil(t, err)
 		assert.Equal(t, `Desc{fqName: "test:xsco", help: "some x", constLabels: {}, variableLabels: []}`, mco.Desc().String())
 		mv := s.MustNewSummaryVec("xsv", description)
