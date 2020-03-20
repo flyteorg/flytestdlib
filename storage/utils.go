@@ -16,6 +16,10 @@ var (
 	ErrFailedToWriteCache stdErrs.ErrorCode = "CACHE_WRITE_FAILED"
 )
 
+const (
+	genericFailureTypeLabel = "Generic"
+)
+
 // Gets a value indicating whether the underlying error is a Not Found error.
 func IsNotFound(err error) bool {
 	if root := errors.Cause(err); os.IsNotExist(root) {
@@ -64,6 +68,6 @@ func incFailureCounterForError(ctx context.Context, counter labeled.Counter, err
 	if found {
 		counter.Inc(context.WithValue(ctx, FailureTypeLabel, errCode))
 	} else {
-		counter.Inc(context.WithValue(ctx, FailureTypeLabel, "Generic"))
+		counter.Inc(context.WithValue(ctx, FailureTypeLabel, genericFailureTypeLabel))
 	}
 }
