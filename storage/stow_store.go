@@ -5,6 +5,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/lyft/flytestdlib/contextutils"
+
 	"github.com/lyft/flytestdlib/promutils/labeled"
 
 	"github.com/lyft/flytestdlib/errors"
@@ -16,7 +18,7 @@ import (
 )
 
 const (
-	FailureTypeLabel = "failure_type"
+	FailureTypeLabel contextutils.Key = "failure_type"
 )
 
 type stowMetrics struct {
@@ -159,7 +161,7 @@ func (s *StowStore) GetBaseContainerFQN(ctx context.Context) DataReference {
 }
 
 func NewStowRawStore(containerBaseFQN DataReference, container stow.Container, metricsScope promutils.Scope) (*StowStore, error) {
-	failureTypeOption := labeled.AdditionalLabelsOption{Labels: []string{FailureTypeLabel}}
+	failureTypeOption := labeled.AdditionalLabelsOption{Labels: []string{FailureTypeLabel.String()}}
 	self := &StowStore{
 		Container:        container,
 		containerBaseFQN: containerBaseFQN,
