@@ -13,3 +13,9 @@ type EmitUnlabeledMetricOption struct {
 func (EmitUnlabeledMetricOption) isMetricOption() {}
 
 var EmitUnlabeledMetric = EmitUnlabeledMetricOption{}
+
+type AdditionalLabelsOption struct {
+	Labels []string
+}
+
+func (AdditionalLabelsOption) isMetricOption() {}
