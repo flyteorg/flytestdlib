@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
@@ -83,10 +84,19 @@ func newStowRawStore(cfg *Config, metricsScope promutils.Scope) (RawStore, error
 	if !ok {
 		return nil, errors.Errorf("unsupported stow.kind [%s], add support in flytestdlib?", kind)
 	}
+
+	defaultClient := http.DefaultClient
+	defer func() {
+		http.DefaultClient = defaultClient
+	}()
+
+	http.DefaultClient = createHttpClientWithAWSBucketOwnerPermission()
+
 	loc, err := stow.Dial(kind, cfgMap)
 	if err != nil {
 		return emptyStore, fmt.Errorf("unable to configure the storage for %s. Error: %v", kind, err)
 	}
+
 	c, err := loc.Container(cfg.InitContainer)
 	if err != nil {
 		if IsNotFound(err) || awsBucketIsNotFound(err) {
@@ -97,9 +107,26 @@ func newStowRawStore(cfg *Config, metricsScope promutils.Scope) (RawStore, error
 			}
 			return NewStowRawStore(fn(c.Name()), c, metricsScope)
 		}
+
 		return emptyStore, err
 	}
+
 	return NewStowRawStore(fn(c.Name()), c, metricsScope)
+}
+
+type proxyTransport struct {
+	http.RoundTripper
+}
+
+func (p proxyTransport) RoundTrip(r *http.Request) (resp *http.Response, err error) {
+	r.Header.Add("x-amz-acl", "bucket-owner-full-control")
+	return p.RoundTripper.RoundTrip(r)
+}
+
+func createHttpClientWithAWSBucketOwnerPermission() *http.Client {
+	c := &http.Client{}
+	c.Transport = &proxyTransport{RoundTripper: http.DefaultTransport}
+	return c
 }
 
 func legacyS3ConfigMap(cfg ConnectionConfig) stow.ConfigMap {
