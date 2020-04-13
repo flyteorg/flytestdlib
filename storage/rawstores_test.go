@@ -9,7 +9,7 @@ import (
 
 func Test_createHttpClientWithDefaultHeaders(t *testing.T) {
 	t.Run("nil", func(t *testing.T) {
-		client := createHttpClientWithDefaultHeaders(nil)
+		client := createHTTPClientWithDefaultHeaders(nil)
 		assert.NotNil(t, client.Transport)
 		proxyTransport, casted := client.Transport.(*proxyTransport)
 		assert.True(t, casted)
@@ -20,7 +20,7 @@ func Test_createHttpClientWithDefaultHeaders(t *testing.T) {
 		m := map[string][]string{
 			"Header1": {"val1", "val2"},
 		}
-		client := createHttpClientWithDefaultHeaders(m)
+		client := createHTTPClientWithDefaultHeaders(m)
 		assert.NotNil(t, client.Transport)
 		proxyTransport, casted := client.Transport.(*proxyTransport)
 		assert.True(t, casted)

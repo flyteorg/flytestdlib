@@ -54,7 +54,7 @@ type Config struct {
 	// If this section is skipped, Caching is disabled
 	Cache                    CachingConfig       `json:"cache"`
 	Limits                   LimitsConfig        `json:"limits" pflag:",Sets limits for stores."`
-	DefaultHttpClientHeaders map[string][]string `json:"defaultHttpClientHeaders" pflag:"-,Sets http headers to set on the default http client."`
+	DefaultHTTPClientHeaders map[string][]string `json:"defaultHttpClientHeaders" pflag:"-,Sets http headers to set on the default http client."`
 }
 
 // Defines connection configurations.
