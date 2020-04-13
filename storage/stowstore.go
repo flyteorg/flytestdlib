@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"

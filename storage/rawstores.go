@@ -23,13 +23,20 @@ type proxyTransport struct {
 }
 
 func (p proxyTransport) RoundTrip(r *http.Request) (resp *http.Response, err error) {
-	for key, values := range p.defaultHeaders {
+	applyDefaultHeaders(r, p.defaultHeaders)
+	return p.RoundTripper.RoundTrip(r)
+}
+
+func applyDefaultHeaders(r *http.Request, headers map[string][]string) {
+	if r.Header == nil {
+		r.Header = http.Header{}
+	}
+
+	for key, values := range headers {
 		for _, val := range values {
 			r.Header.Add(key, val)
 		}
 	}
-
-	return p.RoundTripper.RoundTrip(r)
 }
 
 func createHttpClientWithDefaultHeaders(headers map[string][]string) *http.Client {
