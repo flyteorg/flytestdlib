@@ -52,9 +52,9 @@ type Config struct {
 	// inputs is accelerated. The size of the cache is large so understand how to configure the cache.
 	// TODO provide some default config choices
 	// If this section is skipped, Caching is disabled
-	Cache             CachingConfig     `json:"cache"`
-	Limits            LimitsConfig      `json:"limits" pflag:",Sets limits for stores."`
-	DefaultHTTPClient *HTTPClientConfig `json:"defaultHttpClient" pflag:",Sets the default http client config."`
+	Cache             CachingConfig    `json:"cache"`
+	Limits            LimitsConfig     `json:"limits" pflag:",Sets limits for stores."`
+	DefaultHTTPClient HTTPClientConfig `json:"defaultHttpClient" pflag:",Sets the default http client config."`
 }
 
 // HTTPClientConfig encapsulates common settings that can be applied to an HTTP Client.

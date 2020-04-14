@@ -39,18 +39,16 @@ func applyDefaultHeaders(r *http.Request, headers map[string][]string) {
 	}
 }
 
-func createHTTPClient(cfg *HTTPClientConfig) *http.Client {
-	if cfg == nil {
-		return &http.Client{}
-	}
-
+func createHTTPClient(cfg HTTPClientConfig) *http.Client {
 	c := &http.Client{
 		Timeout: cfg.Timeout.Duration,
 	}
 
-	c.Transport = &proxyTransport{
-		RoundTripper:   http.DefaultTransport,
-		defaultHeaders: cfg.Headers,
+	if len(cfg.Headers) > 0 {
+		c.Transport = &proxyTransport{
+			RoundTripper:   http.DefaultTransport,
+			defaultHeaders: cfg.Headers,
+		}
 	}
 
 	return c
@@ -58,14 +56,12 @@ func createHTTPClient(cfg *HTTPClientConfig) *http.Client {
 
 // Creates a new Data Store with the supplied config.
 func NewDataStore(cfg *Config, metricsScope promutils.Scope) (s *DataStore, err error) {
-	if cfg.DefaultHTTPClient != nil {
-		defaultClient := http.DefaultClient
-		defer func() {
-			http.DefaultClient = defaultClient
-		}()
+	defaultClient := http.DefaultClient
+	defer func() {
+		http.DefaultClient = defaultClient
+	}()
 
-		http.DefaultClient = createHTTPClient(cfg.DefaultHTTPClient)
-	}
+	http.DefaultClient = createHTTPClient(cfg.DefaultHTTPClient)
 
 	var rawStore RawStore
 	if fn, found := stores[cfg.Type]; found {

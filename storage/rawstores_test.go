@@ -11,8 +11,8 @@ import (
 )
 
 func Test_createHTTPClient(t *testing.T) {
-	t.Run("nil", func(t *testing.T) {
-		client := createHTTPClient(nil)
+	t.Run("empty", func(t *testing.T) {
+		client := createHTTPClient(HTTPClientConfig{})
 		assert.Nil(t, client.Transport)
 	})
 
@@ -21,7 +21,7 @@ func Test_createHTTPClient(t *testing.T) {
 			"Header1": {"val1", "val2"},
 		}
 
-		client := createHTTPClient(&HTTPClientConfig{
+		client := createHTTPClient(HTTPClientConfig{
 			Headers: m,
 		})
 
@@ -32,7 +32,7 @@ func Test_createHTTPClient(t *testing.T) {
 	})
 
 	t.Run("Set empty timeout", func(t *testing.T) {
-		client := createHTTPClient(&HTTPClientConfig{
+		client := createHTTPClient(HTTPClientConfig{
 			Timeout: config.Duration{},
 		})
 
@@ -40,7 +40,7 @@ func Test_createHTTPClient(t *testing.T) {
 	})
 
 	t.Run("Set timeout", func(t *testing.T) {
-		client := createHTTPClient(&HTTPClientConfig{
+		client := createHTTPClient(HTTPClientConfig{
 			Timeout: config.Duration{Duration: 2 * time.Second},
 		})
 
