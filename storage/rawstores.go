@@ -39,11 +39,18 @@ func applyDefaultHeaders(r *http.Request, headers map[string][]string) {
 	}
 }
 
-func createHTTPClientWithDefaultHeaders(headers map[string][]string) *http.Client {
-	c := &http.Client{}
+func createHTTPClient(cfg *HTTPClientConfig) *http.Client {
+	if cfg == nil {
+		return &http.Client{}
+	}
+
+	c := &http.Client{
+		Timeout: cfg.Timeout.Duration,
+	}
+
 	c.Transport = &proxyTransport{
 		RoundTripper:   http.DefaultTransport,
-		defaultHeaders: headers,
+		defaultHeaders: cfg.Headers,
 	}
 
 	return c
@@ -51,16 +58,13 @@ func createHTTPClientWithDefaultHeaders(headers map[string][]string) *http.Clien
 
 // Creates a new Data Store with the supplied config.
 func NewDataStore(cfg *Config, metricsScope promutils.Scope) (s *DataStore, err error) {
-	// HACK: This sets http headers to the default http client. This is because
-	// some underlying stores (e.g. S3 Stow Store) grabs the default http client
-	// and doesn't allow configuration of default headers.
-	if len(cfg.DefaultHTTPClientHeaders) > 0 {
+	if cfg.DefaultHTTPClient != nil {
 		defaultClient := http.DefaultClient
 		defer func() {
 			http.DefaultClient = defaultClient
 		}()
 
-		http.DefaultClient = createHTTPClientWithDefaultHeaders(cfg.DefaultHTTPClientHeaders)
+		http.DefaultClient = createHTTPClient(cfg.DefaultHTTPClient)
 	}
 
 	var rawStore RawStore
