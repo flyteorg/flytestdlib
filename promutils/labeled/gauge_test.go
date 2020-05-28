@@ -75,17 +75,17 @@ func TestWithAdditionalLabels(t *testing.T) {
 	scope := promutils.NewScope("testscope")
 	ctx := context.Background()
 	ctx = contextutils.WithProjectDomain(ctx, "flyte", "dev")
-	g := NewGauge("unittest", "some desc", scope, AdditionalLabelsOption{Labels:[]string{"bearing"}})
+	g := NewGauge("unittestlabeled", "some desc", scope, AdditionalLabelsOption{Labels: []string{"bearing"}})
 	assert.NotNil(t, g)
 
 	const header = `
-		# HELP testscope:unittest some desc
-		# TYPE testscope:unittest gauge
+		# HELP testscope:unittestlabeled some desc
+		# TYPE testscope:unittestlabeled gauge
 	`
 
 	g.Inc(ctx)
 	var expected = `
-        testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
+        testscope:unittestlabeled{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
 	`
 	err := testutil.CollectAndCompare(g.GaugeVec, strings.NewReader(header+expected))
 	assert.NoError(t, err)
@@ -94,32 +94,32 @@ func TestWithAdditionalLabels(t *testing.T) {
 	ctx = context.WithValue(ctx, bearingKey, "123")
 	g.Set(ctx, 42)
 	expected = `
-		testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
-		testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 42
+		testscope:unittestlabeled{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
+		testscope:unittestlabeled{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 42
 	`
 	err = testutil.CollectAndCompare(g.GaugeVec, strings.NewReader(header+expected))
 	assert.NoError(t, err)
 
 	g.Add(ctx, 1)
 	expected = `
-		testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
-		testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 43
+		testscope:unittestlabeled{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
+		testscope:unittestlabeled{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 43
 	`
 	err = testutil.CollectAndCompare(g.GaugeVec, strings.NewReader(header+expected))
 	assert.NoError(t, err)
 
 	g.Dec(ctx)
 	expected = `
-		testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
-		testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 42
+		testscope:unittestlabeled{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
+		testscope:unittestlabeled{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 42
 	`
 	err = testutil.CollectAndCompare(g.GaugeVec, strings.NewReader(header+expected))
 	assert.NoError(t, err)
 
 	g.Sub(ctx, 42)
 	expected = `
-		testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
-		testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 0
+		testscope:unittestlabeled{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
+		testscope:unittestlabeled{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 0
 	`
 	err = testutil.CollectAndCompare(g.GaugeVec, strings.NewReader(header+expected))
 	assert.NoError(t, err)
