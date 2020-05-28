@@ -80,7 +80,7 @@ func TestWithAdditionalLabels(t *testing.T) {
 
 	const header = `
 		# HELP testscope:unittest some desc
-        # TYPE testscope:unittest gauge
+		# TYPE testscope:unittest gauge
 	`
 
 	g.Inc(ctx)
