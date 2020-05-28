@@ -94,32 +94,32 @@ func TestWithAdditionalLabels(t *testing.T) {
 	ctx = context.WithValue(ctx, bearingKey, "123")
 	g.Set(ctx, 42)
 	expected = `
-	   testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
-       testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 42
+		testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
+		testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 42
 	`
 	err = testutil.CollectAndCompare(g.GaugeVec, strings.NewReader(header+expected))
 	assert.NoError(t, err)
 
 	g.Add(ctx, 1)
 	expected = `
-	   testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
-       testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 43
+		testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
+		testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 43
 	`
 	err = testutil.CollectAndCompare(g.GaugeVec, strings.NewReader(header+expected))
 	assert.NoError(t, err)
 
 	g.Dec(ctx)
 	expected = `
-	   testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
-       testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 42
+		testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
+		testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 42
 	`
 	err = testutil.CollectAndCompare(g.GaugeVec, strings.NewReader(header+expected))
 	assert.NoError(t, err)
 
 	g.Sub(ctx, 42)
 	expected = `
-	   testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
-       testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 0
+		testscope:unittest{bearing="", domain="dev",lp="",project="flyte",task="",wf=""} 1
+		testscope:unittest{bearing="123", domain="dev",lp="",project="flyte",task="",wf=""} 0
 	`
 	err = testutil.CollectAndCompare(g.GaugeVec, strings.NewReader(header+expected))
 	assert.NoError(t, err)
