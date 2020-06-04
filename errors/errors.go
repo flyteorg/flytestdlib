@@ -1,11 +1,6 @@
-package config
+package errors
 
 import "fmt"
-
-var (
-	ErrStrictModeValidation       = fmt.Errorf("failed strict mode check")
-	ErrChildConfigOverridesConfig = fmt.Errorf("child config attempts to override an existing native config property")
-)
 
 // A helper object that collects errors.
 type ErrorCollection []error

@@ -56,6 +56,7 @@ func (cfg TestType) GetPFlagSet(prefix string) *pflag.FlagSet {
 	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "storage.connection.region"), DefaultTestType.StorageConfig.Connection.Region, "Region to connect to.")
 	cmdFlags.Bool(fmt.Sprintf("%v%v", prefix, "storage.connection.disable-ssl"), DefaultTestType.StorageConfig.Connection.DisableSSL, "Disables SSL connection. Should only be used for development.")
 	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "storage.container"), DefaultTestType.StorageConfig.InitContainer, "Initial container to create -if it doesn't exist-.'")
+	cmdFlags.Bool(fmt.Sprintf("%v%v", prefix, "storage.enable-multicontainer"), DefaultTestType.StorageConfig.MultiContainerEnabled, "If this is true,  then the container argument is overlooked and redundant. This config will automatically open new connections to new containers/buckets as they are encountered")
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "storage.cache.max_size_mbs"), DefaultTestType.StorageConfig.Cache.MaxSizeMegabytes, "Maximum size of the cache where the Blob store data is cached in-memory. If not specified or set to 0,  cache is not used")
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "storage.cache.target_gc_percent"), DefaultTestType.StorageConfig.Cache.TargetGCPercent, "Sets the garbage collection target percentage.")
 	cmdFlags.Int64(fmt.Sprintf("%v%v", prefix, "storage.limits.maxDownloadMBs"), DefaultTestType.StorageConfig.Limits.GetLimitMegabytes, "Maximum allowed download size (in MBs) per call.")
