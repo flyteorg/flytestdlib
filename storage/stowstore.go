@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
+	"github.com/graymeta/stow/local"
 
 	"github.com/lyft/flytestdlib/logger"
 	"github.com/lyft/flytestdlib/promutils"
@@ -36,6 +37,10 @@ var fQNFn = map[string]func(string) DataReference{
 	azure.Kind: func(bucket string) DataReference {
 		return DataReference(fmt.Sprintf("afs://%s", bucket))
 	},
+	local.Kind: func(bucket string) DataReference {
+		// Eventually we may want to make this file://
+		return DataReference(fmt.Sprintf("file://%s", bucket))
+	},
 }
 
 func awsBucketIsNotFound(err error) bool {
@@ -64,14 +69,14 @@ func awsBucketAlreadyExists(err error) bool {
 
 func newStowRawStore(cfg *Config, metricsScope promutils.Scope) (RawStore, error) {
 	if cfg.InitContainer == "" {
-		return nil, fmt.Errorf("initContainer is required")
+		return nil, fmt.Errorf("initContainer is required even with `enable-multicontainer`")
 	}
 
 	var cfgMap stow.ConfigMap
 	var kind string
 	if cfg.Stow != nil {
 		kind = cfg.Stow.Kind
-		cfgMap = stow.ConfigMap(cfg.Stow.Config)
+		cfgMap = cfg.Stow.Config
 	} else {
 		logger.Warnf(context.TODO(), "stow configuration section missing, defaulting to legacy s3/minio connection config")
 		// This is for supporting legacy configurations which configure S3 via connection config
@@ -89,21 +94,7 @@ func newStowRawStore(cfg *Config, metricsScope promutils.Scope) (RawStore, error
 		return emptyStore, fmt.Errorf("unable to configure the storage for %s. Error: %v", kind, err)
 	}
 
-	c, err := loc.Container(cfg.InitContainer)
-	if err != nil {
-		if IsNotFound(err) || awsBucketIsNotFound(err) {
-			c, err := loc.CreateContainer(cfg.InitContainer)
-			// If the container's already created, move on. Otherwise, fail with error.
-			if err != nil && !awsBucketAlreadyExists(err) {
-				return emptyStore, fmt.Errorf("unable to initialize container [%v]. Error: %v", cfg.InitContainer, err)
-			}
-			return NewStowRawStore(fn(c.Name()), c, metricsScope)
-		}
-
-		return emptyStore, err
-	}
-
-	return NewStowRawStore(fn(c.Name()), c, metricsScope)
+	return NewStowRawStore(fn(cfg.InitContainer), loc, cfg.MultiContainerEnabled, metricsScope)
 }
 
 func legacyS3ConfigMap(cfg ConnectionConfig) stow.ConfigMap {

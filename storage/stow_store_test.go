@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -11,11 +12,22 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/lyft/flytestdlib/promutils"
-
 	"github.com/graymeta/stow"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/lyft/flytestdlib/contextutils"
+	"github.com/lyft/flytestdlib/promutils"
+	"github.com/lyft/flytestdlib/promutils/labeled"
 )
+
+type mockStowLoc struct {
+	stow.Location
+	ContainerCb func(id string) (stow.Container, error)
+}
+
+func (m mockStowLoc) Container(id string) (stow.Container, error) {
+	return m.ContainerCb(id)
+}
 
 type mockStowContainer struct {
 	id    string
@@ -102,10 +114,19 @@ func (mockStowItem) Metadata() (map[string]interface{}, error) {
 }
 
 func TestStowStore_ReadRaw(t *testing.T) {
+	labeled.SetMetricKeys(contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey)
+
 	t.Run("Happy Path", func(t *testing.T) {
 		testScope := promutils.NewTestScope()
 		fn := fQNFn["s3"]
-		s, err := NewStowRawStore(fn("container"), newMockStowContainer("container"), testScope)
+		s, err := NewStowRawStore(fn("container"), &mockStowLoc{
+			ContainerCb: func(id string) (stow.Container, error) {
+				if id == "container" {
+					return newMockStowContainer("container"), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+		}, false, testScope)
 		assert.NoError(t, err)
 		err = s.WriteRaw(context.TODO(), DataReference("s3://container/path"), 0, Options{}, bytes.NewReader([]byte{}))
 		assert.NoError(t, err)
@@ -123,7 +144,14 @@ func TestStowStore_ReadRaw(t *testing.T) {
 	t.Run("Exceeds limit", func(t *testing.T) {
 		testScope := promutils.NewTestScope()
 		fn := fQNFn["s3"]
-		s, err := NewStowRawStore(fn("container"), newMockStowContainer("container"), testScope)
+		s, err := NewStowRawStore(fn("container"), &mockStowLoc{
+			ContainerCb: func(id string) (stow.Container, error) {
+				if id == "container" {
+					return newMockStowContainer("container"), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+		}, false, testScope)
 		assert.NoError(t, err)
 		err = s.WriteRaw(context.TODO(), DataReference("s3://container/path"), 3*MiB, Options{}, bytes.NewReader([]byte{}))
 		assert.NoError(t, err)
@@ -134,5 +162,53 @@ func TestStowStore_ReadRaw(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsExceedsLimit(err))
 		assert.NotNil(t, errors.Cause(err))
+	})
+
+	t.Run("Happy Path multi-container enabled", func(t *testing.T) {
+		testScope := promutils.NewTestScope()
+		fn := fQNFn["s3"]
+		s, err := NewStowRawStore(fn("container"), &mockStowLoc{
+			ContainerCb: func(id string) (stow.Container, error) {
+				if id == "container" {
+					return newMockStowContainer("container"), nil
+				} else if id == "bad-container" {
+					return newMockStowContainer("bad-container"), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+		}, true, testScope)
+		assert.NoError(t, err)
+		err = s.WriteRaw(context.TODO(), "s3://bad-container/path", 0, Options{}, bytes.NewReader([]byte{}))
+		assert.NoError(t, err)
+		metadata, err := s.Head(context.TODO(), "s3://bad-container/path")
+		if assert.NoError(t, err) {
+			assert.True(t, metadata.Exists())
+		}
+		raw, err := s.ReadRaw(context.TODO(), "s3://bad-container/path")
+		assert.NoError(t, err)
+		rawBytes, err := ioutil.ReadAll(raw)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(rawBytes))
+		assert.Equal(t, DataReference("s3://container"), s.GetBaseContainerFQN(context.TODO()))
+	})
+
+	t.Run("Happy Path multi-container bad", func(t *testing.T) {
+		testScope := promutils.NewTestScope()
+		fn := fQNFn["s3"]
+		s, err := NewStowRawStore(fn("container"), &mockStowLoc{
+			ContainerCb: func(id string) (stow.Container, error) {
+				if id == "container" {
+					return newMockStowContainer("container"), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+		}, true, testScope)
+		assert.NoError(t, err)
+		err = s.WriteRaw(context.TODO(), "s3://bad-container/path", 0, Options{}, bytes.NewReader([]byte{}))
+		assert.Error(t, err)
+		_, err = s.Head(context.TODO(), "s3://bad-container/path")
+		assert.Error(t, err)
+		_, err = s.ReadRaw(context.TODO(), "s3://bad-container/path")
+		assert.Error(t, err)
 	})
 }
