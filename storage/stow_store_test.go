@@ -116,13 +116,14 @@ func (mockStowItem) Metadata() (map[string]interface{}, error) {
 func TestStowStore_ReadRaw(t *testing.T) {
 	labeled.SetMetricKeys(contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey)
 
+	const container = "container"
 	t.Run("Happy Path", func(t *testing.T) {
 		testScope := promutils.NewTestScope()
 		fn := fQNFn["s3"]
-		s, err := NewStowRawStore(fn("container"), &mockStowLoc{
+		s, err := NewStowRawStore(fn(container), &mockStowLoc{
 			ContainerCb: func(id string) (stow.Container, error) {
-				if id == "container" {
-					return newMockStowContainer("container"), nil
+				if id == container {
+					return newMockStowContainer(container), nil
 				}
 				return nil, fmt.Errorf("container is not supported")
 			},
@@ -144,10 +145,10 @@ func TestStowStore_ReadRaw(t *testing.T) {
 	t.Run("Exceeds limit", func(t *testing.T) {
 		testScope := promutils.NewTestScope()
 		fn := fQNFn["s3"]
-		s, err := NewStowRawStore(fn("container"), &mockStowLoc{
+		s, err := NewStowRawStore(fn(container), &mockStowLoc{
 			ContainerCb: func(id string) (stow.Container, error) {
-				if id == "container" {
-					return newMockStowContainer("container"), nil
+				if id == container {
+					return newMockStowContainer(container), nil
 				}
 				return nil, fmt.Errorf("container is not supported")
 			},
@@ -167,10 +168,10 @@ func TestStowStore_ReadRaw(t *testing.T) {
 	t.Run("Happy Path multi-container enabled", func(t *testing.T) {
 		testScope := promutils.NewTestScope()
 		fn := fQNFn["s3"]
-		s, err := NewStowRawStore(fn("container"), &mockStowLoc{
+		s, err := NewStowRawStore(fn(container), &mockStowLoc{
 			ContainerCb: func(id string) (stow.Container, error) {
-				if id == "container" {
-					return newMockStowContainer("container"), nil
+				if id == container {
+					return newMockStowContainer(container), nil
 				} else if id == "bad-container" {
 					return newMockStowContainer("bad-container"), nil
 				}
@@ -195,10 +196,10 @@ func TestStowStore_ReadRaw(t *testing.T) {
 	t.Run("Happy Path multi-container bad", func(t *testing.T) {
 		testScope := promutils.NewTestScope()
 		fn := fQNFn["s3"]
-		s, err := NewStowRawStore(fn("container"), &mockStowLoc{
+		s, err := NewStowRawStore(fn(container), &mockStowLoc{
 			ContainerCb: func(id string) (stow.Container, error) {
-				if id == "container" {
-					return newMockStowContainer("container"), nil
+				if id == container {
+					return newMockStowContainer(container), nil
 				}
 				return nil, fmt.Errorf("container is not supported")
 			},

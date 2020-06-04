@@ -114,7 +114,7 @@ func TestNewLocalStore(t *testing.T) {
 					local.ConfigKeyPath: tmpDir,
 				},
 			},
-			InitContainer: "tmp",
+			InitContainer:         "tmp",
 			MultiContainerEnabled: true,
 		}, testScope.NewSubScope("y"))
 
@@ -128,4 +128,3 @@ func TestNewLocalStore(t *testing.T) {
 		}
 	})
 }
-
