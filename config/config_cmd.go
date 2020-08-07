@@ -123,6 +123,7 @@ func printInfo(p printer, v Accessor) {
 }
 
 func generateDefaultConfig(rootSection Section, p printer) error {
+	rootSection.GetConfig()
 	m, err := AllConfigsAsMap(rootSection)
 	red := color.New(color.FgRed).SprintFunc()
 	if err != nil {
@@ -134,6 +135,6 @@ func generateDefaultConfig(rootSection Section, p printer) error {
 		p.Println(red("Couldn't Marshal config YAML. Reason: %s", err))
 		return err
 	}
-	p.Println(v)
+	p.Println(string(v))
 	return nil
 }
