@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 )
 
@@ -47,12 +48,21 @@ func NewConfigCommand(accessorProvider AccessorProvider) *cobra.Command {
 		},
 	}
 
+	generateDefaultConfigCmd := &cobra.Command{
+		Use:   "generate-default",
+		Short: "Generates a default configuration for this binary and also print optional values commented.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return generateDefaultConfig(opts.RootSection, cmd)
+		},
+	}
+
 	// Configure Root Command
 	rootCmd.PersistentFlags().StringArrayVar(&opts.SearchPaths, PathFlag, []string{}, `Passes the config file to load.
 If empty, it'll first search for the config file path then, if found, will load config from there.`)
 
 	rootCmd.AddCommand(validateCmd)
 	rootCmd.AddCommand(discoverCmd)
+	rootCmd.AddCommand(generateDefaultConfigCmd)
 
 	// Configure Validate Command
 	validateCmd.Flags().BoolVar(&opts.StrictMode, StrictModeFlag, false, `Validates that all keys in loaded config
@@ -110,4 +120,20 @@ func printInfo(p printer, v Accessor) {
 		red := color.New(color.FgRed).SprintFunc()
 		p.Println(red("Couldn't find a config file."))
 	}
+}
+
+func generateDefaultConfig(rootSection Section, p printer) error {
+	m, err := AllConfigsAsMap(rootSection)
+	red := color.New(color.FgRed).SprintFunc()
+	if err != nil {
+		p.Println(red("Couldn't convert config section to a Map. Reason: %s", err))
+		return err
+	}
+	v, err := yaml.Marshal(m)
+	if err != nil {
+		p.Println(red("Couldn't Marshal config YAML. Reason: %s", err))
+		return err
+	}
+	p.Println(v)
+	return nil
 }
