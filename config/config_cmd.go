@@ -8,8 +8,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
-
-	"github.com/lyft/flytestdlib/config"
 )
 
 const (
@@ -54,7 +52,7 @@ func NewConfigCommand(accessorProvider AccessorProvider) *cobra.Command {
 		Use:   "generate-default",
 		Short: "Generates a default configuration for this binary and also print optional values commented.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return generateDefaultConfig(config.GetRootSection(), cmd)
+			return generateDefaultConfig(GetRootSection(), cmd)
 		},
 	}
 
