@@ -15,13 +15,6 @@ type SimpleType struct {
 	StringValue string `json:"string_value,omitempty"`
 }
 
-// func (m *TestProto) GetWorkflowID() string {
-// 	if m != nil {
-// 		return m.StringValue
-// 	}
-// 	return ""
-// }
-
 func TestMarshalPbToString(t *testing.T) {
 	type args struct {
 		msg proto.Message

@@ -52,6 +52,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: "0"
       - name: Unit Tests
         uses: cedrickring/golang-action@1.6.0
         env:
