@@ -9,6 +9,7 @@ import (
 	"github.com/flyteorg/flytestdlib/utils/prototest"
 	"github.com/golang/protobuf/proto"
 	structpb "github.com/golang/protobuf/ptypes/struct"
+	"github.com/lyft/flytestdlib/utils/prototest"
 )
 
 type SimpleType struct {
