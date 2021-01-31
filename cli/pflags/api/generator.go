@@ -341,10 +341,16 @@ func loadPackage(pkg string) (*types.Package, error) {
 	config := &packages.Config{
 		Mode: packages.NeedTypes | packages.NeedTypesInfo,
 	}
+
 	loadedPkgs, err := packages.Load(config, pkg)
 	if err != nil {
 		return nil, err
 	}
+
+	if len(loadedPkgs) == 0 {
+		return nil, fmt.Errorf("No packages loaded")
+	}
+
 	targetPackage := loadedPkgs[0].Types
 	return targetPackage, nil
 }
