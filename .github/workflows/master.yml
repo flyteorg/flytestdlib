@@ -10,8 +10,6 @@ jobs:
     name: Bump Version
     if: github.event.commits[0].author.name != 'goreleaserbot'
     runs-on: ubuntu-latest
-    # Only to ensure it can successfully build
-    needs: build-docker
     outputs:
       version: ${{ steps.bump-version.outputs.tag }}
     steps:
