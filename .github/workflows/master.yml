@@ -57,7 +57,7 @@ jobs:
         env:
           GO111MODULE: "on"
         with:
-          args: make install && make test_unit_codecov
+          args: make mod_download && make test_unit_codecov
       - name: Push CodeCov
         uses: codecov/codecov-action@v1
         with:
