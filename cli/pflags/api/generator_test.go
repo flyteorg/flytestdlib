@@ -45,7 +45,7 @@ func TestElemValueOrNil(t *testing.T) {
 }
 
 func TestNewGenerator(t *testing.T) {
-	g, err := NewGenerator(".", "TestType", "DefaultTestType")
+	g, err := NewGenerator("github.com/lyft/flytestdlib/cli/pflags/api", "TestType", "DefaultTestType")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
