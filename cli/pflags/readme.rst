@@ -6,7 +6,7 @@ This tool enables you to generate code to add pflags for all fields in a struct 
 
 Getting Started
 ^^^^^^^^^^^^^^^
- - ``go get github.com/lyft/flytestdlib/cli/pflags``
+ - ``go get github.com/flyteorg/flytestdlib/cli/pflags``
  - call ``pflags <struct_name> --package <pkg_path>`` OR
  - add ``//go:generate pflags <struct_name>`` to the top of the file where the struct is declared.
    <struct_name> has to be a struct type (it can't be, for instance, a slice type). 
