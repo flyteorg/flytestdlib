@@ -1,11 +1,11 @@
 Common Go Tools
 =====================
-[![Current Release](https://img.shields.io/github/release/lyft/flytestdlib.svg)](https://github.com/lyft/flytestdlib/releases/latest)
+[![Current Release](https://img.shields.io/github/release/lyft/flytestdlib.svg)](https://github.com/flyteorg/flytestdlib/releases/latest)
 [![Build Status](https://travis-ci.org/lyft/flytestdlib.svg?branch=master)](https://travis-ci.org/lyft/flytestdlib)
-[![GoDoc](https://godoc.org/github.com/lyft/flytestdlib?status.svg)](https://godoc.org/github.com/lyft/flytestdlib)
+[![GoDoc](https://godoc.org/github.com/flyteorg/flytestdlib?status.svg)](https://godoc.org/github.com/flyteorg/flytestdlib)
 [![License](https://img.shields.io/badge/LICENSE-Apache2.0-ff69b4.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![CodeCoverage](https://img.shields.io/codecov/c/github/lyft/flytestdlib.svg)](https://codecov.io/gh/lyft/flytestdlib)
-[![Go Report Card](https://goreportcard.com/badge/github.com/lyft/flytestdlib)](https://goreportcard.com/report/github.com/lyft/flytestdlib)
+[![Go Report Card](https://goreportcard.com/badge/github.com/flyteorg/flytestdlib)](https://goreportcard.com/report/github.com/flyteorg/flytestdlib)
 ![Commit activity](https://img.shields.io/github/commit-activity/w/lyft/flytestdlib.svg?style=plastic)
 ![Commit since last releast](https://img.shields.io/github/commits-since/lyft/flytestdlib/latest.svg?style=plastic)
 
@@ -28,7 +28,7 @@ This library consists of:
 
    Install scoop: `iex (new-object net.webclient).downloadstring('https://get.scoop.sh')`
 
-   Run: `scoop bucket add flytestdlib https://github.com/lyft/flytestdlib.git`
+   Run: `scoop bucket add flytestdlib https://github.com/flyteorg/flytestdlib.git`
 
    Run: `scoop install pflags`
 
