@@ -1,4 +1,4 @@
-module github.com/lyft/flytestdlib
+module github.com/flyteorg/flytestdlib
 
 go 1.13
 
