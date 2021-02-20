@@ -9,4 +9,4 @@ require (
 	github.com/vektra/mockery v0.0.0-20181123154057-e78b021dcbb5
 )
 
-replace github.com/vektra/mockery => github.com/enghabu/mockery v0.0.0-20191009061720-9d0c8670c2f0
+//replace github.com/vektra/mockery => github.com/enghabu/mockery v0.0.0-20191009061720-9d0c8670c2f0
