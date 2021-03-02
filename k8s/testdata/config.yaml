@@ -1,0 +1,8 @@
+example:
+  remote-cluster-config:
+    endpoint: 127.0.0.1
+    enabled: true
+    auth:
+      type: "file_path"
+      token-path: /var/run/credentials/token
+      cert-path: /var/run/credentials/cacert

@@ -20,6 +20,8 @@ require (
 	github.com/golang/protobuf v1.4.3
 	github.com/graymeta/stow v0.2.7
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/lyft/flyteplugins v0.5.26
+	github.com/lyft/flytepropeller v0.6.1
 	github.com/magiconair/properties v1.8.4
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/ncw/swift v1.0.53 // indirect
@@ -29,9 +31,7 @@ require (
 	github.com/prometheus/procfs v0.3.0 // indirect
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.5.1 // indirect
-	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.1.1
-	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/objx v0.3.0 // indirect
@@ -53,8 +53,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/apimachinery v0.20.2
-	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/client-go v11.0.1-0.20190918222721-c0e3722d5cf0+incompatible
 	k8s.io/klog/v2 v2.5.0 // indirect
+	sigs.k8s.io/controller-runtime v0.5.1
 )
 
 // Pin the version of client-go to something that's compatible with katrogan's fork of api and apimachinery
