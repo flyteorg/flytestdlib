@@ -1,4 +1,4 @@
-module github.com/lyft/flytestdlib
+module github.com/flyteorg/flytestdlib
 
 go 1.13
 
@@ -54,4 +54,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.0.0-20210217172142-7279fc64d847
+	k8s.io/klog/v2 v2.5.0 // indirect
 )
