@@ -402,3 +402,44 @@ func Test_newStowRawStore(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadContainer(t *testing.T) {
+	t.Run("Create if not found", func(t *testing.T) {
+		container := "container"
+		stowStore := StowStore{
+			loc: &mockStowLoc{
+				ContainerCb: func(id string) (stow.Container, error) {
+					if id == container {
+						return newMockStowContainer(container), nil
+					}
+					return nil, fmt.Errorf("container is not supported")
+				},
+				CreateContainerCb: func(name string) (stow.Container, error) {
+					if name == container {
+						return newMockStowContainer(container), nil
+					}
+					return nil, fmt.Errorf("container is not supported")
+				},
+			},
+		}
+		stowContainer, err := stowStore.LoadContainer(context.Background(), "container", true)
+		assert.NoError(t, err)
+		assert.Equal(t, container, stowContainer.ID())
+	})
+	t.Run("No create if not found", func(t *testing.T) {
+		container := "container"
+		stowStore := StowStore{
+			loc: &mockStowLoc{
+				ContainerCb: func(id string) (stow.Container, error) {
+					if id == container {
+						return newMockStowContainer(container), nil
+					}
+					return nil, fmt.Errorf("container is not supported")
+				},
+			},
+		}
+		stowContainer, err := stowStore.LoadContainer(context.Background(), "container", false)
+		assert.NoError(t, err)
+		assert.Equal(t, container, stowContainer.ID())
+	})
+}
