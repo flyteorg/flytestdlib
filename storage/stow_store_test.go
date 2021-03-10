@@ -404,8 +404,8 @@ func Test_newStowRawStore(t *testing.T) {
 }
 
 func TestLoadContainer(t *testing.T) {
+	container := "container"
 	t.Run("Create if not found", func(t *testing.T) {
-		container := "container"
 		stowStore := StowStore{
 			loc: &mockStowLoc{
 				ContainerCb: func(id string) (stow.Container, error) {
@@ -426,8 +426,27 @@ func TestLoadContainer(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, container, stowContainer.ID())
 	})
+	t.Run("Create if not found with error", func(t *testing.T) {
+		stowStore := StowStore{
+			loc: &mockStowLoc{
+				ContainerCb: func(id string) (stow.Container, error) {
+					if id == container {
+						return newMockStowContainer(container), nil
+					}
+					return nil, fmt.Errorf("container is not supported")
+				},
+				CreateContainerCb: func(name string) (stow.Container, error) {
+					if name == container {
+						return nil, fmt.Errorf("foo")
+					}
+					return nil, fmt.Errorf("container is not supported")
+				},
+			},
+		}
+		_, err := stowStore.LoadContainer(context.Background(), "container", true)
+		assert.EqualError(t, err, "unable to initialize container [container]. Error: foo")
+	})
 	t.Run("No create if not found", func(t *testing.T) {
-		container := "container"
 		stowStore := StowStore{
 			loc: &mockStowLoc{
 				ContainerCb: func(id string) (stow.Container, error) {
