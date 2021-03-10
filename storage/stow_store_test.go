@@ -28,11 +28,16 @@ import (
 
 type mockStowLoc struct {
 	stow.Location
-	ContainerCb func(id string) (stow.Container, error)
+	ContainerCb       func(id string) (stow.Container, error)
+	CreateContainerCb func(name string) (stow.Container, error)
 }
 
 func (m mockStowLoc) Container(id string) (stow.Container, error) {
 	return m.ContainerCb(id)
+}
+
+func (m mockStowLoc) CreateContainer(name string) (stow.Container, error) {
+	return m.CreateContainerCb(name)
 }
 
 type mockStowContainer struct {
@@ -133,6 +138,12 @@ func TestStowStore_ReadRaw(t *testing.T) {
 				}
 				return nil, fmt.Errorf("container is not supported")
 			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
 		}, false, testScope)
 		assert.NoError(t, err)
 		err = s.WriteRaw(context.TODO(), DataReference("s3://container/path"), 0, Options{}, bytes.NewReader([]byte{}))
@@ -154,6 +165,12 @@ func TestStowStore_ReadRaw(t *testing.T) {
 		s, err := NewStowRawStore(fn(container), &mockStowLoc{
 			ContainerCb: func(id string) (stow.Container, error) {
 				if id == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
 					return newMockStowContainer(container), nil
 				}
 				return nil, fmt.Errorf("container is not supported")
@@ -183,6 +200,12 @@ func TestStowStore_ReadRaw(t *testing.T) {
 				}
 				return nil, fmt.Errorf("container is not supported")
 			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
 		}, true, testScope)
 		assert.NoError(t, err)
 		err = s.WriteRaw(context.TODO(), "s3://bad-container/path", 0, Options{}, bytes.NewReader([]byte{}))
@@ -205,6 +228,12 @@ func TestStowStore_ReadRaw(t *testing.T) {
 		s, err := NewStowRawStore(fn(container), &mockStowLoc{
 			ContainerCb: func(id string) (stow.Container, error) {
 				if id == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
 					return newMockStowContainer(container), nil
 				}
 				return nil, fmt.Errorf("container is not supported")
