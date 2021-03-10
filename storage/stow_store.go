@@ -127,7 +127,7 @@ type StowStore struct {
 }
 
 func (s *StowStore) LoadContainer(ctx context.Context, container string, createIfNotFound bool) (stow.Container, error) {
-	// TODO: As of stow v0.2.7 a buggy commit [https://github.com/graymeta/stow/commit/0862eee499c9e7b87763e9f30af7b99479177ec5#diff-dd65194c93a22b03112f6701be7b9ad784706bdb374cc5b2d9f8ffe56b480564R174]
+	// TODO: As of stow v0.2.6 a buggy commit [https://github.com/graymeta/stow/commit/0862eee499c9e7b87763e9f30af7b99479177ec5#diff-dd65194c93a22b03112f6701be7b9ad784706bdb374cc5b2d9f8ffe56b480564R174]
 	// which elides the container lookup when a bucket region is set, which means we can't use the error from the
 	// commented line below to test for the existence of a container. Instead we always just create it when createIfNotFound is true.
 	// c, err := s.loc.Container(container)
