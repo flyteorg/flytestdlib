@@ -219,14 +219,6 @@ func (s *StowStore) ReadRaw(ctx context.Context, reference DataReference) (io.Re
 	t := s.metrics.ReadOpenLatency.Start(ctx)
 	item, err := container.Item(k)
 	if err != nil {
-		if awsBucketIsNotFound(err) {
-			container, err = s.CreateContainer(ctx, c)
-			if err != nil {
-				return nil, err
-			}
-			s.dynamicContainerMap.Store(container, c)
-		}
-
 		incFailureCounterForError(ctx, s.metrics.ReadFailure, err)
 		return nil, err
 	}
