@@ -53,6 +53,19 @@ var fQNFn = map[string]func(string) DataReference{
 	},
 }
 
+// Checks if the error is AWS S3 bucket not found error
+func awsBucketIsNotFound(err error) bool {
+	if IsNotFound(err) {
+		return true
+	}
+
+	if awsErr, errOk := errs.Cause(err).(awserr.Error); errOk {
+		return awsErr.Code() == s32.ErrCodeNoSuchBucket
+	}
+
+	return false
+}
+
 // Checks if the error is AWS S3 bucket already exists error.
 func awsBucketAlreadyExists(err error) bool {
 	if IsExists(err) {
@@ -110,22 +123,29 @@ type StowStore struct {
 	baseContainerFQN    DataReference
 }
 
-func (s *StowStore) LoadContainer(ctx context.Context, container string, createIfNotFound bool) (stow.Container, error) {
-	// TODO: As of stow v0.2.6 elides the container lookup when a bucket region is set,
-	// so we always just attempt to create it when createIfNotFound is true.
-
-	if createIfNotFound {
-		logger.Infof(ctx, "Attempting to create container [%s]", container)
-		_, err := s.loc.CreateContainer(container)
-		if err != nil && !awsBucketAlreadyExists(err) && !IsExists(err) {
-			return nil, fmt.Errorf("unable to initialize container [%v]. Error: %v", container, err)
-		}
+func (s *StowStore) CreateContainer(ctx context.Context, container string) (stow.Container, error) {
+	logger.Infof(ctx, "Attempting to create container [%s]", container)
+	c, err := s.loc.CreateContainer(container)
+	if err != nil && !awsBucketAlreadyExists(err) && !IsExists(err) {
+		return nil, fmt.Errorf("unable to initialize container [%v]. Error: %v", container, err)
 	}
+	return c, nil
+}
 
+func (s *StowStore) LoadContainer(ctx context.Context, container string) (stow.Container, error) {
 	c, err := s.loc.Container(container)
 	if err != nil {
-		logger.Errorf(ctx, "Container [%s] lookup failed. Error %s", container, err)
-		return nil, err
+		// IsNotFound is not always guaranteed to be returned if the underlying container doesn't exist!
+		// As of stow v0.2.6, the call to get container elides the lookup when a bucket region is set for S3 containers.
+		if IsNotFound(err) {
+			c, err = s.CreateContainer(ctx, container)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			logger.Errorf(ctx, "Container [%s] lookup failed. Error %s", container, err)
+			return nil, err
+		}
 	}
 	return c, nil
 }
@@ -142,7 +162,7 @@ func (s *StowStore) getContainer(ctx context.Context, container string) (c stow.
 
 	iface, ok := s.dynamicContainerMap.Load(container)
 	if !ok {
-		c, err := s.LoadContainer(ctx, container, false)
+		c, err := s.LoadContainer(ctx, container)
 		if err != nil {
 			logger.Errorf(ctx, "failed to load container [%s] dynamically, error %s", container, err)
 			return nil, err
@@ -167,6 +187,14 @@ func (s *StowStore) Head(ctx context.Context, reference DataReference) (Metadata
 
 	t := s.metrics.HeadLatency.Start(ctx)
 	item, err := container.Item(k)
+	if awsBucketIsNotFound(err) {
+		container, err = s.CreateContainer(ctx, c)
+		if err != nil {
+			incFailureCounterForError(ctx, s.metrics.HeadFailure, err)
+			return StowMetadata{exists: false}, errs.Wrapf(err, "path:%v", k)
+		}
+		item, err = container.Item(k)
+	}
 	if err == nil {
 		if _, err = item.Metadata(); err == nil {
 			size, err := item.Size()
@@ -197,7 +225,16 @@ func (s *StowStore) ReadRaw(ctx context.Context, reference DataReference) (io.Re
 
 	container, err := s.getContainer(ctx, c)
 	if err != nil {
-		return nil, err
+		// If this error is due to the bucket not existing, first attempt to create it and retry the getContainer call.
+		if awsBucketIsNotFound(err) {
+			container, err = s.CreateContainer(ctx, c)
+			if err != nil {
+				incFailureCounterForError(ctx, s.metrics.HeadFailure, err)
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	t := s.metrics.ReadOpenLatency.Start(ctx)
@@ -229,7 +266,16 @@ func (s *StowStore) WriteRaw(ctx context.Context, reference DataReference, size 
 
 	container, err := s.getContainer(ctx, c)
 	if err != nil {
-		return err
+		// If this error is due to the bucket not existing, first attempt to create it and retry the getContainer call.
+		if awsBucketIsNotFound(err) {
+			container, err = s.CreateContainer(ctx, c)
+			if err != nil {
+				incFailureCounterForError(ctx, s.metrics.HeadFailure, err)
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
 	t := s.metrics.WriteLatency.Start(ctx)
@@ -275,7 +321,7 @@ func NewStowRawStore(baseContainerFQN DataReference, loc stow.Location, enableDy
 	if err != nil {
 		return nil, err
 	}
-	container, err := self.LoadContainer(context.TODO(), c, true)
+	container, err := self.LoadContainer(context.TODO(), c)
 	if err != nil {
 		return nil, err
 	}
