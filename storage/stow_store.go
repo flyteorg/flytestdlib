@@ -55,10 +55,6 @@ var fQNFn = map[string]func(string) DataReference{
 
 // Checks if the error is AWS S3 bucket not found error
 func awsBucketIsNotFound(err error) bool {
-	if IsNotFound(err) {
-		return true
-	}
-
 	if awsErr, errOk := errs.Cause(err).(awserr.Error); errOk {
 		return awsErr.Code() == s32.ErrCodeNoSuchBucket
 	}
@@ -187,14 +183,6 @@ func (s *StowStore) Head(ctx context.Context, reference DataReference) (Metadata
 
 	t := s.metrics.HeadLatency.Start(ctx)
 	item, err := container.Item(k)
-	if awsBucketIsNotFound(err) {
-		container, err = s.CreateContainer(ctx, c)
-		if err != nil {
-			incFailureCounterForError(ctx, s.metrics.HeadFailure, err)
-			return StowMetadata{exists: false}, errs.Wrapf(err, "path:%v", k)
-		}
-		item, err = container.Item(k)
-	}
 	if err == nil {
 		if _, err = item.Metadata(); err == nil {
 			size, err := item.Size()
@@ -208,7 +196,7 @@ func (s *StowStore) Head(ctx context.Context, reference DataReference) (Metadata
 		}
 	}
 
-	if IsNotFound(err) {
+	if IsNotFound(err) || awsBucketIsNotFound(err) {
 		return StowMetadata{exists: false}, nil
 	}
 
@@ -225,21 +213,20 @@ func (s *StowStore) ReadRaw(ctx context.Context, reference DataReference) (io.Re
 
 	container, err := s.getContainer(ctx, c)
 	if err != nil {
-		// If this error is due to the bucket not existing, first attempt to create it and retry the getContainer call.
-		if awsBucketIsNotFound(err) {
-			container, err = s.CreateContainer(ctx, c)
-			if err != nil {
-				incFailureCounterForError(ctx, s.metrics.HeadFailure, err)
-				return nil, err
-			}
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	t := s.metrics.ReadOpenLatency.Start(ctx)
 	item, err := container.Item(k)
 	if err != nil {
+		if awsBucketIsNotFound(err) {
+			container, err = s.CreateContainer(ctx, c)
+			if err != nil {
+				return nil, err
+			}
+			s.dynamicContainerMap.Store(container, c)
+		}
+
 		incFailureCounterForError(ctx, s.metrics.ReadFailure, err)
 		return nil, err
 	}
@@ -266,23 +253,23 @@ func (s *StowStore) WriteRaw(ctx context.Context, reference DataReference, size 
 
 	container, err := s.getContainer(ctx, c)
 	if err != nil {
-		// If this error is due to the bucket not existing, first attempt to create it and retry the getContainer call.
-		if awsBucketIsNotFound(err) {
-			container, err = s.CreateContainer(ctx, c)
-			if err != nil {
-				incFailureCounterForError(ctx, s.metrics.HeadFailure, err)
-				return err
-			}
-		} else {
-			return err
-		}
+		return err
 	}
 
 	t := s.metrics.WriteLatency.Start(ctx)
 	_, err = container.Put(k, raw, size, opts.Metadata)
 	if err != nil {
-		incFailureCounterForError(ctx, s.metrics.WriteFailure, err)
-		return errs.Wrapf(err, "Failed to write data [%vb] to path [%v].", size, k)
+		// If this error is due to the bucket not existing, first attempt to create it and retry the getContainer call.
+		if IsNotFound(err) || awsBucketIsNotFound(err) {
+			container, err = s.CreateContainer(ctx, c)
+			if err == nil {
+				s.dynamicContainerMap.Store(container, c)
+			}
+		}
+		if err != nil {
+			incFailureCounterForError(ctx, s.metrics.WriteFailure, err)
+			return errs.Wrapf(err, "Failed to write data [%vb] to path [%v].", size, k)
+		}
 	}
 
 	t.Stop()
