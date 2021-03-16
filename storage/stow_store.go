@@ -136,6 +136,7 @@ func (s *StowStore) LoadContainer(ctx context.Context, container string, createI
 		if IsNotFound(err) && createIfNotFound {
 			c, err = s.CreateContainer(ctx, container)
 			if err != nil {
+				logger.Errorf(ctx, "Call to create container [%s] failed. Error %s", container, err)
 				return nil, err
 			}
 		} else {
