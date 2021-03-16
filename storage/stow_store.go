@@ -128,12 +128,12 @@ func (s *StowStore) CreateContainer(ctx context.Context, container string) (stow
 	return c, nil
 }
 
-func (s *StowStore) LoadContainer(ctx context.Context, container string) (stow.Container, error) {
+func (s *StowStore) LoadContainer(ctx context.Context, container string, createIfNotFound bool) (stow.Container, error) {
 	c, err := s.loc.Container(container)
 	if err != nil {
 		// IsNotFound is not always guaranteed to be returned if the underlying container doesn't exist!
 		// As of stow v0.2.6, the call to get container elides the lookup when a bucket region is set for S3 containers.
-		if IsNotFound(err) {
+		if IsNotFound(err) && createIfNotFound {
 			c, err = s.CreateContainer(ctx, container)
 			if err != nil {
 				return nil, err
@@ -158,7 +158,7 @@ func (s *StowStore) getContainer(ctx context.Context, container string) (c stow.
 
 	iface, ok := s.dynamicContainerMap.Load(container)
 	if !ok {
-		c, err := s.LoadContainer(ctx, container)
+		c, err := s.LoadContainer(ctx, container, false)
 		if err != nil {
 			logger.Errorf(ctx, "failed to load container [%s] dynamically, error %s", container, err)
 			return nil, err
@@ -308,7 +308,7 @@ func NewStowRawStore(baseContainerFQN DataReference, loc stow.Location, enableDy
 	if err != nil {
 		return nil, err
 	}
-	container, err := self.LoadContainer(context.TODO(), c)
+	container, err := self.LoadContainer(context.TODO(), c, true)
 	if err != nil {
 		return nil, err
 	}

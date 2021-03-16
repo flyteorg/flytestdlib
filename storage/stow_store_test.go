@@ -410,7 +410,7 @@ func TestLoadContainer(t *testing.T) {
 			loc: &mockStowLoc{
 				ContainerCb: func(id string) (stow.Container, error) {
 					if id == container {
-						return newMockStowContainer(container), nil
+						return newMockStowContainer(container), stow.ErrNotFound
 					}
 					return nil, fmt.Errorf("container is not supported")
 				},
@@ -422,7 +422,7 @@ func TestLoadContainer(t *testing.T) {
 				},
 			},
 		}
-		stowContainer, err := stowStore.LoadContainer(context.Background(), "container")
+		stowContainer, err := stowStore.LoadContainer(context.Background(), "container", true)
 		assert.NoError(t, err)
 		assert.Equal(t, container, stowContainer.ID())
 	})
@@ -440,7 +440,7 @@ func TestLoadContainer(t *testing.T) {
 				},
 			},
 		}
-		_, err := stowStore.LoadContainer(context.Background(), "container")
+		_, err := stowStore.LoadContainer(context.Background(), "container", true)
 		assert.EqualError(t, err, "unable to initialize container [container]. Error: foo")
 	})
 	t.Run("No create if not found", func(t *testing.T) {
@@ -448,14 +448,13 @@ func TestLoadContainer(t *testing.T) {
 			loc: &mockStowLoc{
 				ContainerCb: func(id string) (stow.Container, error) {
 					if id == container {
-						return newMockStowContainer(container), nil
+						return newMockStowContainer(container), stow.ErrNotFound
 					}
 					return nil, fmt.Errorf("container is not supported")
 				},
 			},
 		}
-		stowContainer, err := stowStore.LoadContainer(context.Background(), "container")
-		assert.NoError(t, err)
-		assert.Equal(t, container, stowContainer.ID())
+		_, err := stowStore.LoadContainer(context.Background(), "container", false)
+		assert.EqualError(t, err, stow.ErrNotFound.Error())
 	})
 }
