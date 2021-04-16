@@ -40,6 +40,8 @@ type DataStore struct {
 	ReferenceConstructor
 }
 
+//go:generate mockery -name RawStore -case=underscore
+
 // Defines a low level interface for accessing and storing bytes.
 type RawStore interface {
 	// returns a FQN DataReference with the configured base init container
