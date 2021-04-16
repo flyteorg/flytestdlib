@@ -77,7 +77,6 @@ type ProtobufStore interface {
 	WriteProtobuf(ctx context.Context, reference DataReference, opts Options, msg proto.Message) error
 }
 
-
 //go:generate mockery -name ComposedProtobufStore -case=underscore
 
 // A ProtobufStore needs a RawStore to get the RawData. This interface provides all the necessary components to make
