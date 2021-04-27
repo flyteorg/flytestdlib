@@ -13,7 +13,15 @@ const (
 var configLocations = [][]string{
 	{"."},
 	{"/etc", "flyte", "config"},
+	{UserHomeDir(), ".flyte"},
 	{os.ExpandEnv("$GOPATH"), "src", "github.com", "lyft", "flytestdlib"},
+}
+var osUserHomDir = os.UserHomeDir
+// UserHomeDir Returns the users home directory or on error returns the current dir
+func UserHomeDir() string {
+	homeDir := "."
+	homeDir, _ = osUserHomDir()
+	return homeDir
 }
 
 // Check if File / Directory Exists
