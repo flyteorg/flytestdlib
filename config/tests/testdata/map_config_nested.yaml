@@ -4,6 +4,7 @@ my-component:
         - itemAa:
             id: abc1
             name: "A b c"
+            randomValue: "hello world"
         - itemAb:
             id: xyz1
             name: "x y z"

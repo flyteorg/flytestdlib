@@ -177,7 +177,6 @@ func sliceToMapHook(f reflect.Kind, t reflect.Kind, data interface{}) (interface
 		// It's safe to convert data into a slice since we did the type assertion above.
 		asSlice := data.([]interface{})
 		for _, item := range asSlice {
-			//
 			asMap, casted := item.(map[interface{}]interface{})
 			if !casted {
 				return data, nil

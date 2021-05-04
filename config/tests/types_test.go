@@ -28,8 +28,9 @@ type OtherComponentConfig struct {
 }
 
 type Item struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	RandomValue string `json:"randomValue"`
 }
 
 type ItemArray struct {

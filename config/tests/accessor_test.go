@@ -375,6 +375,7 @@ func TestAccessor_UpdateConfig(t *testing.T) {
 				r := root.GetSection(MyComponentSectionKey).GetConfig().(*ItemMap)
 				assert.Len(t, r.ItemsMap, 2)
 				assert.Equal(t, "abc1", r.ItemsMap["itemA"]["itemAa"].ID)
+				assert.Equal(t, "hello world", r.ItemsMap["itemA"]["itemAa"].RandomValue)
 				assert.Equal(t, "abc2", r.ItemsMap["itemB"]["itemBa"].ID)
 				assert.Equal(t, "xyz1", r.ItemsMap["itemA"]["itemAb"].ID)
 				assert.Equal(t, "xyz2", r.ItemsMap["itemB"]["itemBb"].ID)
