@@ -52,7 +52,6 @@ func TestNewGenerator(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-
 	ctx := context.Background()
 	p, err := g.Generate(ctx)
 	if !assert.NoError(t, err) {
@@ -96,6 +95,11 @@ func TestNewGenerator(t *testing.T) {
 	goldenTestOutput, err := ioutil.ReadFile(filepath.Clean(goldenTestFilePath))
 	assert.NoError(t, err)
 	assert.Equal(t, string(goldenTestOutput), string(testBytes))
+	t.Run("empty package", func(t *testing.T) {
+		gen, err := NewGenerator("", "TestType", "DefaultTestType", false)
+		assert.Nil(t, err)
+		assert.NotNil(t, gen.GetTargetPackage())
+	})
 }
 
 func TestBuildFieldForMap(t *testing.T) {
