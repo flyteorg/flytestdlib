@@ -198,18 +198,29 @@ func sliceToMapHook(f reflect.Kind, t reflect.Kind, data interface{}) (interface
 // each element as a uint8 before assembling the final []byte.
 func stringToByteArray(f, t reflect.Type, data interface{}) (interface{}, error) {
 	// Only handle string -> []byte conversion
-	if f.Kind() == reflect.String && t.Kind() == reflect.Slice && t.Elem().Kind() == reflect.Uint8 {
-		asStr := data.(string)
-		b := make([]byte, base64.StdEncoding.DecodedLen(len(asStr)))
-		n, err := base64.StdEncoding.Decode(b, []byte(asStr))
-		if err != nil {
-			return nil, err
-		}
-
-		return b[:n], nil
+	if t.Kind() != reflect.Slice || t.Elem().Kind() != reflect.Uint8 {
+		return data, nil
 	}
 
-	return data, nil
+	asStr := ""
+	if f.Kind() == reflect.String {
+		asStr = data.(string)
+	} else if f.Kind() == reflect.Slice && f.Elem().Kind() == reflect.String {
+		asSlice := data.([]string)
+		if len(asSlice) == 0 {
+			return data, nil
+		}
+
+		asStr = asSlice[0]
+	}
+
+	b := make([]byte, base64.StdEncoding.DecodedLen(len(asStr)))
+	n, err := base64.StdEncoding.Decode(b, []byte(asStr))
+	if err != nil {
+		return nil, err
+	}
+
+	return b[:n], nil
 }
 
 // This decoder hook tests types for json unmarshaling capability. If implemented, it uses json unmarshal to build the
