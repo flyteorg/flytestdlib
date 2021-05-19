@@ -2,6 +2,7 @@ package viper
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -198,7 +199,14 @@ func sliceToMapHook(f reflect.Kind, t reflect.Kind, data interface{}) (interface
 func stringToByteArray(f, t reflect.Type, data interface{}) (interface{}, error) {
 	// Only handle string -> []byte conversion
 	if f.Kind() == reflect.String && t.Kind() == reflect.Slice && t.Elem().Kind() == reflect.Uint8 {
-		return []byte(data.(string)), nil
+		asStr := data.(string)
+		b := make([]byte, base64.StdEncoding.DecodedLen(len(asStr)))
+		n, err := base64.StdEncoding.Decode(b, []byte(asStr))
+		if err != nil {
+			return nil, err
+		}
+
+		return b[:n], nil
 	}
 
 	return data, nil
