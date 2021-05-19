@@ -193,6 +193,17 @@ func sliceToMapHook(f reflect.Kind, t reflect.Kind, data interface{}) (interface
 	return data, nil
 }
 
+// stringToByteArray allows the conversion from strings to []byte. mapstructure's default behavior involve converting
+// each element as a uint8 before assembling the final []byte.
+func stringToByteArray(f, t reflect.Type, data interface{}) (interface{}, error) {
+	// Only handle string -> []byte conversion
+	if f.Kind() == reflect.String && t.Kind() == reflect.Slice && t.Elem().Kind() == reflect.Uint8 {
+		return []byte(data.(string)), nil
+	}
+
+	return data, nil
+}
+
 // This decoder hook tests types for json unmarshaling capability. If implemented, it uses json unmarshal to build the
 // object. Otherwise, it'll just pass on the original data.
 func jsonUnmarshallerHook(_, to reflect.Type, data interface{}) (interface{}, error) {
@@ -298,6 +309,7 @@ func defaultDecoderConfig(output interface{}, opts ...viperLib.DecoderConfigOpti
 			mapstructure.StringToTimeDurationHookFunc(),
 			mapstructure.StringToSliceHookFunc(","),
 			sliceToMapHook,
+			stringToByteArray,
 		),
 		// Empty/zero fields before applying provided values. This avoids potentially undesired/unexpected merging logic.
 		ZeroFields: true,
