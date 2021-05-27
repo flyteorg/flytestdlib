@@ -2,6 +2,7 @@ package viper
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -11,13 +12,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	stdLibErrs "github.com/lyft/flytestdlib/errors"
+	stdLibErrs "github.com/flyteorg/flytestdlib/errors"
 
 	"github.com/spf13/cobra"
 
-	"github.com/lyft/flytestdlib/config"
-	"github.com/lyft/flytestdlib/config/files"
-	"github.com/lyft/flytestdlib/logger"
+	"github.com/flyteorg/flytestdlib/config"
+	"github.com/flyteorg/flytestdlib/config/files"
+	"github.com/flyteorg/flytestdlib/logger"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/mitchellh/mapstructure"
@@ -165,6 +166,63 @@ func canGetElement(t reflect.Kind) bool {
 	return exists
 }
 
+// sliceToMapHook allows the conversion from slices to maps. This is used as a hack due to the lack of support of case
+// sensitive keys in viper (see: https://github.com/spf13/viper#does-viper-support-case-sensitive-keys). The way we work
+// around that is by filling in fields that should be maps as slices in yaml config files. This hook then takes care of
+// reverting that process.
+func sliceToMapHook(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error) {
+	// Only handle slice -> map conversion
+	if f == reflect.Slice && t == reflect.Map {
+		// this will be the target result
+		res := map[interface{}]interface{}{}
+		// It's safe to convert data into a slice since we did the type assertion above.
+		asSlice := data.([]interface{})
+		for _, item := range asSlice {
+			asMap, casted := item.(map[interface{}]interface{})
+			if !casted {
+				return data, nil
+			}
+
+			for key, value := range asMap {
+				res[key] = value
+			}
+		}
+
+		return res, nil
+	}
+
+	return data, nil
+}
+
+// stringToByteArray allows the conversion from strings to []byte. mapstructure's default behavior involve converting
+// each element as a uint8 before assembling the final []byte.
+func stringToByteArray(f, t reflect.Type, data interface{}) (interface{}, error) {
+	// Only handle string -> []byte conversion
+	if t.Kind() != reflect.Slice || t.Elem().Kind() != reflect.Uint8 {
+		return data, nil
+	}
+
+	asStr := ""
+	if f.Kind() == reflect.String {
+		asStr = data.(string)
+	} else if f.Kind() == reflect.Slice && f.Elem().Kind() == reflect.String {
+		asSlice := data.([]string)
+		if len(asSlice) == 0 {
+			return data, nil
+		}
+
+		asStr = asSlice[0]
+	}
+
+	b := make([]byte, base64.StdEncoding.DecodedLen(len(asStr)))
+	n, err := base64.StdEncoding.Decode(b, []byte(asStr))
+	if err != nil {
+		return nil, err
+	}
+
+	return b[:n], nil
+}
+
 // This decoder hook tests types for json unmarshaling capability. If implemented, it uses json unmarshal to build the
 // object. Otherwise, it'll just pass on the original data.
 func jsonUnmarshallerHook(_, to reflect.Type, data interface{}) (interface{}, error) {
@@ -269,7 +327,11 @@ func defaultDecoderConfig(output interface{}, opts ...viperLib.DecoderConfigOpti
 			jsonUnmarshallerHook,
 			mapstructure.StringToTimeDurationHookFunc(),
 			mapstructure.StringToSliceHookFunc(","),
+			sliceToMapHook,
+			stringToByteArray,
 		),
+		// Empty/zero fields before applying provided values. This avoids potentially undesired/unexpected merging logic.
+		ZeroFields: true,
 	}
 
 	for _, opt := range opts {

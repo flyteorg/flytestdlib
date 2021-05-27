@@ -16,13 +16,13 @@ import (
 	"github.com/graymeta/stow/s3"
 	"github.com/graymeta/stow/swift"
 
-	"github.com/lyft/flytestdlib/contextutils"
-	"github.com/lyft/flytestdlib/logger"
-	"github.com/lyft/flytestdlib/promutils/labeled"
+	"github.com/flyteorg/flytestdlib/contextutils"
+	"github.com/flyteorg/flytestdlib/logger"
+	"github.com/flyteorg/flytestdlib/promutils/labeled"
 
-	"github.com/lyft/flytestdlib/errors"
+	"github.com/flyteorg/flytestdlib/errors"
 
-	"github.com/lyft/flytestdlib/promutils"
+	"github.com/flyteorg/flytestdlib/promutils"
 
 	"github.com/graymeta/stow"
 	errs "github.com/pkg/errors"
@@ -55,10 +55,6 @@ var fQNFn = map[string]func(string) DataReference{
 
 // Checks if the error is AWS S3 bucket not found error
 func awsBucketIsNotFound(err error) bool {
-	if IsNotFound(err) {
-		return true
-	}
-
 	if awsErr, errOk := errs.Cause(err).(awserr.Error); errOk {
 		return awsErr.Code() == s32.ErrCodeNoSuchBucket
 	}
@@ -123,23 +119,30 @@ type StowStore struct {
 	baseContainerFQN    DataReference
 }
 
+func (s *StowStore) CreateContainer(ctx context.Context, container string) (stow.Container, error) {
+	logger.Infof(ctx, "Attempting to create container [%s]", container)
+	c, err := s.loc.CreateContainer(container)
+	if err != nil && !awsBucketAlreadyExists(err) && !IsExists(err) {
+		return nil, fmt.Errorf("unable to initialize container [%v]. Error: %v", container, err)
+	}
+	return c, nil
+}
+
 func (s *StowStore) LoadContainer(ctx context.Context, container string, createIfNotFound bool) (stow.Container, error) {
 	c, err := s.loc.Container(container)
 	if err != nil {
-		if createIfNotFound {
-			logger.Infof(ctx, "Container [%s] lookup failed, err [%s], will try to create a new one", container, err)
-			if IsNotFound(err) || awsBucketIsNotFound(err) {
-				c, err := s.loc.CreateContainer(container)
-				// If the container's already created, move on. Otherwise, fail with error.
-				if err != nil && !awsBucketAlreadyExists(err) && !IsExists(err) {
-					return nil, fmt.Errorf("unable to initialize container [%v]. Error: %v", container, err)
-				}
-				return c, nil
+		// IsNotFound is not always guaranteed to be returned if the underlying container doesn't exist!
+		// As of stow v0.2.6, the call to get container elides the lookup when a bucket region is set for S3 containers.
+		if IsNotFound(err) && createIfNotFound {
+			c, err = s.CreateContainer(ctx, container)
+			if err != nil {
+				logger.Errorf(ctx, "Call to create container [%s] failed. Error %s", container, err)
+				return nil, err
 			}
 		} else {
 			logger.Errorf(ctx, "Container [%s] lookup failed. Error %s", container, err)
+			return nil, err
 		}
-		return nil, err
 	}
 	return c, nil
 }
@@ -194,7 +197,7 @@ func (s *StowStore) Head(ctx context.Context, reference DataReference) (Metadata
 		}
 	}
 
-	if IsNotFound(err) {
+	if IsNotFound(err) || awsBucketIsNotFound(err) {
 		return StowMetadata{exists: false}, nil
 	}
 
@@ -249,8 +252,17 @@ func (s *StowStore) WriteRaw(ctx context.Context, reference DataReference, size 
 	t := s.metrics.WriteLatency.Start(ctx)
 	_, err = container.Put(k, raw, size, opts.Metadata)
 	if err != nil {
-		incFailureCounterForError(ctx, s.metrics.WriteFailure, err)
-		return errs.Wrapf(err, "Failed to write data [%vb] to path [%v].", size, k)
+		// If this error is due to the bucket not existing, first attempt to create it and retry the getContainer call.
+		if IsNotFound(err) || awsBucketIsNotFound(err) {
+			container, err = s.CreateContainer(ctx, c)
+			if err == nil {
+				s.dynamicContainerMap.Store(container, c)
+			}
+		}
+		if err != nil {
+			incFailureCounterForError(ctx, s.metrics.WriteFailure, err)
+			return errs.Wrapf(err, "Failed to write data [%vb] to path [%v].", size, k)
+		}
 	}
 
 	t.Stop()

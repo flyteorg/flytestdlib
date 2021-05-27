@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
+	errors2 "errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,6 +13,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	s32 "github.com/aws/aws-sdk-go/service/s3"
+
 	"github.com/graymeta/stow/google"
 	"github.com/graymeta/stow/local"
 	"github.com/pkg/errors"
@@ -19,25 +23,31 @@ import (
 	"github.com/graymeta/stow"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/lyft/flytestdlib/config"
-	"github.com/lyft/flytestdlib/contextutils"
-	"github.com/lyft/flytestdlib/internal/utils"
-	"github.com/lyft/flytestdlib/promutils"
-	"github.com/lyft/flytestdlib/promutils/labeled"
+	"github.com/flyteorg/flytestdlib/config"
+	"github.com/flyteorg/flytestdlib/contextutils"
+	"github.com/flyteorg/flytestdlib/internal/utils"
+	"github.com/flyteorg/flytestdlib/promutils"
+	"github.com/flyteorg/flytestdlib/promutils/labeled"
 )
 
 type mockStowLoc struct {
 	stow.Location
-	ContainerCb func(id string) (stow.Container, error)
+	ContainerCb       func(id string) (stow.Container, error)
+	CreateContainerCb func(name string) (stow.Container, error)
 }
 
 func (m mockStowLoc) Container(id string) (stow.Container, error) {
 	return m.ContainerCb(id)
 }
 
+func (m mockStowLoc) CreateContainer(name string) (stow.Container, error) {
+	return m.CreateContainerCb(name)
+}
+
 type mockStowContainer struct {
 	id    string
 	items map[string]mockStowItem
+	putCB func(name string, r io.Reader, size int64, metadata map[string]interface{}) (stow.Item, error)
 }
 
 func (m mockStowContainer) ID() string {
@@ -65,6 +75,9 @@ func (mockStowContainer) RemoveItem(id string) error {
 }
 
 func (m *mockStowContainer) Put(name string, r io.Reader, size int64, metadata map[string]interface{}) (stow.Item, error) {
+	if m.putCB != nil {
+		return m.putCB(name, r, size, metadata)
+	}
 	item := mockStowItem{url: name, size: size}
 	m.items[name] = item
 	return item, nil
@@ -119,6 +132,17 @@ func (mockStowItem) Metadata() (map[string]interface{}, error) {
 	return map[string]interface{}{}, nil
 }
 
+func TestAwsBucketIsNotFound(t *testing.T) {
+	t.Run("detect is not found", func(t *testing.T) {
+		err := awserr.New(s32.ErrCodeNoSuchBucket, "foo", errors2.New("foo"))
+		assert.True(t, awsBucketIsNotFound(err))
+	})
+	t.Run("do not detect random errors", func(t *testing.T) {
+		err := awserr.New(s32.ErrCodeInvalidObjectState, "foo", errors2.New("foo"))
+		assert.False(t, awsBucketIsNotFound(err))
+	})
+}
+
 func TestStowStore_ReadRaw(t *testing.T) {
 	labeled.SetMetricKeys(contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey)
 
@@ -129,6 +153,12 @@ func TestStowStore_ReadRaw(t *testing.T) {
 		s, err := NewStowRawStore(fn(container), &mockStowLoc{
 			ContainerCb: func(id string) (stow.Container, error) {
 				if id == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
 					return newMockStowContainer(container), nil
 				}
 				return nil, fmt.Errorf("container is not supported")
@@ -158,6 +188,12 @@ func TestStowStore_ReadRaw(t *testing.T) {
 				}
 				return nil, fmt.Errorf("container is not supported")
 			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
 		}, false, testScope)
 		assert.NoError(t, err)
 		err = s.WriteRaw(context.TODO(), DataReference("s3://container/path"), 3*MiB, Options{}, bytes.NewReader([]byte{}))
@@ -183,6 +219,12 @@ func TestStowStore_ReadRaw(t *testing.T) {
 				}
 				return nil, fmt.Errorf("container is not supported")
 			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
 		}, true, testScope)
 		assert.NoError(t, err)
 		err = s.WriteRaw(context.TODO(), "s3://bad-container/path", 0, Options{}, bytes.NewReader([]byte{}))
@@ -205,6 +247,12 @@ func TestStowStore_ReadRaw(t *testing.T) {
 		s, err := NewStowRawStore(fn(container), &mockStowLoc{
 			ContainerCb: func(id string) (stow.Container, error) {
 				if id == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
 					return newMockStowContainer(container), nil
 				}
 				return nil, fmt.Errorf("container is not supported")
@@ -372,4 +420,120 @@ func Test_newStowRawStore(t *testing.T) {
 			assert.NotNil(t, got, "Expected rawstore, found nil!")
 		})
 	}
+}
+
+func TestLoadContainer(t *testing.T) {
+	container := "container"
+	t.Run("Create if not found", func(t *testing.T) {
+		stowStore := StowStore{
+			loc: &mockStowLoc{
+				ContainerCb: func(id string) (stow.Container, error) {
+					if id == container {
+						return newMockStowContainer(container), stow.ErrNotFound
+					}
+					return nil, fmt.Errorf("container is not supported")
+				},
+				CreateContainerCb: func(name string) (stow.Container, error) {
+					if name == container {
+						return newMockStowContainer(container), nil
+					}
+					return nil, fmt.Errorf("container is not supported")
+				},
+			},
+		}
+		stowContainer, err := stowStore.LoadContainer(context.Background(), "container", true)
+		assert.NoError(t, err)
+		assert.Equal(t, container, stowContainer.ID())
+	})
+	t.Run("Create if not found with error", func(t *testing.T) {
+		stowStore := StowStore{
+			loc: &mockStowLoc{
+				ContainerCb: func(id string) (stow.Container, error) {
+					return nil, stow.ErrNotFound
+				},
+				CreateContainerCb: func(name string) (stow.Container, error) {
+					if name == container {
+						return nil, fmt.Errorf("foo")
+					}
+					return nil, fmt.Errorf("container is not supported")
+				},
+			},
+		}
+		_, err := stowStore.LoadContainer(context.Background(), "container", true)
+		assert.EqualError(t, err, "unable to initialize container [container]. Error: foo")
+	})
+	t.Run("No create if not found", func(t *testing.T) {
+		stowStore := StowStore{
+			loc: &mockStowLoc{
+				ContainerCb: func(id string) (stow.Container, error) {
+					if id == container {
+						return newMockStowContainer(container), stow.ErrNotFound
+					}
+					return nil, fmt.Errorf("container is not supported")
+				},
+			},
+		}
+		_, err := stowStore.LoadContainer(context.Background(), "container", false)
+		assert.EqualError(t, err, stow.ErrNotFound.Error())
+	})
+}
+
+func TestStowStore_WriteRaw(t *testing.T) {
+	labeled.SetMetricKeys(contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey)
+	const container = "container"
+	fn := fQNFn["s3"]
+	t.Run("create container when not found", func(t *testing.T) {
+		testScope := promutils.NewTestScope()
+		var createCalled bool
+		s, err := NewStowRawStore(fn(container), &mockStowLoc{
+			ContainerCb: func(id string) (stow.Container, error) {
+				if id == container {
+					mockStowContainer := newMockStowContainer(container)
+					mockStowContainer.putCB = func(name string, r io.Reader, size int64, metadata map[string]interface{}) (stow.Item, error) {
+						return nil, awserr.New(s32.ErrCodeNoSuchBucket, "foo", errors2.New("foo"))
+					}
+					return mockStowContainer, nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				createCalled = true
+				if name == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+		}, true, testScope)
+		assert.NoError(t, err)
+		err = s.WriteRaw(context.TODO(), DataReference("s3://container/path"), 0, Options{}, bytes.NewReader([]byte{}))
+		assert.NoError(t, err)
+		assert.True(t, createCalled)
+		var containerStoredInDynamicContainerMap bool
+		s.dynamicContainerMap.Range(func(key, value interface{}) bool {
+			if value == container {
+				containerStoredInDynamicContainerMap = true
+				return true
+			}
+			return false
+		})
+		assert.True(t, containerStoredInDynamicContainerMap)
+	})
+	t.Run("bubble up generic put errors", func(t *testing.T) {
+		testScope := promutils.NewTestScope()
+		s, err := NewStowRawStore(fn(container), &mockStowLoc{
+			ContainerCb: func(id string) (stow.Container, error) {
+				if id == container {
+					mockStowContainer := newMockStowContainer(container)
+					mockStowContainer.putCB = func(name string, r io.Reader, size int64, metadata map[string]interface{}) (stow.Item, error) {
+						return nil, errors2.New("foo")
+					}
+					return mockStowContainer, nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+		}, true, testScope)
+		assert.NoError(t, err)
+		err = s.WriteRaw(context.TODO(), DataReference("s3://container/path"), 0, Options{}, bytes.NewReader([]byte{}))
+		assert.EqualError(t, err, "Failed to write data [0b] to path [path].: foo")
+	})
 }

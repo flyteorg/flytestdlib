@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lyft/flytestdlib/cli/pflags/api"
-	"github.com/lyft/flytestdlib/logger"
+	"github.com/flyteorg/flytestdlib/cli/pflags/api"
+	"github.com/flyteorg/flytestdlib/logger"
 	"github.com/spf13/cobra"
 )
 
 var (
-	pkg                   string
-	defaultValuesVariable string
+	pkg                       string
+	defaultValuesVariable     string
+	shouldBindDefaultVariable bool
 )
 
 var root = cobra.Command{
@@ -33,6 +34,7 @@ type MyStruct struct {
 func init() {
 	root.Flags().StringVarP(&pkg, "package", "p", ".", "Determines the source/destination package.")
 	root.Flags().StringVar(&defaultValuesVariable, "default-var", "defaultConfig", "Points to a variable to use to load default configs. If specified & found, it'll be used instead of the values specified in the tag.")
+	root.Flags().BoolVar(&shouldBindDefaultVariable, "bind-default-var", false, "The generated PFlags Set will bind fields to the default variable.")
 }
 
 func Execute() error {
@@ -46,7 +48,7 @@ func generatePflagsProvider(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx := context.Background()
-	gen, err := api.NewGenerator(pkg, structName, defaultValuesVariable)
+	gen, err := api.NewGenerator(pkg, structName, defaultValuesVariable, shouldBindDefaultVariable)
 	if err != nil {
 		return err
 	}

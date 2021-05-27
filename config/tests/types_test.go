@@ -3,8 +3,8 @@ package tests
 import (
 	"fmt"
 
-	"github.com/lyft/flytestdlib/config"
-	"github.com/lyft/flytestdlib/config/viper"
+	"github.com/flyteorg/flytestdlib/config"
+	"github.com/flyteorg/flytestdlib/config/viper"
 	"github.com/spf13/pflag"
 )
 
@@ -25,6 +25,23 @@ type OtherComponentConfig struct {
 	IntValue                int             `json:"int-val"`
 	StringArray             []string        `json:"strings"`
 	StringArrayWithDefaults []string        `json:"strings-def"`
+	MyByteArray             []byte          `json:"myByteArray"`
+}
+
+type Item struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	RandomValue string `json:"randomValue"`
+}
+
+type ItemArray struct {
+	Items     []Item `json:"items"`
+	OtherItem Item   `json:"otherItem"`
+}
+
+type ItemMap struct {
+	Items    map[string]Item            `json:"items"`
+	ItemsMap map[string]map[string]Item `json:"itemsMap"`
 }
 
 func (MyComponentConfig) GetPFlagSet(prefix string) *pflag.FlagSet {
