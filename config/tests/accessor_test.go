@@ -221,7 +221,7 @@ func TestStrictAccessor(t *testing.T) {
 			})
 
 			set := pflag.NewFlagSet("test", pflag.ExitOnError)
-			set.String("unknown-key", "", "")
+			set.StringP("unknown-key", "u", "", "")
 			v.InitializePflags(set)
 			assert.NoError(t, v.UpdateConfig(context.TODO()))
 		})
