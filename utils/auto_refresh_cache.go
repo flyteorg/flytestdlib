@@ -136,6 +136,7 @@ func (w *autoRefreshCache) GetOrCreate(item CacheItem) (CacheItem, error) {
 //  * Sync loop updates item 2, repeat
 func (w *autoRefreshCache) sync(ctx context.Context) {
 	keys := w.lruMap.Keys()
+	//logger.Infof(ctx, "Keys count: %v", len(keys))
 	for _, k := range keys {
 		// If not ok, it means evicted between the item was evicted between getting the keys and this update loop
 		// which is fine, we can just ignore.
