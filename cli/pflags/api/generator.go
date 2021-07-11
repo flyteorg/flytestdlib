@@ -20,10 +20,10 @@ const (
 
 // PFlagProviderGenerator parses and generates GetPFlagSet implementation to add PFlags for a given struct's fields.
 type PFlagProviderGenerator struct {
-	pkg                  *types.Package
-	st                   *types.Named
-	defaultVar           *types.Var
-	shouldBindDefaultVar bool
+	pkg                     *types.Package
+	st                      *types.Named
+	defaultVar              *types.Var
+	shouldBindDefaultVar    bool
 	shouldDisableMarshalFns bool
 }
 
@@ -236,14 +236,14 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			}
 
 			fields = append(fields, FieldInfo{
-				Name:                    tag.Name,
-				GoName:                  v.Name(),
-				Typ:                     t,
-				FlagMethodName:          camelCase(t.String()),
-				DefaultValue:            defaultValue,
-				UsageString:             tag.Usage,
-				TestValue:               `"1"`,
-				TestStrategy:            JSON,
+				Name:           tag.Name,
+				GoName:         v.Name(),
+				Typ:            t,
+				FlagMethodName: camelCase(t.String()),
+				DefaultValue:   defaultValue,
+				UsageString:    tag.Usage,
+				TestValue:      `"1"`,
+				TestStrategy:   JSON,
 			})
 		case *types.Named:
 			if _, isStruct := t.Underlying().(*types.Struct); !isStruct {
@@ -290,6 +290,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 					UsageString:       tag.Usage,
 					TestValue:         testValue,
 					TestStrategy:      JSON,
+					ShouldBindDefault: bindDefaultVar,
 				})
 			} else {
 				logger.Infof(ctx, "Traversing fields in type.")
@@ -309,6 +310,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 						UsageString:       subField.UsageString,
 						TestValue:         subField.TestValue,
 						TestStrategy:      subField.TestStrategy,
+						ShouldBindDefault: bindDefaultVar,
 					})
 				}
 			}
@@ -402,10 +404,10 @@ func NewGenerator(pkg, targetTypeName, defaultVariableName string, shouldBindDef
 	}
 
 	return &PFlagProviderGenerator{
-		st:                   st,
-		pkg:                  targetPackage,
-		defaultVar:           defaultVar,
-		shouldBindDefaultVar: shouldBindDefaultVar,
+		st:                      st,
+		pkg:                     targetPackage,
+		defaultVar:              defaultVar,
+		shouldBindDefaultVar:    shouldBindDefaultVar,
 		shouldDisableMarshalFns: shouldDisableMarshalFns,
 	}, nil
 }
