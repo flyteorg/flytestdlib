@@ -28,6 +28,7 @@ import (
 	{{$name}} "{{$path}}"{{end}}
 )
 
+{{- if .ShouldDisableMarshalFns }}
 // If v is a pointer, it will get its element value or the zero value of the element type.
 // If v is not a pointer, it will return it as is.
 func ({{ .Name }}) elemValueOrNil(v interface{}) interface{} {
@@ -61,6 +62,7 @@ func ({{ .Name }}) mustMarshalJSON(v json.Marshaler) string {
 
     return string(raw)
 }
+{{- end }}
 
 // GetPFlagSet will return strongly types pflags for all fields in {{ .Name }} and its nested types. The format of the
 // flags is json-name.json-sub-name... etc.

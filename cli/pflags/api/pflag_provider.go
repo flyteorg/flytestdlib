@@ -15,6 +15,7 @@ import (
 type PFlagProvider struct {
 	typeName string
 	pkg      *types.Package
+	shouldDisableMarshalFns bool
 	fields   []FieldInfo
 }
 
@@ -81,10 +82,11 @@ func (p PFlagProvider) generate(generator func(buffer *bytes.Buffer, info TypeIn
 	return err
 }
 
-func newPflagProvider(pkg *types.Package, typeName string, fields []FieldInfo) PFlagProvider {
+func newPflagProvider(pkg *types.Package, typeName string, fields []FieldInfo, shouldDisableMarshalFns bool) PFlagProvider {
 	return PFlagProvider{
 		typeName: typeName,
 		pkg:      pkg,
 		fields:   fields,
+		shouldDisableMarshalFns: shouldDisableMarshalFns,
 	}
 }

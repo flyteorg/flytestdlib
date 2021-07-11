@@ -24,6 +24,7 @@ type PFlagProviderGenerator struct {
 	st                   *types.Named
 	defaultVar           *types.Var
 	shouldBindDefaultVar bool
+	shouldDisableMarshalFns bool
 }
 
 // This list is restricted because that's the only kinds viper parses out, otherwise it assumes strings.
@@ -235,15 +236,14 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			}
 
 			fields = append(fields, FieldInfo{
-				Name:              tag.Name,
-				GoName:            v.Name(),
-				Typ:               t,
-				FlagMethodName:    camelCase(t.String()),
-				DefaultValue:      defaultValue,
-				UsageString:       tag.Usage,
-				TestValue:         `"1"`,
-				TestStrategy:      JSON,
-				ShouldBindDefault: bindDefaultVar,
+				Name:                    tag.Name,
+				GoName:                  v.Name(),
+				Typ:                     t,
+				FlagMethodName:          camelCase(t.String()),
+				DefaultValue:            defaultValue,
+				UsageString:             tag.Usage,
+				TestValue:               `"1"`,
+				TestStrategy:            JSON,
 			})
 		case *types.Named:
 			if _, isStruct := t.Underlying().(*types.Struct); !isStruct {
@@ -290,7 +290,6 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 					UsageString:       tag.Usage,
 					TestValue:         testValue,
 					TestStrategy:      JSON,
-					ShouldBindDefault: bindDefaultVar,
 				})
 			} else {
 				logger.Infof(ctx, "Traversing fields in type.")
@@ -310,7 +309,6 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 						UsageString:       subField.UsageString,
 						TestValue:         subField.TestValue,
 						TestStrategy:      subField.TestStrategy,
-						ShouldBindDefault: bindDefaultVar,
 					})
 				}
 			}
@@ -358,7 +356,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 // NewGenerator initializes a PFlagProviderGenerator for pflags files for targetTypeName struct under pkg. If pkg is not filled in,
 // it's assumed to be current package (which is expected to be the common use case when invoking pflags from
 // go:generate comments)
-func NewGenerator(pkg, targetTypeName, defaultVariableName string, shouldBindDefaultVar bool) (*PFlagProviderGenerator, error) {
+func NewGenerator(pkg, targetTypeName, defaultVariableName string, shouldBindDefaultVar bool, shouldDisableMarshalFns bool) (*PFlagProviderGenerator, error) {
 	ctx := context.Background()
 	var err error
 
@@ -408,6 +406,7 @@ func NewGenerator(pkg, targetTypeName, defaultVariableName string, shouldBindDef
 		pkg:                  targetPackage,
 		defaultVar:           defaultVar,
 		shouldBindDefaultVar: shouldBindDefaultVar,
+		shouldDisableMarshalFns: shouldDisableMarshalFns,
 	}, nil
 }
 
@@ -445,5 +444,5 @@ func (g PFlagProviderGenerator) Generate(ctx context.Context) (PFlagProvider, er
 		return PFlagProvider{}, err
 	}
 
-	return newPflagProvider(g.pkg, g.st.Obj().Name(), fields), nil
+	return newPflagProvider(g.pkg, g.st.Obj().Name(), fields, g.shouldDisableMarshalFns), nil
 }
