@@ -33,7 +33,7 @@ var (
 	defaultConfig = &Config{
 		Type: TypeS3,
 		Limits: LimitsConfig{
-			GetLimitMegabytes: 2,
+			GetLimitMegabytes: 0,
 		},
 		Connection: ConnectionConfig{
 			Region:   "us-east-1",
