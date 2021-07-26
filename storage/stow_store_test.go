@@ -181,7 +181,6 @@ func TestStowStore_ReadRaw(t *testing.T) {
 	t.Run("Exceeds limit", func(t *testing.T) {
 		testScope := promutils.NewTestScope()
 		fn := fQNFn["s3"]
-		GetConfig().Limits.GetLimitMegabytes = 2
 
 		s, err := NewStowRawStore(fn(container), &mockStowLoc{
 			ContainerCb: func(id string) (stow.Container, error) {
