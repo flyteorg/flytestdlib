@@ -79,8 +79,8 @@ type ConnectionConfig struct {
 }
 
 type StowConfig struct {
-	Kind   string            `json:"kind,omitempty" pflag:"-,Kind of Stow backend to use. Refer to github/graymeta/stow"`
-	Config map[string]string `json:"config,omitempty" pflag:"-,Configuration for stow backend. Refer to github/graymeta/stow"`
+	Kind   string            `json:"kind,omitempty" pflag:",Kind of Stow backend to use. Refer to github/graymeta/stow"`
+	Config map[string]string `json:"config,omitempty" pflag:",Configuration for stow backend. Refer to github/graymeta/stow"`
 }
 
 type CachingConfig struct {
