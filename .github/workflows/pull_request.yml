@@ -48,4 +48,4 @@ jobs:
         env:
           GO111MODULE: "on"
         with:
-          args: make mod_download && go generate ./... && git diff --quiet || { echo "run go gonerate ./..."; exit 1; }
+          args: make gen-config && git diff --quiet || { echo "run go gonerate ./..."; exit 1; }
