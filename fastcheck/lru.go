@@ -2,13 +2,14 @@ package fastcheck
 
 import (
 	"context"
+
 	"github.com/flyteorg/flytestdlib/promutils"
 	cache "github.com/hashicorp/golang-lru"
 )
 
 // Implements the fastcheck.Filter interface using an underlying LRUCache from cache.Cache
 type lruCacheFilter struct {
-	lru *cache.Cache
+	lru     *cache.Cache
 	metrics Metrics
 }
 
@@ -34,7 +35,7 @@ func NewLRUCacheFilter(size int, scope promutils.Scope) (Filter, error) {
 		return nil, err
 	}
 	return lruCacheFilter{
-		lru: c,
+		lru:     c,
 		metrics: NewMetrics(scope),
 	}, nil
 }

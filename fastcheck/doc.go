@@ -9,4 +9,3 @@
 // https://github.com/jmhodges/opposite_of_a_bloom_filter/ and
 // the related blog https://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/
 package fastcheck
-

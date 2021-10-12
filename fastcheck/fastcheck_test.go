@@ -2,14 +2,15 @@ package fastcheck
 
 import (
 	"context"
+	"testing"
+
 	"github.com/flyteorg/flytestdlib/contextutils"
 	"github.com/flyteorg/flytestdlib/promutils"
 	"github.com/flyteorg/flytestdlib/promutils/labeled"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
-func TestFilter(t *testing.T)  {
+func TestFilter(t *testing.T) {
 	ctx := context.TODO()
 
 	lru, err := NewLRUCacheFilter(2, promutils.NewTestScope())
@@ -19,39 +20,39 @@ func TestFilter(t *testing.T)  {
 	assert.NoError(t, err)
 	assert.NotNil(t, oppo)
 
-	twentyNineId := []byte{27, 28, 29}
-	thirtyId := []byte{27, 28, 30}
-	thirtyThreeId := []byte{27, 28, 33}
+	twentyNineID := []byte{27, 28, 29}
+	thirtyID := []byte{27, 28, 30}
+	thirtyThreeID := []byte{27, 28, 33}
 	// the last 2 byte arrays have the same hash value
 
-	assert.False(t, lru.Contains(ctx, twentyNineId))
-	assert.False(t, oppo.Contains(ctx, twentyNineId))
-	lru.Add(ctx, twentyNineId)
-	oppo.Add(ctx, twentyNineId)
-	assert.True(t, lru.Contains(ctx, twentyNineId))
-	assert.True(t, oppo.Contains(ctx, twentyNineId))
+	assert.False(t, lru.Contains(ctx, twentyNineID))
+	assert.False(t, oppo.Contains(ctx, twentyNineID))
+	lru.Add(ctx, twentyNineID)
+	oppo.Add(ctx, twentyNineID)
+	assert.True(t, lru.Contains(ctx, twentyNineID))
+	assert.True(t, oppo.Contains(ctx, twentyNineID))
 
-	assert.False(t, lru.Contains(ctx, thirtyId))
-	assert.False(t, oppo.Contains(ctx, thirtyId))
+	assert.False(t, lru.Contains(ctx, thirtyID))
+	assert.False(t, oppo.Contains(ctx, thirtyID))
 
-	assert.False(t, lru.Contains(ctx, thirtyThreeId))
-	assert.False(t, oppo.Contains(ctx, thirtyThreeId))
+	assert.False(t, lru.Contains(ctx, thirtyThreeID))
+	assert.False(t, oppo.Contains(ctx, thirtyThreeID))
 
 	// Now that they have the same hash value
-	lru.Add(ctx, thirtyId)
-	oppo.Add(ctx, thirtyId)
-	assert.True(t, lru.Contains(ctx, thirtyId))
-	assert.True(t, oppo.Contains(ctx, thirtyId))
+	lru.Add(ctx, thirtyID)
+	oppo.Add(ctx, thirtyID)
+	assert.True(t, lru.Contains(ctx, thirtyID))
+	assert.True(t, oppo.Contains(ctx, thirtyID))
 	// LRU should not contain it and oppo should also return false
-	assert.False(t, lru.Contains(ctx, thirtyThreeId))
-	assert.False(t, oppo.Contains(ctx, thirtyThreeId))
+	assert.False(t, lru.Contains(ctx, thirtyThreeID))
+	assert.False(t, oppo.Contains(ctx, thirtyThreeID))
 
-	lru.Add(ctx, thirtyThreeId)
-	oppo.Add(ctx, thirtyThreeId)
+	lru.Add(ctx, thirtyThreeID)
+	oppo.Add(ctx, thirtyThreeID)
 
 	// LRU will evict first entered, while oppo will evict matching hash
-	assert.True(t, lru.Contains(ctx, thirtyId))
-	assert.False(t, oppo.Contains(ctx, thirtyId))
+	assert.True(t, lru.Contains(ctx, thirtyID))
+	assert.False(t, oppo.Contains(ctx, thirtyID))
 
 }
 
@@ -91,6 +92,6 @@ func TestTooSmallSize(t *testing.T) {
 	}
 }
 
-func init()  {
+func init() {
 	labeled.SetMetricKeys(contextutils.MetricKeysFromStrings([]string{"test"})...)
 }

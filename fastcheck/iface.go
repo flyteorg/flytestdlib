@@ -2,6 +2,7 @@ package fastcheck
 
 import (
 	"context"
+
 	"github.com/flyteorg/flytestdlib/promutils"
 	"github.com/flyteorg/flytestdlib/promutils/labeled"
 )
@@ -21,13 +22,13 @@ type Filter interface {
 
 // Every implementation of the Filter Interface provides these metrics
 type Metrics struct {
-	Hit labeled.Counter
+	Hit  labeled.Counter
 	Miss labeled.Counter
 }
 
 func NewMetrics(scope promutils.Scope) Metrics {
 	return Metrics{
-		Hit: labeled.NewCounter("cache_hit", "Indicates that the item was found in the cache", scope),
+		Hit:  labeled.NewCounter("cache_hit", "Indicates that the item was found in the cache", scope),
 		Miss: labeled.NewCounter("cache_miss", "Indicates that the item was found in the cache", scope),
 	}
 }
