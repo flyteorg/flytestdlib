@@ -5,7 +5,7 @@
 // This code is liberally copied from the original implementation at https://github.com/jmhodges/opposite_of_a_bloom_filter/blob/master/go/oppobloom/oppobloom.go
 // Package oppobloom implements a filter data structure that may report false negatives but no false positives.
 
-// the fastcheck.oppoBloomFilter provides two methods instead of one, a contains and an add. This makes it possible to
+// the fastcheck.OppoBloomFilter provides two methods instead of one, a contains and an add. This makes it possible to
 // check and then optionally add the value. It is possible that two threads may race and add it multiple times
 package fastcheck
 
@@ -25,6 +25,8 @@ import (
 var ErrSizeTooLarge = errors.New("oppobloom: size given too large to round to a power of 2")
 var ErrSizeTooSmall = errors.New("oppobloom: filter cannot have a zero or negative size")
 var MaxFilterSize = 1 << 30
+// validate that it conforms to the interface
+var _ Filter = &OppoBloomFilter{}
 
 type md5UintHash struct {
 	hash.Hash // a hack with knowledge of how md5 works
@@ -42,14 +44,14 @@ func (m md5UintHash) Sum32() uint32 {
 
 // Implementation of the oppoFilter proposed in https://github.com/jmhodges/opposite_of_a_bloom_filter/ and
 // the related blog https://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/
-type oppoBloomFilter struct {
+type OppoBloomFilter struct {
 	array    []*[]byte
 	sizeMask uint32
 	metrics  Metrics
 }
 
 // getIndex calculates the hashindex of the given id
-func (f *oppoBloomFilter) getIndex(id []byte) int32 {
+func (f *OppoBloomFilter) getIndex(id []byte) int32 {
 	//nolint:gosec
 	h := md5UintHash{md5.New()}
 	h.Write(id)
@@ -57,12 +59,12 @@ func (f *oppoBloomFilter) getIndex(id []byte) int32 {
 	return int32(uindex)
 }
 
-func (f *oppoBloomFilter) Add(_ context.Context, id []byte) bool {
+func (f *OppoBloomFilter) Add(_ context.Context, id []byte) bool {
 	oldID := getAndSet(f.array, f.getIndex(id), id)
 	return !bytes.Equal(oldID, id)
 }
 
-func (f *oppoBloomFilter) Contains(ctx context.Context, id []byte) bool {
+func (f *OppoBloomFilter) Contains(ctx context.Context, id []byte) bool {
 	curr := get(f.array, f.getIndex(id))
 	if curr != nil {
 		if bytes.Equal(id, *curr) {
@@ -103,7 +105,7 @@ func getAndSet(arr []*[]byte, index int32, id []byte) []byte {
 
 // NewOppoBloomFilter creates a new Opposite of Bloom filter proposed in https://github.com/jmhodges/opposite_of_a_bloom_filter/ and
 // the related blog https://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/
-func NewOppoBloomFilter(size int, scope promutils.Scope) (Filter, error) {
+func NewOppoBloomFilter(size int, scope promutils.Scope) (*OppoBloomFilter, error) {
 	if size > MaxFilterSize {
 		return nil, ErrSizeTooLarge
 	}
@@ -114,5 +116,5 @@ func NewOppoBloomFilter(size int, scope promutils.Scope) (Filter, error) {
 	size = int(math.Pow(2, math.Ceil(math.Log2(float64(size)))))
 	slice := make([]*[]byte, size)
 	sizeMask := uint32(size - 1)
-	return &oppoBloomFilter{slice, sizeMask, NewMetrics(scope)}, nil
+	return &OppoBloomFilter{slice, sizeMask, newMetrics(scope)}, nil
 }

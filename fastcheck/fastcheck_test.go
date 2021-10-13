@@ -2,6 +2,8 @@ package fastcheck
 
 import (
 	"context"
+	"math/rand"
+	"sync"
 	"testing"
 
 	"github.com/flyteorg/flytestdlib/contextutils"
@@ -58,15 +60,15 @@ func TestFilter(t *testing.T) {
 
 func TestSizeRounding(t *testing.T) {
 	f, _ := NewOppoBloomFilter(3, promutils.NewTestScope())
-	if len(f.(*oppoBloomFilter).array) != 4 {
+	if len(f.array) != 4 {
 		t.Errorf("3 should round to 4")
 	}
 	f, _ = NewOppoBloomFilter(4, promutils.NewTestScope())
-	if len(f.(*oppoBloomFilter).array) != 4 {
+	if len(f.array) != 4 {
 		t.Errorf("4 should round to 4")
 	}
 	f, _ = NewOppoBloomFilter(129, promutils.NewTestScope())
-	if len(f.(*oppoBloomFilter).array) != 256 {
+	if len(f.array) != 256 {
 		t.Errorf("129 should round to 256")
 	}
 }
@@ -90,6 +92,73 @@ func TestTooSmallSize(t *testing.T) {
 	if f != nil {
 		t.Errorf("did not return nil on a too small filter size")
 	}
+}
+
+func benchmarkFilter(b *testing.B, ids [][]byte, filter Filter, nGoroutines int) {
+	ctx := context.TODO()
+	wg := sync.WaitGroup{}
+	wg.Add(nGoroutines)
+	f := func() {
+		for _, id := range ids {
+			filter.Contains(ctx, id)
+			filter.Add(ctx, id)
+		}
+		wg.Done()
+	}
+
+	for i := 0; i < nGoroutines; i++ {
+		go f()
+	}
+	wg.Wait()
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const (
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+func RandBytesGenerator(n int) []byte {
+	b := make([]byte, n)
+	// A rand.Int63() generates 63 random bits, enough for letterIdxMax letters!
+	for i, cache, remain := n-1, rand.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = rand.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+
+	return b
+}
+
+// RandBytesSliceGenerator generates a slice of size m with random bytes of size n
+func RandBytesSliceGenerator(n int, m int) [][]byte {
+	byteSlice := make([][]byte, 0, m)
+	for i := 0; i < m; i++ {
+		byteSlice = append(byteSlice, RandBytesGenerator(n))
+	}
+	return byteSlice
+}
+
+func BenchmarkFilter(b *testing.B) {
+	bf, err := NewOppoBloomFilter(5000, promutils.NewTestScope())
+	assert.NoError(b, err)
+	ids := RandBytesSliceGenerator(100, 10000)
+	nGoroutines := 20
+
+	b.Run("oppoFilterBenchmark", func(b *testing.B) {
+		benchmarkFilter(b, ids, bf, nGoroutines)
+	})
+
+	b.Run("lruFilterBenchmark", func(b *testing.B) {
+		benchmarkFilter(b, ids, bf, nGoroutines)
+	})
 }
 
 func init() {

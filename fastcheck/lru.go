@@ -7,14 +7,18 @@ import (
 	cache "github.com/hashicorp/golang-lru"
 )
 
+// validate that it conforms to the interface
+var _ Filter = LRUCacheFilter{}
+
 // Implements the fastcheck.Filter interface using an underlying LRUCache from cache.Cache
-type lruCacheFilter struct {
+// the underlying lru cache implementation is thread-safe
+type LRUCacheFilter struct {
 	lru     *cache.Cache
 	metrics Metrics
 }
 
-// Simply uses Contains from the lruCacheFilter
-func (l lruCacheFilter) Contains(ctx context.Context, id []byte) bool {
+// Simply uses Contains from the LRUCacheFilter
+func (l LRUCacheFilter) Contains(ctx context.Context, id []byte) bool {
 	v := l.lru.Contains(string(id))
 	if v {
 		l.metrics.Hit.Inc(ctx)
@@ -24,18 +28,18 @@ func (l lruCacheFilter) Contains(ctx context.Context, id []byte) bool {
 	return false
 }
 
-func (l lruCacheFilter) Add(_ context.Context, id []byte) bool {
+func (l LRUCacheFilter) Add(_ context.Context, id []byte) bool {
 	return l.lru.Add(string(id), nil)
 }
 
-// Create a new fastcheck.Filter using an LRU cache of a fixed size
-func NewLRUCacheFilter(size int, scope promutils.Scope) (Filter, error) {
+// Create a new fastcheck.Filter using an LRU cache of type cache.Cache with a fixed size
+func NewLRUCacheFilter(size int, scope promutils.Scope) (*LRUCacheFilter, error) {
 	c, err := cache.New(size)
 	if err != nil {
 		return nil, err
 	}
-	return lruCacheFilter{
+	return &LRUCacheFilter{
 		lru:     c,
-		metrics: NewMetrics(scope),
+		metrics: newMetrics(scope),
 	}, nil
 }
