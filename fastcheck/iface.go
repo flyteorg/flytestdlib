@@ -24,7 +24,7 @@ type Filter interface {
 // Every implementation of the Filter Interface provides these metrics
 type Metrics struct {
 	// Indicates if the item was found in the cache
-	Hit  labeled.Counter
+	Hit labeled.Counter
 	// Indicates if the item was not found in the cache
 	Miss labeled.Counter
 }

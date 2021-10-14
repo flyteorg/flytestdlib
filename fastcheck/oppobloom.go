@@ -25,6 +25,7 @@ import (
 var ErrSizeTooLarge = errors.New("oppobloom: size given too large to round to a power of 2")
 var ErrSizeTooSmall = errors.New("oppobloom: filter cannot have a zero or negative size")
 var MaxFilterSize = 1 << 30
+
 // validate that it conforms to the interface
 var _ Filter = &OppoBloomFilter{}
 

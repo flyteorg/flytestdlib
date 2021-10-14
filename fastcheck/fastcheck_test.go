@@ -3,7 +3,6 @@ package fastcheck
 import (
 	"context"
 	"math/rand"
-	"sync"
 	"testing"
 
 	"github.com/flyteorg/flytestdlib/contextutils"
@@ -94,24 +93,6 @@ func TestTooSmallSize(t *testing.T) {
 	}
 }
 
-func benchmarkFilter(b *testing.B, ids [][]byte, filter Filter, nGoroutines int) {
-	ctx := context.TODO()
-	wg := sync.WaitGroup{}
-	wg.Add(nGoroutines)
-	f := func() {
-		for _, id := range ids {
-			filter.Contains(ctx, id)
-			filter.Add(ctx, id)
-		}
-		wg.Done()
-	}
-
-	for i := 0; i < nGoroutines; i++ {
-		go f()
-	}
-	wg.Wait()
-}
-
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const (
 	letterIdxBits = 6                    // 6 bits to represent a letter index
@@ -122,9 +103,9 @@ const (
 func RandBytesGenerator(n int) []byte {
 	b := make([]byte, n)
 	// A rand.Int63() generates 63 random bits, enough for letterIdxMax letters!
-	for i, cache, remain := n-1, rand.Int63(), letterIdxMax; i >= 0; {
+	for i, cache, remain := n-1, rand.Int63(), letterIdxMax; i >= 0; { //nolint:gosec
 		if remain == 0 {
-			cache, remain = rand.Int63(), letterIdxMax
+			cache, remain = rand.Int63(), letterIdxMax //nolint:gosec
 		}
 		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
 			b[i] = letterBytes[idx]
@@ -146,18 +127,30 @@ func RandBytesSliceGenerator(n int, m int) [][]byte {
 	return byteSlice
 }
 
+func benchmarkFilter(b *testing.B, ids [][]byte, filter Filter) {
+	ctx := context.TODO()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			for _, id := range ids {
+				filter.Contains(ctx, id)
+				filter.Add(ctx, id)
+			}
+		}
+	})
+}
+
 func BenchmarkFilter(b *testing.B) {
 	bf, err := NewOppoBloomFilter(5000, promutils.NewTestScope())
 	assert.NoError(b, err)
 	ids := RandBytesSliceGenerator(100, 10000)
-	nGoroutines := 20
+	b.SetParallelism(8)
 
 	b.Run("oppoFilterBenchmark", func(b *testing.B) {
-		benchmarkFilter(b, ids, bf, nGoroutines)
+		benchmarkFilter(b, ids, bf)
 	})
 
 	b.Run("lruFilterBenchmark", func(b *testing.B) {
-		benchmarkFilter(b, ids, bf, nGoroutines)
+		benchmarkFilter(b, ids, bf)
 	})
 }
 
