@@ -127,30 +127,44 @@ func RandBytesSliceGenerator(n int, m int) [][]byte {
 	return byteSlice
 }
 
-func benchmarkFilter(b *testing.B, ids [][]byte, filter Filter) {
+func benchmarkFilter(b *testing.B, ids [][]byte, f func(context.Context, []byte) bool, parallelism int) {
 	ctx := context.TODO()
+	b.SetParallelism(parallelism)
+	b.ResetTimer()
+
 	b.RunParallel(func(pb *testing.PB) {
+		index := 0
 		for pb.Next() {
-			for _, id := range ids {
-				filter.Contains(ctx, id)
-				filter.Add(ctx, id)
-			}
+			index = (index + 1) % len(ids)
+			f(ctx, ids[index])
 		}
 	})
 }
 
 func BenchmarkFilter(b *testing.B) {
-	bf, err := NewOppoBloomFilter(5000, promutils.NewTestScope())
-	assert.NoError(b, err)
-	ids := RandBytesSliceGenerator(100, 10000)
-	b.SetParallelism(8)
+	parallelism := 10
+	cacheSize := 5000
 
-	b.Run("oppoFilterBenchmark", func(b *testing.B) {
-		benchmarkFilter(b, ids, bf)
+	bf, err := NewOppoBloomFilter(cacheSize, promutils.NewTestScope())
+	assert.NoError(b, err)
+	lf, err := NewLRUCacheFilter(cacheSize, promutils.NewTestScope())
+	assert.NoError(b, err)
+	ids := RandBytesSliceGenerator(100, 100000)
+
+	b.Run("oppoFilterContainsBenchmark", func(b *testing.B) {
+		benchmarkFilter(b, ids, bf.Contains, parallelism)
 	})
 
-	b.Run("lruFilterBenchmark", func(b *testing.B) {
-		benchmarkFilter(b, ids, bf)
+	b.Run("oppoFilterAddBenchmark", func(b *testing.B) {
+		benchmarkFilter(b, ids, bf.Add, parallelism)
+	})
+
+	b.Run("lruCacheContainsBenchmark", func(b *testing.B) {
+		benchmarkFilter(b, ids, lf.Contains, parallelism)
+	})
+
+	b.Run("lruCacheAddBenchmark", func(b *testing.B) {
+		benchmarkFilter(b, ids, lf.Add, parallelism)
 	})
 }
 
