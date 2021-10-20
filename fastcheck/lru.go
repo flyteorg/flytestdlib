@@ -18,7 +18,7 @@ type LRUCacheFilter struct {
 }
 
 // Simply uses Contains from the LRUCacheFilter
-func (l LRUCacheFilter) Contains(ctx context.Context, id []byte) bool {
+func (l LRUCacheFilter) Contains(_ context.Context, id []byte) bool {
 	v := l.lru.Contains(string(id))
 	if v {
 		l.metrics.Hit.Inc()
