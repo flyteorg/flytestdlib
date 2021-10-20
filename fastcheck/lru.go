@@ -21,10 +21,10 @@ type LRUCacheFilter struct {
 func (l LRUCacheFilter) Contains(ctx context.Context, id []byte) bool {
 	v := l.lru.Contains(string(id))
 	if v {
-		l.metrics.Hit.Inc(ctx)
+		l.metrics.Hit.Inc()
 		return true
 	}
-	l.metrics.Miss.Inc(ctx)
+	l.metrics.Miss.Inc()
 	return false
 }
 

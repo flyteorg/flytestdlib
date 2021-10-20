@@ -69,11 +69,11 @@ func (f *OppoBloomFilter) Contains(ctx context.Context, id []byte) bool {
 	curr := get(f.array, f.getIndex(id))
 	if curr != nil {
 		if bytes.Equal(id, *curr) {
-			f.metrics.Hit.Inc(ctx)
+			f.metrics.Hit.Inc()
 			return true
 		}
 	}
-	f.metrics.Miss.Inc(ctx)
+	f.metrics.Miss.Inc()
 	return false
 }
 
