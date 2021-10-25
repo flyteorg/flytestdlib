@@ -3,11 +3,12 @@ package config
 import (
 	"context"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"os"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -18,6 +19,7 @@ const (
 	StrictModeFlag  = "strict"
 	CommandValidate = "validate"
 	CommandDiscover = "discover"
+	CommandDocs     = "docs"
 )
 
 type AccessorProvider func(options Options) Accessor
@@ -32,7 +34,7 @@ func NewConfigCommand(accessorProvider AccessorProvider) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:       "config",
 		Short:     "Runs various config commands, look at the help of this command to get a list of available commands..",
-		ValidArgs: []string{CommandValidate, CommandDiscover},
+		ValidArgs: []string{CommandValidate, CommandDiscover, CommandDocs},
 	}
 
 	validateCmd := &cobra.Command{
@@ -100,7 +102,7 @@ func redirectStdOut() (old, new *os.File) {
 func PrintConfigTable(b interface{}, sectionName string, subsection bool) {
 	val := reflect.Indirect(reflect.ValueOf(b))
 
-	if val.Kind() != reflect.Struct || val.Type().Field(0).Tag.Get("json") == ""{
+	if val.Kind() != reflect.Struct || val.Type().Field(0).Tag.Get("json") == "" {
 		return
 	}
 
@@ -140,7 +142,7 @@ func PrintConfigTable(b interface{}, sectionName string, subsection bool) {
 		data := []string{fieldName, fieldType, fieldDescription}
 		table.Append(data)
 
-		if t.Type.Kind() == reflect.Struct{
+		if t.Type.Kind() == reflect.Struct {
 			defer PrintConfigTable(val.Field(i).Interface(), fieldName, true)
 		}
 	}

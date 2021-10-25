@@ -61,4 +61,7 @@ func TestNewConfigCommand(t *testing.T) {
 	output, err = executeCommandC(cmd, CommandValidate)
 	assert.NoError(t, err)
 	assert.Contains(t, output, "test")
+
+	output, err = executeCommandC(cmd, CommandDocs)
+	assert.NoError(t, err)
 }
