@@ -3,12 +3,11 @@ package config
 import (
 	"context"
 	"fmt"
+	"github.com/olekukonko/tablewriter"
 	"os"
 	"reflect"
 	"sort"
 	"strings"
-
-	"github.com/olekukonko/tablewriter"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -99,10 +98,10 @@ func redirectStdOut() (old, new *os.File) {
 	return
 }
 
-func PrintConfigTable(b interface{}, sectionName string, subsection bool) {
+func PrintConfigTable(b interface{}, sectionName string, subsection bool){
 	val := reflect.Indirect(reflect.ValueOf(b))
 
-	if val.Kind() != reflect.Struct || val.Type().Field(0).Tag.Get("json") == "" {
+	if val.Kind() != reflect.Struct || val.Type().Field(0).Tag.Get("json") == ""{
 		return
 	}
 
@@ -139,16 +138,26 @@ func PrintConfigTable(b interface{}, sectionName string, subsection bool) {
 			}
 			fieldDescription = pFlag[commaIdx+1:]
 		}
-		data := []string{fieldName, fieldType, fieldDescription}
-		table.Append(data)
 
 		if t.Type.Kind() == reflect.Struct {
-			defer PrintConfigTable(val.Field(i).Interface(), fieldName, true)
+			defer PrintConfigTable(val.Field(i).Interface(), fieldType, true)
+			val := reflect.Indirect(reflect.ValueOf(val.Field(i).Interface()))
+			if val.Type().Field(0).Tag.Get("json") != ""{
+				fieldType = fmt.Sprintf("`%s <#%s>`_", fieldType, fieldType)
+			}
 		}
+		data := []string{fieldName, fieldType, fieldDescription}
+		table.Append(data)
 	}
 	table.Render()
 	fmt.Println()
+	return
 }
+
+//func GetUnexportedField(field reflect.Value) interface{} {
+//	return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Interface()
+//}
+
 
 func validate(accessor Accessor, p printer) error {
 	// Redirect stdout
