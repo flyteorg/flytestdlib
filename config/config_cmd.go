@@ -3,13 +3,14 @@ package config
 import (
 	"context"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"os"
 	"reflect"
 	"sort"
 	"strings"
+	"unsafe"
 
 	"github.com/fatih/color"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -62,8 +63,12 @@ func NewConfigCommand(accessorProvider AccessorProvider) *cobra.Command {
 				orderedSections = append(orderedSections, s)
 			}
 			sort.Strings(orderedSections)
+			m := map[string]bool{}
 			for _, sectionKey := range orderedSections {
-				PrintConfigTable(sections[sectionKey].GetConfig(), sectionKey, false)
+				if canPrint(sections[sectionKey].GetConfig()) {
+					m[sectionKey] = true
+					printConfigTable(sections[sectionKey].GetConfig(), sectionKey, false, m)
+				}
 			}
 			return nil
 		},
@@ -98,18 +103,11 @@ func redirectStdOut() (old, new *os.File) {
 	return
 }
 
-func PrintConfigTable(b interface{}, sectionName string, subsection bool){
+func printConfigTable(b interface{}, sectionName string, subsection bool, sectionKeyMap map[string]bool) {
 	val := reflect.Indirect(reflect.ValueOf(b))
 
-	if val.Kind() != reflect.Struct || val.Type().Field(0).Tag.Get("json") == ""{
-		return
-	}
-
-	fmt.Println(sectionName)
-	if subsection {
-		fmt.Println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-	} else {
-		fmt.Println("------------------------------------")
+	if val.Kind() == reflect.Slice {
+		val = reflect.Indirect(reflect.ValueOf(val.Index(0).Interface()))
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
@@ -119,9 +117,19 @@ func PrintConfigTable(b interface{}, sectionName string, subsection bool){
 
 	for i := 0; i < val.Type().NumField(); i++ {
 		t := val.Type().Field(i)
+		tagType := t.Type
+		if tagType.Kind() == reflect.Ptr {
+			tagType = t.Type.Elem()
+		}
+
 		fieldName := t.Name
-		fieldType := t.Type.String()
+		fieldType := tagType.String()
 		fieldDescription := ""
+
+		if t.Type.Kind() == reflect.Struct {
+			ss := strings.Split(fieldType, ".")
+			fieldType = ss[len(ss)-1]
+		}
 
 		if jsonTag := t.Tag.Get("json"); jsonTag != "" && jsonTag != "-" {
 			var commaIdx int
@@ -139,25 +147,47 @@ func PrintConfigTable(b interface{}, sectionName string, subsection bool){
 			fieldDescription = pFlag[commaIdx+1:]
 		}
 
-		if t.Type.Kind() == reflect.Struct {
-			defer PrintConfigTable(val.Field(i).Interface(), fieldType, true)
-			val := reflect.Indirect(reflect.ValueOf(val.Field(i).Interface()))
-			if val.Type().Field(0).Tag.Get("json") != ""{
-				fieldType = fmt.Sprintf("`%s <#%s>`_", fieldType, fieldType)
+		if tagType.Kind() == reflect.Struct {
+			f := val.Field(i)
+			// In order to get value from unexported field
+			if f.Type().Kind() == reflect.Ptr {
+				f = reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
+			} else {
+				f = reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr()))
+			}
+			if canPrint(f.Interface()) && sectionKeyMap[fieldType] == false {
+				sectionKeyMap[fieldType] = true
+				defer printConfigTable(f.Interface(), fieldType, true, sectionKeyMap)
 			}
 		}
+		if sectionKeyMap[fieldType] {
+			// Make this string as a link
+			fieldType = fmt.Sprintf("%s_", fieldType)
+		}
+
 		data := []string{fieldName, fieldType, fieldDescription}
 		table.Append(data)
 	}
+
+	// Print out the config table
+	fmt.Println(sectionName)
+	if subsection {
+		fmt.Println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+	} else {
+		fmt.Println("-----------------------------------------")
+	}
 	table.Render()
 	fmt.Println()
-	return
 }
 
-//func GetUnexportedField(field reflect.Value) interface{} {
-//	return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Interface()
-//}
-
+// Print out config docs if and only if the section is struct or slice
+func canPrint(b interface{}) bool {
+	val := reflect.Indirect(reflect.ValueOf(b))
+	if val.Kind() == reflect.Struct || val.Kind() == reflect.Slice {
+		return true
+	}
+	return false
+}
 
 func validate(accessor Accessor, p printer) error {
 	// Redirect stdout
