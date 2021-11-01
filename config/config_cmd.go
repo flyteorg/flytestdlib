@@ -58,16 +58,12 @@ func NewConfigCommand(accessorProvider AccessorProvider) *cobra.Command {
 		Short: "Generate configuration documetation in rst format",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			sections := GetRootSection().GetSections()
-			var orderedSections []string
-			for s := range sections {
-				orderedSections = append(orderedSections, s)
-			}
-			sort.Strings(orderedSections)
-			m := map[string]bool{}
-			for _, sectionKey := range orderedSections {
+			orderedSectionKeys := getOrderedSectionKeys(sections)
+			visitedSection := map[string]bool{}
+			typeLink := map[reflect.Type]string{}
+			for _, sectionKey := range orderedSectionKeys {
 				if canPrint(sections[sectionKey].GetConfig()) {
-					m[sectionKey] = true
-					printConfigTable(sections[sectionKey].GetConfig(), sectionKey, false, m)
+					printConfigTable(sections[sectionKey], sectionKey, false, visitedSection, typeLink)
 				}
 			}
 			return nil
@@ -103,18 +99,19 @@ func redirectStdOut() (old, new *os.File) {
 	return
 }
 
-func printConfigTable(b interface{}, sectionName string, subsection bool, sectionKeyMap map[string]bool) {
-	val := reflect.Indirect(reflect.ValueOf(b))
+func printConfigTable(section Section, sectionName string, isSubsection bool, visitedSection map[string]bool, typeLink map[reflect.Type]string) {
+	val := reflect.Indirect(reflect.ValueOf(section.GetConfig()))
 
 	if val.Kind() == reflect.Slice {
 		val = reflect.Indirect(reflect.ValueOf(val.Index(0).Interface()))
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Type", "Description"})
+	table.SetHeader([]string{"Name", "Type", "Default Value", "Description"})
 	table.SetAlignment(3)
 	table.SetRowLine(true)
 
+	subsections := make(map[string]interface{})
 	for i := 0; i < val.Type().NumField(); i++ {
 		t := val.Type().Field(i)
 		tagType := t.Type
@@ -123,61 +120,124 @@ func printConfigTable(b interface{}, sectionName string, subsection bool, sectio
 		}
 
 		fieldName := t.Name
-		fieldType := tagType.String()
+		fieldType := tagType.Kind().String()
+		fieldDefaultValue := fmt.Sprintf("%v", val.Field(i))
+		fieldDefaultValue = strings.Replace(fieldDefaultValue, "_", "\\_", -1)
 		fieldDescription := ""
 
-		if t.Type.Kind() == reflect.Struct {
-			ss := strings.Split(fieldType, ".")
-			fieldType = ss[len(ss)-1]
+		if tagType.Kind() == reflect.Map || tagType.Kind() == reflect.Slice || tagType.Kind() == reflect.Struct {
+			fieldType = tagType.String()
+			// Set default value to field type, and user can check its default value in subsection table
+			fieldDefaultValue = fieldType
 		}
 
-		if jsonTag := t.Tag.Get("json"); jsonTag != "" && jsonTag != "-" {
+		if jsonTag := t.Tag.Get("json"); len(jsonTag) > 0 && !strings.HasPrefix(jsonTag, "-") {
 			var commaIdx int
 			if commaIdx = strings.Index(jsonTag, ","); commaIdx < 0 {
 				commaIdx = len(jsonTag)
 			}
-			fieldName = jsonTag[:commaIdx]
+			if jsonTag[:commaIdx] != "" {
+				fieldName = jsonTag[:commaIdx]
+			}
 		}
 
-		if pFlag := t.Tag.Get("pflag"); pFlag != "" && pFlag != "-" {
+		if pFlag := t.Tag.Get("pflag"); len(pFlag) > 0 && !strings.HasPrefix(pFlag, "-") {
 			var commaIdx int
 			if commaIdx = strings.Index(pFlag, ","); commaIdx < 0 {
 				commaIdx = -1
 			}
-			fieldDescription = pFlag[commaIdx+1:]
+			if pFlag[commaIdx+1:] != "" {
+				fieldDescription = strings.TrimPrefix(pFlag[commaIdx+1:], " ")
+			}
 		}
 
 		if tagType.Kind() == reflect.Struct {
 			f := val.Field(i)
 			// In order to get value from unexported field
-			if f.Type().Kind() == reflect.Ptr {
+			if f.Kind() == reflect.Ptr {
 				f = reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
 			} else {
 				f = reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr()))
 			}
-			if canPrint(f.Interface()) && sectionKeyMap[fieldType] == false {
-				sectionKeyMap[fieldType] = true
-				defer printConfigTable(f.Interface(), fieldType, true, sectionKeyMap)
+			// Remove the package name of the type
+			ss := strings.Split(fieldType, ".")
+			if len(ss) > 0 {
+				fieldType = ss[len(ss)-1]
+			}
+
+			if canPrint(f.Interface()) {
+				if visitedSection[fieldType] {
+					if typeLink[tagType] == "" {
+						// Some types have the same name, but they are different type.
+						// Add field name at the end to tell the difference between them.
+						fieldType = fmt.Sprintf("%s (%s)", fieldType, fieldName)
+						subsections[fieldType] = f.Interface()
+					}
+				} else {
+					visitedSection[fieldType] = true
+					subsections[fieldType] = f.Interface()
+				}
+				fieldType = fmt.Sprintf("`%s`_", fieldType)
+				typeLink[tagType] = fieldType
 			}
 		}
-		if sectionKeyMap[fieldType] {
-			// Make this string as a link
-			fieldType = fmt.Sprintf("%s_", fieldType)
-		}
-
-		data := []string{fieldName, fieldType, fieldDescription}
+		data := []string{fieldName, fieldType, fieldDefaultValue, fieldDescription}
 		table.Append(data)
 	}
 
-	// Print out the config table
-	fmt.Println(sectionName)
-	if subsection {
+	if section != nil {
+		sections := section.GetSections()
+		orderedSectionKeys := getOrderedSectionKeys(sections)
+		for _, sectionKey := range orderedSectionKeys {
+			fieldName := sectionKey
+			t := reflect.TypeOf(sections[sectionKey].GetConfig())
+			fieldType := t.String()
+			if t.Kind() == reflect.Ptr {
+				fieldType = t.Elem().String()
+			}
+			fieldDefaultValue := fieldType
+			fieldDescription := ""
+
+			if visitedSection[fieldType] {
+				if typeLink[t] == "" {
+					// Some types have the same name, but they are different type.
+					// Add field name at the end to tell the difference between them.
+					fieldType = fmt.Sprintf("%s (%s)", fieldType, fieldName)
+					subsections[fieldType] = sections[sectionKey].GetConfig()
+				}
+			} else {
+				visitedSection[fieldType] = true
+				subsections[fieldType] = sections[sectionKey].GetConfig()
+			}
+			fieldType = fmt.Sprintf("`%s`_", fieldType)
+			typeLink[t] = fieldType
+			data := []string{fieldName, fieldType, fieldDefaultValue, fieldDescription}
+			table.Append(data)
+		}
+	}
+
+	if isSubsection {
+		fmt.Println(sectionName)
 		fmt.Println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
 	} else {
+		fmt.Println("Section:", sectionName)
 		fmt.Println("-----------------------------------------")
 	}
 	table.Render()
 	fmt.Println()
+
+	for k, v := range subsections {
+		printConfigTable(NewSection(v, nil), k, true, visitedSection, typeLink)
+	}
+}
+
+func getOrderedSectionKeys(sectionMap SectionMap) []string {
+	var orderedSectionKeys []string
+	for s := range sectionMap {
+		orderedSectionKeys = append(orderedSectionKeys, s)
+	}
+	sort.Strings(orderedSectionKeys)
+	return orderedSectionKeys
 }
 
 // Print out config docs if and only if the section is struct or slice
