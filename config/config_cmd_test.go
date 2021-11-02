@@ -13,7 +13,8 @@ import (
 )
 
 var redisConfig = "mockRedis"
-var resourceManagerConfig = ResourceManagerConfig{"mockType", 100, &redisConfig}
+var resourceManagerConfig = ResourceManagerConfig{"mockType", 100, &redisConfig,
+	[]int{1, 2, 3}, InnerConfig{"hello"}}
 
 type MockAccessor struct {
 }
@@ -68,16 +69,21 @@ func TestNewConfigCommand(t *testing.T) {
 
 	_, err = RegisterSection("resourceManager", &resourceManagerConfig)
 	assert.NoError(t, err)
-	_, err = GetRootSection().RegisterSection("subsection", &resourceManagerConfig)
-	assert.NoError(t, err)
+	GetRootSection().MustRegisterSection("subsection", &resourceManagerConfig)
 	_, err = executeCommandC(cmd, CommandDocs)
 	assert.NoError(t, err)
+}
+
+type InnerConfig struct {
+	InnerType string `json:"type" pflag:"noop,Which resource manager to use"`
 }
 
 type ResourceManagerConfig struct {
 	Type             string  `json:"type" pflag:"noop,Which resource manager to use"`
 	ResourceMaxQuota int     `json:"resourceMaxQuota" pflag:",Global limit for concurrent Qubole queries"`
 	RedisConfig      *string `json:"" pflag:",Config for Redis resource manager."`
+	ListConfig       []int
+	InnerConfig      InnerConfig
 }
 
 func TestGetDefaultValue(t *testing.T) {
