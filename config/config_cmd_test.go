@@ -99,11 +99,11 @@ func TestGetFieldDescriptionFromPflag(t *testing.T) {
 	assert.Equal(t, "Config for Redis resource manager.", getFieldDescriptionFromPflag(val.Type().Field(2)))
 }
 
-func TestGetFieldNameFromJsonTag(t *testing.T) {
+func TestGetFieldNameFromJSONTag(t *testing.T) {
 	val := reflect.ValueOf(resourceManagerConfig)
-	assert.Equal(t, "type", getFieldNameFromJsonTag(val.Type().Field(0)))
-	assert.Equal(t, "resourceMaxQuota", getFieldNameFromJsonTag(val.Type().Field(1)))
-	assert.Equal(t, "RedisConfig", getFieldNameFromJsonTag(val.Type().Field(2)))
+	assert.Equal(t, "type", getFieldNameFromJSONTag(val.Type().Field(0)))
+	assert.Equal(t, "resourceMaxQuota", getFieldNameFromJSONTag(val.Type().Field(1)))
+	assert.Equal(t, "RedisConfig", getFieldNameFromJSONTag(val.Type().Field(2)))
 }
 
 func TestCanPrint(t *testing.T) {

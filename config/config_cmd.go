@@ -63,6 +63,7 @@ func NewConfigCommand(accessorProvider AccessorProvider) *cobra.Command {
 			for s := range sections {
 				orderedSectionKeys.Insert(s)
 			}
+			printToc(orderedSectionKeys, sections)
 			visitedSection := map[string]bool{}
 			visitedType := map[reflect.Type]bool{}
 			for _, sectionKey := range orderedSectionKeys.List() {
@@ -103,13 +104,6 @@ func redirectStdOut() (old, new *os.File) {
 	return
 }
 
-type config struct {
-	name         string
-	dataType     string
-	defaultValue string
-	description  string
-}
-
 func printDocs(title string, isSubsection bool, section Section, visitedSection map[string]bool, visitedType map[reflect.Type]bool) {
 	printTitle(title, isSubsection)
 	val := reflect.Indirect(reflect.ValueOf(section.GetConfig()))
@@ -125,7 +119,7 @@ func printDocs(title string, isSubsection bool, section Section, visitedSection 
 			tagType = field.Type.Elem()
 		}
 
-		fieldName := getFieldNameFromJsonTag(field)
+		fieldName := getFieldNameFromJSONTag(field)
 		fieldTypeString := getFieldTypeString(tagType)
 		fieldDefaultValue := getDefaultValue(fmt.Sprintf("%v", reflect.Indirect(val.Field(i))))
 		fieldDescription := getFieldDescriptionFromPflag(field)
@@ -149,7 +143,7 @@ func printDocs(title string, isSubsection bool, section Section, visitedSection 
 				addSubsection(subVal.Interface(), subsections, fieldName, &fieldTypeString, tagType, visitedSection, visitedType)
 			}
 		}
-		printSection(config{fieldName, fieldTypeString, fieldDefaultValue, fieldDescription}, isSubsection)
+		printSection(fieldName, fieldTypeString, fieldDefaultValue, fieldDescription)
 	}
 
 	if section != nil {
@@ -165,7 +159,7 @@ func printDocs(title string, isSubsection bool, section Section, visitedSection 
 			fieldDefaultValue := getDefaultValue(sections[sectionKey].GetConfig())
 
 			addSubsection(sections[sectionKey].GetConfig(), subsections, fieldName, &fieldTypeString, fieldType, visitedSection, visitedType)
-			printSection(config{fieldName, fieldTypeString, fieldDefaultValue, ""}, isSubsection)
+			printSection(fieldName, fieldTypeString, fieldDefaultValue, "")
 		}
 	}
 	orderedSectionKeys := sets.NewString()
@@ -178,10 +172,17 @@ func printDocs(title string, isSubsection bool, section Section, visitedSection 
 	}
 }
 
+// Print Table of contents
+func printToc(orderedSectionKeys sets.String, sections SectionMap) {
+	for _, sectionKey := range orderedSectionKeys.List() {
+		fmt.Printf("- `%s <#section-%s>`_\n\n", sectionKey, sectionKey)
+	}
+}
+
 func printTitle(title string, isSubsection bool) {
 	if isSubsection {
 		fmt.Println(title)
-		fmt.Println(strings.Repeat("^", 80))
+		fmt.Println(strings.Repeat("-", 80))
 	} else {
 		fmt.Println("Section:", title)
 		fmt.Println(strings.Repeat("=", 80))
@@ -189,21 +190,18 @@ func printTitle(title string, isSubsection bool) {
 	fmt.Println()
 }
 
-func printSection(config config, isSubsection bool) {
+func printSection(name string, dataType string, defaultValue string, description string) {
 	c := "-"
-	if isSubsection {
-		c = "\""
-	}
 
-	fmt.Printf("%s ", config.name)
-	fmt.Printf("%s\n", config.dataType)
+	fmt.Printf("%s ", name)
+	fmt.Printf("(%s)\n", dataType)
 	fmt.Println(strings.Repeat(c, 80))
 	fmt.Println()
-	if config.description != "" {
-		fmt.Printf("**Description**: %s\n\n", config.description)
+	if description != "" {
+		fmt.Printf("%s\n\n", description)
 	}
-	if config.defaultValue != "" {
-		val := strings.Replace(config.defaultValue, "\n", "\n  ", -1)
+	if defaultValue != "" {
+		val := strings.Replace(defaultValue, "\n", "\n  ", -1)
 		val = ".. code-block:: yaml\n\n  " + val
 		fmt.Printf("**Default Value**: \n\n%s\n", val)
 	}
@@ -265,7 +263,7 @@ func getFieldDescriptionFromPflag(field reflect.StructField) string {
 	return ""
 }
 
-func getFieldNameFromJsonTag(field reflect.StructField) string {
+func getFieldNameFromJSONTag(field reflect.StructField) string {
 	if jsonTag := field.Tag.Get("json"); len(jsonTag) > 0 && !strings.HasPrefix(jsonTag, "-") {
 		var commaIdx int
 		if commaIdx = strings.Index(jsonTag, ","); commaIdx < 0 {
