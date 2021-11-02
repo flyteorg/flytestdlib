@@ -68,6 +68,8 @@ func TestNewConfigCommand(t *testing.T) {
 
 	_, err = RegisterSection("resourceManager", &resourceManagerConfig)
 	assert.NoError(t, err)
+	_, err = GetRootSection().RegisterSection("subsection", &resourceManagerConfig)
+	assert.NoError(t, err)
 	_, err = executeCommandC(cmd, CommandDocs)
 	assert.NoError(t, err)
 }
