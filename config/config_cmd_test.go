@@ -88,7 +88,7 @@ type ResourceManagerConfig struct {
 
 func TestGetDefaultValue(t *testing.T) {
 	val := getDefaultValue(resourceManagerConfig)
-	res := "RedisConfig: mockRedis\nresourceMaxQuota: 100\ntype: mockType\n"
+	res := "InnerConfig:\n  type: hello\nListConfig:\n- 1\n- 2\n- 3\nRedisConfig: mockRedis\nresourceMaxQuota: 100\ntype: mockType\n"
 	assert.Equal(t, res, val)
 }
 
