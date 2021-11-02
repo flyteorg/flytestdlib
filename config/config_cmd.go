@@ -214,7 +214,7 @@ func addSubsection(val interface{}, subsections map[string]interface{}, fieldNam
 	fieldTypeString *string, fieldType reflect.Type, visitedSection map[string]bool, visitedType map[reflect.Type]bool) {
 
 	if visitedSection[*fieldTypeString] {
-		if visitedType[fieldType] == false {
+		if !visitedType[fieldType] {
 			// Some types have the same name, but they are different type.
 			// Add field name at the end to tell the difference between them.
 			*fieldTypeString = fmt.Sprintf("%s (%s)", *fieldTypeString, fieldName)

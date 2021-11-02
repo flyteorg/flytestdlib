@@ -12,6 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var redisConfig = "mockRedis"
+var resourceManagerConfig = ResourceManagerConfig{"mockType", 100, &redisConfig}
+
 type MockAccessor struct {
 }
 
@@ -63,9 +66,7 @@ func TestNewConfigCommand(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, output, "test")
 
-	redisConfig := "mockRedis"
-	config := ResourceManagerConfig{"mockType", 100, &redisConfig}
-	_, err = RegisterSection("resourceManager", &config)
+	_, err = RegisterSection("resourceManager", &resourceManagerConfig)
 	assert.NoError(t, err)
 	_, err = executeCommandC(cmd, CommandDocs)
 	assert.NoError(t, err)
@@ -78,17 +79,13 @@ type ResourceManagerConfig struct {
 }
 
 func TestGetDefaultValue(t *testing.T) {
-	redisConfig := "mockRedis"
-	config := ResourceManagerConfig{"mockType", 100, &redisConfig}
-	val := getDefaultValue(config)
+	val := getDefaultValue(resourceManagerConfig)
 	res := "RedisConfig: mockRedis\nresourceMaxQuota: 100\ntype: mockType\n"
 	assert.Equal(t, res, val)
 }
 
 func TestGetFieldTypeString(t *testing.T) {
-	redisConfig := "mockRedis"
-	config := ResourceManagerConfig{"mockType", 100, &redisConfig}
-	val := reflect.ValueOf(config)
+	val := reflect.ValueOf(resourceManagerConfig)
 	assert.Equal(t, "config.ResourceManagerConfig", getFieldTypeString(val.Type()))
 	assert.Equal(t, "string", getFieldTypeString(val.Field(0).Type()))
 	assert.Equal(t, "int", getFieldTypeString(val.Field(1).Type()))
@@ -96,28 +93,22 @@ func TestGetFieldTypeString(t *testing.T) {
 }
 
 func TestGetFieldDescriptionFromPflag(t *testing.T) {
-	redisConfig := "mockRedis"
-	config := ResourceManagerConfig{"mockType", 100, &redisConfig}
-	val := reflect.ValueOf(config)
+	val := reflect.ValueOf(resourceManagerConfig)
 	assert.Equal(t, "Which resource manager to use", getFieldDescriptionFromPflag(val.Type().Field(0)))
 	assert.Equal(t, "Global limit for concurrent Qubole queries", getFieldDescriptionFromPflag(val.Type().Field(1)))
 	assert.Equal(t, "Config for Redis resource manager.", getFieldDescriptionFromPflag(val.Type().Field(2)))
 }
 
 func TestGetFieldNameFromJsonTag(t *testing.T) {
-	redisConfig := "mockRedis"
-	config := ResourceManagerConfig{"mockType", 100, &redisConfig}
-	val := reflect.ValueOf(config)
+	val := reflect.ValueOf(resourceManagerConfig)
 	assert.Equal(t, "type", getFieldNameFromJsonTag(val.Type().Field(0)))
 	assert.Equal(t, "resourceMaxQuota", getFieldNameFromJsonTag(val.Type().Field(1)))
 	assert.Equal(t, "RedisConfig", getFieldNameFromJsonTag(val.Type().Field(2)))
 }
 
 func TestCanPrint(t *testing.T) {
-	redisConfig := "mockRedis"
-	config := ResourceManagerConfig{"mockType", 100, &redisConfig}
-	assert.True(t, canPrint(config))
-	assert.True(t, canPrint(&config))
-	assert.True(t, canPrint([]ResourceManagerConfig{config}))
-	assert.False(t, canPrint(map[string]ResourceManagerConfig{"config": config}))
+	assert.True(t, canPrint(resourceManagerConfig))
+	assert.True(t, canPrint(&resourceManagerConfig))
+	assert.True(t, canPrint([]ResourceManagerConfig{resourceManagerConfig}))
+	assert.False(t, canPrint(map[string]ResourceManagerConfig{"config": resourceManagerConfig}))
 }
