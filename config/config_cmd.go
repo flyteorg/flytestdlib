@@ -63,7 +63,7 @@ func NewConfigCommand(accessorProvider AccessorProvider) *cobra.Command {
 			for s := range sections {
 				orderedSectionKeys.Insert(s)
 			}
-			printToc(orderedSectionKeys, sections)
+			printToc(orderedSectionKeys)
 			visitedSection := map[string]bool{}
 			visitedType := map[reflect.Type]bool{}
 			for _, sectionKey := range orderedSectionKeys.List() {
@@ -173,7 +173,7 @@ func printDocs(title string, isSubsection bool, section Section, visitedSection 
 }
 
 // Print Table of contents
-func printToc(orderedSectionKeys sets.String, sections SectionMap) {
+func printToc(orderedSectionKeys sets.String) {
 	for _, sectionKey := range orderedSectionKeys.List() {
 		fmt.Printf("- `%s <#section-%s>`_\n\n", sectionKey, sectionKey)
 	}
