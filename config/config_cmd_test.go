@@ -82,9 +82,9 @@ type ResourceManagerConfig struct {
 	Type             string  `json:"type" pflag:"noop,Which resource manager to use"`
 	ResourceMaxQuota int     `json:"resourceMaxQuota" pflag:",Global limit for concurrent Qubole queries"`
 	RedisConfig      *string `json:"" pflag:",Config for Redis resource manager."`
-	ListConfig       []int
+	ListConfig       []int   `json:"" pflag:","`
 	InnerConfig      InnerConfig
-	InnerConfig1      *InnerConfig
+	InnerConfig1     *InnerConfig
 }
 
 func TestGetDefaultValue(t *testing.T) {
