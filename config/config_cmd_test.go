@@ -14,7 +14,7 @@ import (
 
 var redisConfig = "mockRedis"
 var resourceManagerConfig = ResourceManagerConfig{"mockType", 100, &redisConfig,
-	[]int{1, 2, 3}, InnerConfig{"hello"}}
+	[]int{1, 2, 3}, InnerConfig{"hello"}, &InnerConfig{"world"}}
 
 type MockAccessor struct {
 }
@@ -67,9 +67,9 @@ func TestNewConfigCommand(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, output, "test")
 
-	_, err = RegisterSection("resourceManager", &resourceManagerConfig)
+	section, err := GetRootSection().RegisterSection("root", &resourceManagerConfig)
 	assert.NoError(t, err)
-	GetRootSection().MustRegisterSection("subsection", &resourceManagerConfig)
+	section.MustRegisterSection("subsection", &resourceManagerConfig)
 	_, err = executeCommandC(cmd, CommandDocs)
 	assert.NoError(t, err)
 }
@@ -84,11 +84,12 @@ type ResourceManagerConfig struct {
 	RedisConfig      *string `json:"" pflag:",Config for Redis resource manager."`
 	ListConfig       []int
 	InnerConfig      InnerConfig
+	InnerConfig1      *InnerConfig
 }
 
 func TestGetDefaultValue(t *testing.T) {
 	val := getDefaultValue(resourceManagerConfig)
-	res := "InnerConfig:\n  type: hello\nListConfig:\n- 1\n- 2\n- 3\nRedisConfig: mockRedis\nresourceMaxQuota: 100\ntype: mockType\n"
+	res := "InnerConfig:\n  type: hello\nInnerConfig1:\n  type: world\nListConfig:\n- 1\n- 2\n- 3\nRedisConfig: mockRedis\nresourceMaxQuota: 100\ntype: mockType\n"
 	assert.Equal(t, res, val)
 }
 
