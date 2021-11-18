@@ -435,4 +435,18 @@ func TestTestType_SetFlags(t *testing.T) {
 			}
 		})
 	})
+	t.Run("Test_constType", func(t *testing.T) {
+
+		t.Run("Override", func(t *testing.T) {
+			testValue := "1"
+
+			cmdFlags.Set("constType", testValue)
+			if vInt, err := cmdFlags.GetInt("constType"); err == nil {
+				testDecodeJson_TestType(t, fmt.Sprintf("%v", vInt), &actual.ConstType)
+
+			} else {
+				assert.FailNow(t, err.Error())
+			}
+		})
+	})
 }

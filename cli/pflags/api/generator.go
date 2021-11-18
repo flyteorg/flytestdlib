@@ -178,8 +178,8 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 	st := typ.Underlying().(*types.Struct)
 	fields := make([]FieldInfo, 0, st.NumFields())
 	for i := 0; i < st.NumFields(); i++ {
-		v := st.Field(i)
-		if !v.IsField() {
+		variable := st.Field(i)
+		if !variable.IsField() {
 			continue
 		}
 
@@ -190,7 +190,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 		}
 
 		if len(tag.Name) == 0 {
-			tag.Name = v.Name()
+			tag.Name = variable.Name()
 		}
 
 		if tag.DefaultValue == "-" {
@@ -198,7 +198,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			continue
 		}
 
-		typ := v.Type()
+		typ := variable.Type()
 		ptr, isPtr := typ.(*types.Pointer)
 		if isPtr {
 			typ = ptr.Elem()
@@ -206,46 +206,25 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 
 		switch t := typ.(type) {
 		case *types.Basic:
-			if len(tag.DefaultValue) == 0 {
-				tag.DefaultValue = fmt.Sprintf("*new(%v)", typ.String())
+			f, err := buildBasicField(ctx, tag, t, defaultValueAccessor, fieldPath, variable, isPtr, bindDefaultVar)
+			if err != nil {
+				return fields, err
 			}
 
-			logger.Infof(ctx, "[%v] is of a basic type with default value [%v].", tag.Name, tag.DefaultValue)
-
-			isAllowed := false
-			for _, k := range allowedKinds {
-				if t.String() == k.String() {
-					isAllowed = true
-					break
-				}
-			}
-
-			if !isAllowed {
-				return nil, fmt.Errorf("only these basic kinds are allowed. given [%v] (Kind: [%v]. expected: [%+v]",
-					t.String(), t.Kind(), allowedKinds)
-			}
-
-			defaultValue := tag.DefaultValue
-			if len(defaultValueAccessor) > 0 {
-				defaultValue = appendAccessors(defaultValueAccessor, fieldPath, v.Name())
-
-				if isPtr {
-					defaultValue = fmt.Sprintf("%s.elemValueOrNil(%s).(%s)", defaultValueAccessor, defaultValue, t.Name())
-				}
-			}
-
-			fields = append(fields, FieldInfo{
-				Name:              tag.Name,
-				GoName:            v.Name(),
-				Typ:               t,
-				FlagMethodName:    camelCase(t.String()),
-				DefaultValue:      defaultValue,
-				UsageString:       tag.Usage,
-				TestValue:         `"1"`,
-				TestStrategy:      JSON,
-				ShouldBindDefault: bindDefaultVar,
-			})
+			fields = append(fields, f)
 		case *types.Named:
+			// For type aliases/named types (e.g. `type Foo int`), they will show up as Named but their underlying type
+			// will be basic.
+			if asBasic, isBasic := t.Underlying().(*types.Basic); isBasic {
+				f, err := buildBasicField(ctx, tag, asBasic, defaultValueAccessor, fieldPath, variable, isPtr, bindDefaultVar)
+				if err != nil {
+					return fields, err
+				}
+
+				fields = append(fields, f)
+				break
+			}
+
 			if _, isStruct := t.Underlying().(*types.Struct); !isStruct {
 				// TODO: Add a more descriptive error message.
 				return nil, fmt.Errorf("invalid type. it must be struct, received [%v] for field [%v]", t.Underlying().String(), tag.Name)
@@ -257,16 +236,16 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 
 			defaultValue := tag.DefaultValue
 			if len(defaultValueAccessor) > 0 {
-				defaultValue = appendAccessors(defaultValueAccessor, fieldPath, v.Name())
+				defaultValue = appendAccessors(defaultValueAccessor, fieldPath, variable.Name())
 				if isStringer(t) {
 					defaultValue = defaultValue + ".String()"
 				} else if isJSONMarshaler(t) {
 					logger.Infof(ctx, "Field [%v] of type [%v] does not implement Stringer interface."+
-						" Will use %s.mustMarshalJSON() to get its default value.", defaultValueAccessor, v.Name(), t.String())
+						" Will use %s.mustMarshalJSON() to get its default value.", defaultValueAccessor, variable.Name(), t.String())
 					defaultValue = fmt.Sprintf("%s.mustMarshalJSON(%s)", defaultValueAccessor, defaultValue)
 				} else {
 					logger.Infof(ctx, "Field [%v] of type [%v] does not implement Stringer interface."+
-						" Will use %s.mustMarshalJSON() to get its default value.", defaultValueAccessor, v.Name(), t.String())
+						" Will use %s.mustMarshalJSON() to get its default value.", defaultValueAccessor, variable.Name(), t.String())
 					defaultValue = fmt.Sprintf("%s.mustJsonMarshal(%s)", defaultValueAccessor, defaultValue)
 				}
 			}
@@ -283,7 +262,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 
 				fields = append(fields, FieldInfo{
 					Name:              tag.Name,
-					GoName:            v.Name(),
+					GoName:            variable.Name(),
 					Typ:               types.Typ[types.String],
 					FlagMethodName:    "String",
 					DefaultValue:      defaultValue,
@@ -295,7 +274,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			} else {
 				logger.Infof(ctx, "Traversing fields in type.")
 
-				nested, err := discoverFieldsRecursive(logger.WithIndent(ctx, indent), t, defaultValueAccessor, appendAccessors(fieldPath, v.Name()), bindDefaultVar)
+				nested, err := discoverFieldsRecursive(logger.WithIndent(ctx, indent), t, defaultValueAccessor, appendAccessors(fieldPath, variable.Name()), bindDefaultVar)
 				if err != nil {
 					return nil, err
 				}
@@ -303,7 +282,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 				for _, subField := range nested {
 					fields = append(fields, FieldInfo{
 						Name:              fmt.Sprintf("%v.%v", tag.Name, subField.Name),
-						GoName:            fmt.Sprintf("%v.%v", v.Name(), subField.GoName),
+						GoName:            fmt.Sprintf("%v.%v", variable.Name(), subField.GoName),
 						Typ:               subField.Typ,
 						FlagMethodName:    subField.FlagMethodName,
 						DefaultValue:      subField.DefaultValue,
@@ -318,7 +297,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			logger.Infof(ctx, "[%v] is of a slice type with default value [%v].", tag.Name, tag.DefaultValue)
 			defaultValue := tag.DefaultValue
 
-			f, err := buildFieldForSlice(logger.WithIndent(ctx, indent), t, tag.Name, v.Name(), tag.Usage, defaultValue, bindDefaultVar)
+			f, err := buildFieldForSlice(logger.WithIndent(ctx, indent), t, tag.Name, variable.Name(), tag.Usage, defaultValue, bindDefaultVar)
 			if err != nil {
 				return nil, err
 			}
@@ -328,7 +307,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			logger.Infof(ctx, "[%v] is of an array type with default value [%v].", tag.Name, tag.DefaultValue)
 			defaultValue := tag.DefaultValue
 
-			f, err := buildFieldForSlice(logger.WithIndent(ctx, indent), t, tag.Name, v.Name(), tag.Usage, defaultValue, bindDefaultVar)
+			f, err := buildFieldForSlice(logger.WithIndent(ctx, indent), t, tag.Name, variable.Name(), tag.Usage, defaultValue, bindDefaultVar)
 			if err != nil {
 				return nil, err
 			}
@@ -338,10 +317,10 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			logger.Infof(ctx, "[%v] is of a map type with default value [%v].", tag.Name, tag.DefaultValue)
 			defaultValue := tag.DefaultValue
 			if len(defaultValueAccessor) > 0 {
-				defaultValue = appendAccessors(defaultValueAccessor, fieldPath, v.Name())
+				defaultValue = appendAccessors(defaultValueAccessor, fieldPath, variable.Name())
 			}
 
-			f, err := buildFieldForMap(logger.WithIndent(ctx, indent), t, tag.Name, v.Name(), tag.Usage, defaultValue, bindDefaultVar)
+			f, err := buildFieldForMap(logger.WithIndent(ctx, indent), t, tag.Name, variable.Name(), tag.Usage, defaultValue, bindDefaultVar)
 			if err != nil {
 				return nil, err
 			}
@@ -353,6 +332,50 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 	}
 
 	return fields, nil
+}
+
+func buildBasicField(ctx context.Context, tag Tag, t *types.Basic, defaultValueAccessor string, fieldPath string,
+	v *types.Var, isPtr bool, bindDefaultVar bool) (FieldInfo, error) {
+
+	if len(tag.DefaultValue) == 0 {
+		tag.DefaultValue = fmt.Sprintf("*new(%v)", t.String())
+	}
+
+	logger.Infof(ctx, "[%v] is of a basic type with default value [%v].", tag.Name, tag.DefaultValue)
+
+	isAllowed := false
+	for _, k := range allowedKinds {
+		if t.String() == k.String() {
+			isAllowed = true
+			break
+		}
+	}
+
+	if !isAllowed {
+		return FieldInfo{}, fmt.Errorf("only these basic kinds are allowed. given [%v] (Kind: [%v]. expected: [%+v]",
+			t.String(), t.Kind(), allowedKinds)
+	}
+
+	defaultValue := tag.DefaultValue
+	if len(defaultValueAccessor) > 0 {
+		defaultValue = appendAccessors(defaultValueAccessor, fieldPath, v.Name())
+
+		if isPtr {
+			defaultValue = fmt.Sprintf("%s.elemValueOrNil(%s).(%s)", defaultValueAccessor, defaultValue, t.Name())
+		}
+	}
+
+	return FieldInfo{
+		Name:              tag.Name,
+		GoName:            v.Name(),
+		Typ:               t,
+		FlagMethodName:    camelCase(t.String()),
+		DefaultValue:      defaultValue,
+		UsageString:       tag.Usage,
+		TestValue:         `"1"`,
+		TestStrategy:      JSON,
+		ShouldBindDefault: bindDefaultVar,
+	}, nil
 }
 
 // NewGenerator initializes a PFlagProviderGenerator for pflags files for targetTypeName struct under pkg. If pkg is not filled in,

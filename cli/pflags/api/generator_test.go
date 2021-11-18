@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -48,53 +49,70 @@ func TestElemValueOrNil(t *testing.T) {
 }
 
 func TestNewGenerator(t *testing.T) {
-	g, err := NewGenerator("github.com/flyteorg/flytestdlib/cli/pflags/api", "TestType", "DefaultTestType", false)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	ctx := context.Background()
-	p, err := g.Generate(ctx)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	codeOutput, err := ioutil.TempFile("", "output-*.go")
-	if !assert.NoError(t, err) {
-		t.FailNow()
+	testCases := []struct {
+		TypeName                  string
+		DefaultVariableName       string
+		shouldBindDefaultVariable bool
+	}{
+		{
+			TypeName:                  "TestType",
+			DefaultVariableName:       "DefaultTestType",
+			shouldBindDefaultVariable: false,
+		},
 	}
 
-	defer func() { assert.NoError(t, os.Remove(codeOutput.Name())) }()
+	for _, typ := range testCases {
+		t.Run("Test "+typ.TypeName, func(t *testing.T) {
+			g, err := NewGenerator("github.com/flyteorg/flytestdlib/cli/pflags/api", typ.TypeName, typ.DefaultVariableName, typ.shouldBindDefaultVariable)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			ctx := context.Background()
+			p, err := g.Generate(ctx)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
-	testOutput, err := ioutil.TempFile("", "output-*_test.go")
-	if !assert.NoError(t, err) {
-		t.FailNow()
+			codeOutput, err := ioutil.TempFile("", "output-*.go")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			defer func() { assert.NoError(t, os.Remove(codeOutput.Name())) }()
+
+			testOutput, err := ioutil.TempFile("", "output-*_test.go")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			defer func() { assert.NoError(t, os.Remove(testOutput.Name())) }()
+
+			assert.NoError(t, p.WriteCodeFile(codeOutput.Name()))
+			assert.NoError(t, p.WriteTestFile(testOutput.Name()))
+
+			codeBytes, err := ioutil.ReadFile(codeOutput.Name())
+			assert.NoError(t, err)
+
+			testBytes, err := ioutil.ReadFile(testOutput.Name())
+			assert.NoError(t, err)
+
+			goldenFilePath := filepath.Join("testdata", strings.ToLower(typ.TypeName)+".go")
+			goldenTestFilePath := filepath.Join("testdata", strings.ToLower(typ.TypeName)+"_test.go")
+			if *update {
+				assert.NoError(t, ioutil.WriteFile(goldenFilePath, codeBytes, os.ModePerm))
+				assert.NoError(t, ioutil.WriteFile(goldenTestFilePath, testBytes, os.ModePerm))
+			}
+
+			goldenOutput, err := ioutil.ReadFile(filepath.Clean(goldenFilePath))
+			assert.NoError(t, err)
+			assert.Equal(t, string(goldenOutput), string(codeBytes))
+
+			goldenTestOutput, err := ioutil.ReadFile(filepath.Clean(goldenTestFilePath))
+			assert.NoError(t, err)
+			assert.Equal(t, string(goldenTestOutput), string(testBytes))
+		})
 	}
 
-	defer func() { assert.NoError(t, os.Remove(testOutput.Name())) }()
-
-	assert.NoError(t, p.WriteCodeFile(codeOutput.Name()))
-	assert.NoError(t, p.WriteTestFile(testOutput.Name()))
-
-	codeBytes, err := ioutil.ReadFile(codeOutput.Name())
-	assert.NoError(t, err)
-
-	testBytes, err := ioutil.ReadFile(testOutput.Name())
-	assert.NoError(t, err)
-
-	goldenFilePath := filepath.Join("testdata", "testtype.go")
-	goldenTestFilePath := filepath.Join("testdata", "testtype_test.go")
-	if *update {
-		assert.NoError(t, ioutil.WriteFile(goldenFilePath, codeBytes, os.ModePerm))
-		assert.NoError(t, ioutil.WriteFile(goldenTestFilePath, testBytes, os.ModePerm))
-	}
-
-	goldenOutput, err := ioutil.ReadFile(filepath.Clean(goldenFilePath))
-	assert.NoError(t, err)
-	assert.Equal(t, string(goldenOutput), string(codeBytes))
-
-	goldenTestOutput, err := ioutil.ReadFile(filepath.Clean(goldenTestFilePath))
-	assert.NoError(t, err)
-	assert.Equal(t, string(goldenTestOutput), string(testBytes))
 	t.Run("empty package", func(t *testing.T) {
 		gen, err := NewGenerator("", "TestType", "DefaultTestType", false)
 		assert.Nil(t, err)

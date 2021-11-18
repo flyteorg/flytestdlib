@@ -23,7 +23,10 @@ type TestType struct {
 	StorageConfig    storage.Config    `json:"storage"`
 	IntValue         *int              `json:"i"`
 	StringMap        map[string]string `json:"m" pflag:",I'm a map of strings"`
+	ConstType        TestConstType     `json:"constType"`
 }
+
+type TestConstType int
 
 type NestedType struct {
 	IntValue int `json:"i" pflag:",this is an important flag"`
