@@ -75,5 +75,6 @@ func (cfg TestType) GetPFlagSet(prefix string) *pflag.FlagSet {
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "i"), DefaultTestType.elemValueOrNil(DefaultTestType.IntValue).(int), "")
 	cmdFlags.StringToString(fmt.Sprintf("%v%v", prefix, "m"), DefaultTestType.StringMap, "I'm a map of strings")
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "constType"), DefaultTestType.ConstType, "")
+	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "aliasType"), DefaultTestType.AliasType, "")
 	return cmdFlags
 }

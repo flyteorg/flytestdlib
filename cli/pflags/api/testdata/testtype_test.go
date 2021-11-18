@@ -449,4 +449,18 @@ func TestTestType_SetFlags(t *testing.T) {
 			}
 		})
 	})
+	t.Run("Test_aliasType", func(t *testing.T) {
+
+		t.Run("Override", func(t *testing.T) {
+			testValue := "1"
+
+			cmdFlags.Set("aliasType", testValue)
+			if vInt, err := cmdFlags.GetInt("aliasType"); err == nil {
+				testDecodeJson_TestType(t, fmt.Sprintf("%v", vInt), &actual.AliasType)
+
+			} else {
+				assert.FailNow(t, err.Error())
+			}
+		})
+	})
 }
