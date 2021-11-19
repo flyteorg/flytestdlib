@@ -206,7 +206,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 
 		switch t := typ.(type) {
 		case *types.Basic:
-			f, err := buildBasicField(ctx, tag, t, defaultValueAccessor, fieldPath, variable, false, isPtr, bindDefaultVar)
+			f, err := buildBasicField(ctx, tag, t, defaultValueAccessor, fieldPath, variable, isPtr, bindDefaultVar, nil)
 			if err != nil {
 				return fields, err
 			}
@@ -215,8 +215,8 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 		case *types.Named:
 			// For type aliases/named types (e.g. `type Foo int`), they will show up as Named but their underlying type
 			// will be basic.
-			if asBasic, isBasic := t.Underlying().(*types.Basic); isBasic {
-				f, err := buildBasicField(ctx, tag, asBasic, defaultValueAccessor, fieldPath, variable, true, isPtr, bindDefaultVar)
+			if _, isBasic := t.Underlying().(*types.Basic); isBasic {
+				f, err := buildNamedBasicField(ctx, tag, t, defaultValueAccessor, fieldPath, variable, isPtr, bindDefaultVar)
 				if err != nil {
 					return fields, err
 				}
@@ -334,8 +334,33 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 	return fields, nil
 }
 
+// buildNamedBasicField builds FieldInfo for a NamedType that has an underlying basic type (e.g. `type Foo int`)
+func buildNamedBasicField(ctx context.Context, tag Tag, t *types.Named, defaultValueAccessor, fieldPath string,
+	v *types.Var, isPtr, bindDefaultVar bool) (FieldInfo, error) {
+	asBasic, casted := t.Underlying().(*types.Basic)
+	if !casted {
+		return FieldInfo{}, fmt.Errorf("expected named type with an underlying basic type. Received [%v]", t.String())
+	}
+
+	// If it supports json unmarshaling, assume it can be interpretted as a string.
+	if isJSONUnmarshaler(t) {
+		var accessorWrapper func(string) string
+		if isStringer(t) {
+			accessorWrapper = func(str string) string {
+				return str + ".String()"
+			}
+		}
+
+		return buildBasicField(ctx, tag, types.Typ[types.String], defaultValueAccessor, fieldPath, v,
+			isPtr, bindDefaultVar, accessorWrapper)
+	}
+
+	return buildBasicField(ctx, tag, asBasic, defaultValueAccessor, fieldPath, v,
+		isPtr, bindDefaultVar, nil)
+}
+
 func buildBasicField(ctx context.Context, tag Tag, t *types.Basic, defaultValueAccessor, fieldPath string,
-	v *types.Var, addCast, isPtr, bindDefaultVar bool) (FieldInfo, error) {
+	v *types.Var, isPtr, bindDefaultVar bool, accessorWrapper func(string) string) (FieldInfo, error) {
 
 	if len(tag.DefaultValue) == 0 {
 		tag.DefaultValue = fmt.Sprintf("*new(%v)", t.String())
@@ -359,14 +384,13 @@ func buildBasicField(ctx context.Context, tag Tag, t *types.Basic, defaultValueA
 	defaultValue := tag.DefaultValue
 	if len(defaultValueAccessor) > 0 {
 		defaultValue = appendAccessors(defaultValueAccessor, fieldPath, v.Name())
+		if accessorWrapper != nil {
+			defaultValue = accessorWrapper(defaultValue)
+		}
 
 		if isPtr {
 			defaultValue = fmt.Sprintf("%s.elemValueOrNil(%s).(%s)", defaultValueAccessor, defaultValue, t.Name())
 		}
-	}
-
-	if addCast && len(defaultValue) > 0 {
-		defaultValue = fmt.Sprintf("%s(%s)", t.String(), defaultValue)
 	}
 
 	return FieldInfo{
