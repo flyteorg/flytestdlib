@@ -206,7 +206,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 
 		switch t := typ.(type) {
 		case *types.Basic:
-			f, err := buildBasicField(ctx, tag, t, defaultValueAccessor, fieldPath, variable, isPtr, bindDefaultVar)
+			f, err := buildBasicField(ctx, tag, t, defaultValueAccessor, fieldPath, variable, false, isPtr, bindDefaultVar)
 			if err != nil {
 				return fields, err
 			}
@@ -216,7 +216,7 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 			// For type aliases/named types (e.g. `type Foo int`), they will show up as Named but their underlying type
 			// will be basic.
 			if asBasic, isBasic := t.Underlying().(*types.Basic); isBasic {
-				f, err := buildBasicField(ctx, tag, asBasic, defaultValueAccessor, fieldPath, variable, isPtr, bindDefaultVar)
+				f, err := buildBasicField(ctx, tag, asBasic, defaultValueAccessor, fieldPath, variable, true, isPtr, bindDefaultVar)
 				if err != nil {
 					return fields, err
 				}
@@ -334,8 +334,8 @@ func discoverFieldsRecursive(ctx context.Context, typ *types.Named, defaultValue
 	return fields, nil
 }
 
-func buildBasicField(ctx context.Context, tag Tag, t *types.Basic, defaultValueAccessor string, fieldPath string,
-	v *types.Var, isPtr bool, bindDefaultVar bool) (FieldInfo, error) {
+func buildBasicField(ctx context.Context, tag Tag, t *types.Basic, defaultValueAccessor, fieldPath string,
+	v *types.Var, addCast, isPtr, bindDefaultVar bool) (FieldInfo, error) {
 
 	if len(tag.DefaultValue) == 0 {
 		tag.DefaultValue = fmt.Sprintf("*new(%v)", t.String())
@@ -363,6 +363,10 @@ func buildBasicField(ctx context.Context, tag Tag, t *types.Basic, defaultValueA
 		if isPtr {
 			defaultValue = fmt.Sprintf("%s.elemValueOrNil(%s).(%s)", defaultValueAccessor, defaultValue, t.Name())
 		}
+	}
+
+	if addCast && len(defaultValue) > 0 {
+		defaultValue = fmt.Sprintf("%s(%s)", t.String(), defaultValue)
 	}
 
 	return FieldInfo{
