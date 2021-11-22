@@ -2,9 +2,15 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"go/token"
 	"go/types"
 	"unicode"
+
+	"golang.org/x/tools/go/packages"
+
+	"github.com/flyteorg/flytestdlib/logger"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -61,11 +67,58 @@ func implementsAnyOfMethods(t types.Type, methodNames ...string) (found bool) {
 }
 
 func implementsAllOfMethods(t types.Type, methodNames ...string) (found bool) {
+	fset := token.NewFileSet()
 	mset := types.NewMethodSet(t)
 	foundMethods := sets.NewString()
+	var loadedPackage *packages.Package
+	if asNamed, isNamed := t.(*types.Named); isNamed {
+		pkg := asNamed.Obj().Pkg()
+		config := &packages.Config{
+			Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedFiles,
+			Logf: logger.InfofNoCtx,
+		}
+
+		loadedPkgs, err := packages.Load(config, pkg.Path())
+		if err != nil {
+			logger.Errorf(context.Background(), err.Error())
+		}
+
+		loadedPackage = loadedPkgs[0]
+		fset = loadedPackage.Fset
+		//// Resolve package path
+		//p := filepath.Clean(filepath.Join(os.Getenv("GOPATH"), pkg.Path()))
+		////p = gogenutil.StripGopath(p)
+		//logger.InfofNoCtx("Loading package from path [%v]", pkg)
+		//
+		//if pkg == nil {
+		//	return false
+		//}
+		//files, err := ioutil.ReadDir(p)
+		//if err != nil {
+		//	logger.Errorf(context.Background(), err.Error())
+		//}
+		////parent := asNamed.Obj().Parent()
+		//for _, name := range loadedPkgs[0].GoFiles {
+		//	f, _ := os.Stat(name)
+		//	fset.AddFile(name, fset.Base(), int(f.Size()))
+		//}
+	}
 	for _, name := range methodNames {
-		if mset.Lookup(nil, name) != nil {
+		if foundMethod := mset.Lookup(loadedPackage.Types, name); foundMethod != nil {
 			foundMethods.Insert(name)
+			pos := foundMethod.Obj().Pos()
+			//fileNames := foundMethod.Obj().Pkg().Scope().Names()
+
+			if _, isNamed := t.(*types.Named); isNamed {
+				if t.(*types.Named).Obj().Parent().Contains(pos) {
+					return true
+				}
+			}
+
+			p := fset.Position(pos)
+			if p.String() == "" {
+				return false
+			}
 		}
 	}
 

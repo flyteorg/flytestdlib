@@ -197,7 +197,7 @@ func discoverFieldsRecursive(ctx context.Context, workingDirPkg string, typ *typ
 				f.FlagMethodName = ""
 			}
 
-			f.ShouldGeneratePFlagValue = !isPFlagValue(typ) && hasStringCtor
+			f.ShouldGeneratePFlagValue = !hasPFlagValueImpl && hasStringCtor
 
 			if !hasStringCtor && !hasPFlagValueImpl {
 				f.ShouldBindDefault = false
@@ -252,6 +252,7 @@ func discoverFieldsRecursive(ctx context.Context, workingDirPkg string, typ *typ
 			// For type aliases/named types (e.g. `type Foo int`), they will show up as Named but their underlying type
 			// will be basic.
 			if _, isBasic := t.Underlying().(*types.Basic); isBasic {
+				logger.Debugf(ctx, "type [%v] is a named basic type. Using buildNamedBasicField to generate it.", t.Obj().Name())
 				f, err := buildNamedBasicField(ctx, workingDirPkg, tag, t, defaultValueAccessor, fieldPath, variable, isPtr, bindDefaultVar)
 				if err != nil {
 					return fields, []PFlagValueType{}, err
