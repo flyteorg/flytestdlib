@@ -67,14 +67,46 @@ func ({{ .Name }}) mustMarshalJSON(v json.Marshaler) string {
 func (cfg {{ .Name }}) GetPFlagSet(prefix string) *pflag.FlagSet {
 	cmdFlags := pflag.NewFlagSet("{{ .Name }}", pflag.ExitOnError)
 	{{- range .Fields }}
+	{{- if eq .FlagMethodName "" }}
+	{{- if .ShouldBindDefault }}
+	cmdFlags.{{ .FlagMethodName }}Var(&{{ .DefaultValue }}, fmt.Sprintf("%v%v", prefix, "{{ .Name }}"), {{ .UsageString }})
+	{{- else }}
+	cmdFlags.{{ .FlagMethodName }}(fmt.Sprintf("%v%v", prefix, "{{ .Name }}"), {{ .UsageString }})
+	{{- end }}
+	{{- else }}
 	{{- if .ShouldBindDefault }}
 	cmdFlags.{{ .FlagMethodName }}Var(&{{ .DefaultValue }}, fmt.Sprintf("%v%v", prefix, "{{ .Name }}"), {{ .DefaultValue }}, {{ .UsageString }})
 	{{- else }}
 	cmdFlags.{{ .FlagMethodName }}(fmt.Sprintf("%v%v", prefix, "{{ .Name }}"), {{ .DefaultValue }}, {{ .UsageString }})
 	{{- end }}
 	{{- end }}
+	{{- end }}
 	return cmdFlags
 }
+
+{{- range .PFlagValueTypes }}
+
+{{- if .ShouldGenerateSetAndType }}
+// Set attempts to set the value of {{ .Name }} to the passed string representation. Returns error if the passed value
+// doesn't match one of the specified enum strings.
+// You typically need to generate an enum (using //go:generate enumer <type>) to get the corresponding methods generated.
+func (i *{{ .Name }}) Set(val string) error {
+	res, err := {{ .Name }}String(val)
+	if err != nil {
+		return err
+	}
+
+	*i = res
+	return nil
+}
+
+// Type returns a string representation of the type.
+func (i *{{ .Name }}) Type() string {
+	return "{{ .Name }}"
+}
+{{- end }}
+
+{{- end }}
 `))
 
 var testTmpl = template.Must(template.New("TestFile").Parse(
@@ -202,7 +234,15 @@ func Test{{ .Name }}_SetFlags(t *testing.T) {
 			{{ else }}testValue := join_{{ $ParentName }}({{ .TestValue }}, ",")
 			{{ end }}
 			cmdFlags.Set("{{ .Name }}", testValue)
-			if {{ $varName }}, err := cmdFlags.Get{{ .FlagMethodName }}("{{ .Name }}"); err == nil {
+			{{- if eq .FlagMethodName "" }}
+			if {{ $varName }} := cmdFlags.Lookup("{{ .Name }}"); {{ $varName }} != nil {
+				{{ if eq .TestStrategy "Json" }}testDecodeJson_{{ $ParentName }}(t, fmt.Sprintf("%v", v.Value.String()), &actual.{{ .GoName }})
+				{{ else if eq .TestStrategy "Raw" }}testDecodeRaw_{{ $ParentName }}(t, v.Value.String(), &actual.{{ .GoName }})
+				{{ else }}testDecodeRaw_{{ $ParentName }}(t, join_{{ $ParentName }}({{ print "v" .FlagMethodName }}, ",").Value.String(), &actual.{{ .GoName }})
+				{{ end }}
+			}
+			{{- else }}
+			if {{ $varName }}, err := cmdFlags.Get{{ .TestFlagMethodName }}("{{ .Name }}"); err == nil {
 				{{ if eq .TestStrategy "Json" }}testDecodeJson_{{ $ParentName }}(t, fmt.Sprintf("%v", {{ print "v" .FlagMethodName }}), &actual.{{ .GoName }})
 				{{ else if eq .TestStrategy "Raw" }}testDecodeRaw_{{ $ParentName }}(t, {{ print "v" .FlagMethodName }}, &actual.{{ .GoName }})
 				{{ else }}testDecodeRaw_{{ $ParentName }}(t, join_{{ $ParentName }}({{ print "v" .FlagMethodName }}, ","), &actual.{{ .GoName }})
@@ -210,6 +250,7 @@ func Test{{ .Name }}_SetFlags(t *testing.T) {
 			} else {
 				assert.FailNow(t, err.Error())
 			}
+			{{- end }}
 		})
 	})
 	{{- end }}

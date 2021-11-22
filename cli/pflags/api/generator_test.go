@@ -59,6 +59,11 @@ func TestNewGenerator(t *testing.T) {
 			DefaultVariableName:       "DefaultTestType",
 			shouldBindDefaultVariable: false,
 		},
+		{
+			TypeName:                  "TestType",
+			DefaultVariableName:       "DefaultTestType",
+			shouldBindDefaultVariable: true,
+		},
 	}
 
 	for _, typ := range testCases {
@@ -96,8 +101,15 @@ func TestNewGenerator(t *testing.T) {
 			testBytes, err := ioutil.ReadFile(testOutput.Name())
 			assert.NoError(t, err)
 
-			goldenFilePath := filepath.Join("testdata", strings.ToLower(typ.TypeName)+".go")
-			goldenTestFilePath := filepath.Join("testdata", strings.ToLower(typ.TypeName)+"_test.go")
+			var goldenFilePath string
+			var goldenTestFilePath string
+			goldenFilePath = filepath.Join("testdata", strings.ToLower(typ.TypeName)+".go")
+			goldenTestFilePath = filepath.Join("testdata", strings.ToLower(typ.TypeName)+"_test.go")
+			if typ.shouldBindDefaultVariable {
+				goldenFilePath = filepath.Join("testdata", strings.ToLower(typ.TypeName)+"_bind.go")
+				goldenTestFilePath = filepath.Join("testdata", strings.ToLower(typ.TypeName)+"_bind_test.go")
+			}
+
 			if *update {
 				assert.NoError(t, ioutil.WriteFile(goldenFilePath, codeBytes, os.ModePerm))
 				assert.NoError(t, ioutil.WriteFile(goldenTestFilePath, testBytes, os.ModePerm))
@@ -194,7 +206,7 @@ func TestDiscoverFieldsRecursive(t *testing.T) {
 		n1 := types.NewTypeName(token.NoPos, pkg, "T1", nil)
 		namedTypes := types.NewNamed(n1, new(types.Struct), nil)
 		//namedTypes := types.NewNamed(n1, nil, nil)
-		fields, err := discoverFieldsRecursive(ctx, namedTypes, defaultValueAccessor, fieldPath, false)
+		fields, _, err := discoverFieldsRecursive(ctx, "p", namedTypes, defaultValueAccessor, fieldPath, false)
 		assert.Nil(t, err)
 		assert.Equal(t, len(fields), 0)
 	})
