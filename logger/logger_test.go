@@ -7,6 +7,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -576,11 +577,40 @@ func Test_onConfigUpdated(t *testing.T) {
 		name string
 		args args
 	}{
-		// TODO: Add test cases.
+		{"testtext", args{Config{Formatter: FormatterConfig{FormatterText}}}},
+		{"testjson", args{Config{Formatter: FormatterConfig{FormatterJSON}}}},
+		{"testgcp", args{Config{Formatter: FormatterConfig{FormatterGCP}}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			onConfigUpdated(tt.args.cfg)
+		})
+	}
+}
+
+func Test_gcpFormatter(t *testing.T) {
+	tests := []struct {
+		name string
+		entry *logrus.Entry
+		expected string
+	}{
+		{"test", &logrus.Entry{
+			Logger:  nil,
+			Data:    map[string]interface{}{"src": "some-src"},
+			Time:    time.Date(2000,01,01,01,01,000,000, time.UTC),
+			Level:   1,
+			Caller:  nil,
+			Message: "some-message",
+			Buffer:  nil,
+			Context: nil,
+		}, "{\"data\":{\"src\":\"some-src\"},\"message\":\"some-message\",\"severity\":\"CRITICAL\",\"timestamp\":\"2000-01-01T01:01:00Z\"}\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			formatter := GcpFormatter{}
+			bytelog, err := formatter.Format(tt.entry)
+			assert.Nil(t, err)
+			assert.Equal(t, tt.expected, string(bytelog))
 		})
 	}
 }
