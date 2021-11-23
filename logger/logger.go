@@ -60,7 +60,6 @@ type GcpEntry struct {
 	Message   string                 `json:"message,omitempty"`
 	Severity  GcpSeverity            `json:"severity,omitempty"`
 	Timestamp string                 `json:"timestamp,omitempty"`
-	// CHECK: Context
 }
 
 type GcpSeverity = string
