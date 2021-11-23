@@ -590,14 +590,14 @@ func Test_onConfigUpdated(t *testing.T) {
 
 func Test_gcpFormatter(t *testing.T) {
 	tests := []struct {
-		name string
-		entry *logrus.Entry
+		name     string
+		entry    *logrus.Entry
 		expected string
 	}{
 		{"test", &logrus.Entry{
 			Logger:  nil,
 			Data:    map[string]interface{}{"src": "some-src"},
-			Time:    time.Date(2000,01,01,01,01,000,000, time.UTC),
+			Time:    time.Date(2000, 01, 01, 01, 01, 000, 000, time.UTC),
 			Level:   1,
 			Caller:  nil,
 			Message: "some-message",
