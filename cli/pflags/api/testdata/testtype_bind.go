@@ -74,25 +74,7 @@ func (cfg TestType) GetPFlagSet(prefix string) *pflag.FlagSet {
 	cmdFlags.Var(&DefaultTestType.StorageConfig.DefaultHTTPClient.Timeout, fmt.Sprintf("%v%v", prefix, "storage.defaultHttpClient.timeout"), "Sets time out on the http client.")
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "i"), DefaultTestType.elemValueOrNil(DefaultTestType.IntValue).(int), "")
 	cmdFlags.StringToStringVar(&DefaultTestType.StringMap, fmt.Sprintf("%v%v", prefix, "m"), DefaultTestType.StringMap, "I'm a map of strings")
-	cmdFlags.Var(&DefaultTestType.ConstType, fmt.Sprintf("%v%v", prefix, "constType"), "")
+	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "constType"), DefaultTestType.ConstType.String(), "")
 	cmdFlags.IntVar(&DefaultTestType.AliasType, fmt.Sprintf("%v%v", prefix, "aliasType"), DefaultTestType.AliasType, "")
 	return cmdFlags
-}
-
-// Set attempts to set the value of NamedType to the passed string representation. Returns error if the passed value
-// doesn't match one of the specified enum strings.
-// You typically need to generate an enum (using //go:generate enumer <type>) to get the corresponding methods generated.
-func (i *NamedType) Set(val string) error {
-	res, err := NamedTypeString(val)
-	if err != nil {
-		return err
-	}
-
-	*i = res
-	return nil
-}
-
-// Type returns a string representation of the type.
-func (i *NamedType) Type() string {
-	return "NamedType"
 }

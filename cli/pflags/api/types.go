@@ -27,7 +27,6 @@ type FieldInfo struct {
 	TestStrategy             TestStrategy
 	ShouldBindDefault        bool
 	ShouldTestDefault        bool
-	ShouldGeneratePFlagValue bool
 }
 
 // TypeInfo holds the finalized information passed to the template for evaluation.

@@ -83,30 +83,6 @@ func (cfg {{ .Name }}) GetPFlagSet(prefix string) *pflag.FlagSet {
 	{{- end }}
 	return cmdFlags
 }
-
-{{- range .PFlagValueTypes }}
-
-{{- if .ShouldGenerateSetAndType }}
-// Set attempts to set the value of {{ .Name }} to the passed string representation. Returns error if the passed value
-// doesn't match one of the specified enum strings.
-// You typically need to generate an enum (using //go:generate enumer <type>) to get the corresponding methods generated.
-func (i *{{ .Name }}) Set(val string) error {
-	res, err := {{ .Name }}String(val)
-	if err != nil {
-		return err
-	}
-
-	*i = res
-	return nil
-}
-
-// Type returns a string representation of the type.
-func (i *{{ .Name }}) Type() string {
-	return "{{ .Name }}"
-}
-{{- end }}
-
-{{- end }}
 `))
 
 var testTmpl = template.Must(template.New("TestFile").Parse(

@@ -190,24 +190,12 @@ func discoverFieldsRecursive(ctx context.Context, workingDirPkg string, typ *typ
 	fields := make([]FieldInfo, 0, st.NumFields())
 	pflagValueTypes := make(map[string]PFlagValueType, st.NumFields())
 	addField := func(typ types.Type, f FieldInfo) {
-		if asNamed, isNamed := typ.(*types.Named); isNamed && bindDefaultVar {
+		if _, isNamed := typ.(*types.Named); isNamed && bindDefaultVar {
 			hasPFlagValueImpl := isPFlagValue(typ)
-			hasStringCtor := hasStringConstructor(asNamed)
-			if hasPFlagValueImpl || hasStringCtor {
+			if hasPFlagValueImpl {
 				f.FlagMethodName = ""
-			}
-
-			f.ShouldGeneratePFlagValue = !hasPFlagValueImpl && hasStringCtor
-
-			if !hasStringCtor && !hasPFlagValueImpl {
+			} else {
 				f.ShouldBindDefault = false
-			}
-		}
-
-		if f.ShouldGeneratePFlagValue {
-			pflagValueTypes[f.LocalTypeName] = PFlagValueType{
-				Name:                     f.LocalTypeName,
-				ShouldGenerateSetAndType: true,
 			}
 		}
 
@@ -428,7 +416,7 @@ func buildNamedBasicField(ctx context.Context, workingDirPkg string, tag Tag, t 
 		return fmt.Sprintf("%s.String()", str)
 	}
 
-	if bindDefaultVar {
+	if bindDefaultVar && hasPFlagValueImpl {
 		accessorWrapper = nil
 	}
 
@@ -482,29 +470,28 @@ func buildBasicField(ctx context.Context, tag Tag, t *types.Basic, defaultValueA
 		}
 	}
 
-	generatePFlagValueImplementation := false
 	flagMethodName := camelCase(t.String())
 	testFlagMethodName := flagMethodName
-	if isNamed && bindDefaultVar {
-		generatePFlagValueImplementation = !isPFlagValue
+	if isNamed && bindDefaultVar && isPFlagValue {
 		// The template automatically appends the word "Var" to the method name.
 		// The one we now want to use is just named "Var" so make this string empty to end up with the
 		// right method name.
 		flagMethodName = ""
+	} else if isNamed && bindDefaultVar {
+		bindDefaultVar = false
 	}
 
 	return FieldInfo{
-		Name:                     tag.Name,
-		GoName:                   v.Name(),
-		Typ:                      t,
-		FlagMethodName:           flagMethodName,
-		TestFlagMethodName:       testFlagMethodName,
-		DefaultValue:             defaultValue,
-		UsageString:              tag.Usage,
-		TestValue:                `"1"`,
-		TestStrategy:             JSON,
-		ShouldBindDefault:        bindDefaultVar,
-		ShouldGeneratePFlagValue: generatePFlagValueImplementation,
+		Name:               tag.Name,
+		GoName:             v.Name(),
+		Typ:                t,
+		FlagMethodName:     flagMethodName,
+		TestFlagMethodName: testFlagMethodName,
+		DefaultValue:       defaultValue,
+		UsageString:        tag.Usage,
+		TestValue:          `"1"`,
+		TestStrategy:       JSON,
+		ShouldBindDefault:  bindDefaultVar,
 	}, nil
 }
 

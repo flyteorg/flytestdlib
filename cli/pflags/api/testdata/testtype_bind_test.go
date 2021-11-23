@@ -437,9 +437,11 @@ func TestTestType_SetFlags(t *testing.T) {
 			testValue := "1"
 
 			cmdFlags.Set("constType", testValue)
-			if v := cmdFlags.Lookup("constType"); v != nil {
-				testDecodeJson_TestType(t, fmt.Sprintf("%v", v.Value.String()), &actual.ConstType)
+			if vString, err := cmdFlags.GetString("constType"); err == nil {
+				testDecodeJson_TestType(t, fmt.Sprintf("%v", vString), &actual.ConstType)
 
+			} else {
+				assert.FailNow(t, err.Error())
 			}
 		})
 	})
