@@ -55,10 +55,10 @@ type GcpFormatter struct {
 }
 
 type GcpEntry struct {
-	JsonPayload map[string]interface{} `json:"jsonPayload,omitempty"`
-	Message     string                 `json:"message,omitempty"`
-	Severity    GcpSeverity            `json:"severity,omitempty"`
-	Timestamp   string                 `json:"timestamp,omitempty"`
+	Data      map[string]interface{} `json:"data,omitempty"`
+	Message   string                 `json:"message,omitempty"`
+	Severity  GcpSeverity            `json:"severity,omitempty"`
+	Timestamp string                 `json:"timestamp,omitempty"`
 	// CHECK: Context
 }
 
@@ -87,10 +87,10 @@ var (
 
 func (f *GcpFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var log = &GcpEntry{
-		Timestamp:   entry.Time.Format(time.RFC3339),
-		Message:     entry.Message,
-		Severity:    logrusToGcp[entry.Level],
-		JsonPayload: entry.Data,
+		Timestamp: entry.Time.Format(time.RFC3339),
+		Message:   entry.Message,
+		Severity:  logrusToGcp[entry.Level],
+		Data:      entry.Data,
 	}
 
 	serialized, err := json.Marshal(log)
