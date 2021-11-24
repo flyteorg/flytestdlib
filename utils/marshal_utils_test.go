@@ -63,7 +63,6 @@ func TestMarshalObjToStruct(t *testing.T) {
 			"string_value": {Kind: &structpb.Value_StringValue{StringValue: "hello"}},
 		}}, false},
 		{"has string value", args{input: "hello"}, nil, true},
-		{"pod spec", args{input: &v1.PodSpec{}}, nil, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -72,6 +71,7 @@ func TestMarshalObjToStruct(t *testing.T) {
 				t.Errorf("MarshalObjToStruct() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if diff := deep.Equal(got, tt.want); diff != nil {
 				t.Errorf("MarshalObjToStruct() = %v, want %v, diff: %v", got, tt.want, diff)
 			}
