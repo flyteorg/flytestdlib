@@ -64,7 +64,7 @@ func (MyComponentConfig) GetPFlagSet(prefix string) *pflag.FlagSet {
 
 var (
 	DefaultOtherComponentConfig = &OtherComponentConfig{
-		NamedType:NamedTypeA,
+		NamedType: NamedTypeA,
 	}
 )
 
