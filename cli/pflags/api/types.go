@@ -15,18 +15,18 @@ const (
 )
 
 type FieldInfo struct {
-	Name                     string
-	GoName                   string
-	Typ                      types.Type
-	LocalTypeName            string
-	DefaultValue             string
-	UsageString              string
-	FlagMethodName           string
-	TestFlagMethodName       string
-	TestValue                string
-	TestStrategy             TestStrategy
-	ShouldBindDefault        bool
-	ShouldTestDefault        bool
+	Name               string
+	GoName             string
+	Typ                types.Type
+	LocalTypeName      string
+	DefaultValue       string
+	UsageString        string
+	FlagMethodName     string
+	TestFlagMethodName string
+	TestValue          string
+	TestStrategy       TestStrategy
+	ShouldBindDefault  bool
+	ShouldTestDefault  bool
 }
 
 // TypeInfo holds the finalized information passed to the template for evaluation.
