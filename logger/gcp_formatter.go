@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// GcpFormatter Log formatter compatible with GCP stackdriver logging.
 type GcpFormatter struct {
 }
 
@@ -41,7 +42,7 @@ var (
 	}
 )
 
-func getOrDefault(level logrus.Level) GcpSeverity {
+func toGcpSeverityOrDefault(level logrus.Level) GcpSeverity {
 	if severity, found := logrusToGcp[level]; found {
 		return severity
 	}
@@ -53,7 +54,7 @@ func (f *GcpFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var log = &GcpEntry{
 		Timestamp: entry.Time.Format(time.RFC3339),
 		Message:   entry.Message,
-		Severity:  getOrDefault(entry.Level),
+		Severity:  toGcpSeverityOrDefault(entry.Level),
 		Data:      entry.Data,
 	}
 
