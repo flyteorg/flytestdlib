@@ -43,6 +43,10 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: "0"
+      - name: Bench tests
+        uses: cedrickring/golang-action@1.6.0
+        env:
+          GO111MODULE: "on"
       - name: Go generate and diff
         run: DELTA_CHECK=true make generate
 
