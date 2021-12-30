@@ -2,12 +2,13 @@ package labeled
 
 import (
 	"context"
+	"strings"
+	"testing"
+
 	"github.com/flyteorg/flytestdlib/contextutils"
 	"github.com/flyteorg/flytestdlib/promutils"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 func TestLabeledSummary(t *testing.T) {
