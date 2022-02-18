@@ -1,7 +1,6 @@
 package bitarray
 
 import (
-	//"math"
 	"unsafe"
 )
 
