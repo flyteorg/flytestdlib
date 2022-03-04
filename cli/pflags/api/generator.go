@@ -36,8 +36,6 @@ var allowedKinds = []types.Type{
 	types.Typ[types.Int64],
 	types.Typ[types.Bool],
 	types.Typ[types.String],
-	types.Typ[types.String],
-	types.NewArray(types.Typ[types.String], 64),
 	types.NewMap(types.Typ[types.String], types.Typ[types.String]),
 }
 
