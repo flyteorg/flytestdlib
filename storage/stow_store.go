@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"sync"
@@ -320,8 +319,13 @@ func newStowRawStore(cfg *Config, metricsScope promutils.Scope) (RawStore, error
 
 	var cfgMap stow.ConfigMap
 	var kind string
-	res2B, _ := json.Marshal(cfg)
-	fmt.Println(string(res2B))
+	fmt.Printf("%v", cfg.Stow.Kind)
+	fmt.Printf("%v", cfg.Stow.Config)
+	fmt.Printf("%v", cfg.MultiContainerEnabled)
+	fmt.Printf("%v", cfg.Type)
+	fmt.Printf("%v", cfg.Connection)
+	fmt.Printf("%v", cfg.Cache)
+	fmt.Printf("%v", cfg.DefaultHTTPClient)
 	if len(cfg.Stow.Kind) > 0 && len(cfg.Stow.Config) > 0 {
 		kind = cfg.Stow.Kind
 		cfgMap = cfg.Stow.Config
