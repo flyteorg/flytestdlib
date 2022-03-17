@@ -50,6 +50,12 @@ type mockStowContainer struct {
 	putCB func(name string, r io.Reader, size int64, metadata map[string]interface{}) (stow.Item, error)
 }
 
+// CreateSignedURL creates a signed url with the provided properties.
+func (m mockStowContainer) PreSignRequest(_ context.Context, _ stow.ClientMethod, _ string,
+	_ stow.PresignRequestParams) (url string, err error) {
+	return "", fmt.Errorf("unsupported")
+}
+
 func (m mockStowContainer) ID() string {
 	return m.id
 }

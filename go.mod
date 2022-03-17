@@ -94,3 +94,5 @@ require (
 	k8s.io/klog/v2 v2.5.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.0.3 // indirect
 )
+
+replace github.com/graymeta/stow => github.com/flyteorg/stow v0.2.8-0.20220317000530-1190b6127dd9

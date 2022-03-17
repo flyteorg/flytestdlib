@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -54,7 +55,7 @@ func createHTTPClient(cfg HTTPClientConfig) *http.Client {
 	return c
 }
 
-// Creates a new Data Store with the supplied config.
+// NewDataStore creates a new Data Store with the supplied config.
 func NewDataStore(cfg *Config, metricsScope promutils.Scope) (s *DataStore, err error) {
 	defaultClient := http.DefaultClient
 	defer func() {
@@ -71,13 +72,19 @@ func NewDataStore(cfg *Config, metricsScope promutils.Scope) (s *DataStore, err 
 		}
 
 		protoStore := NewDefaultProtobufStore(newCachedRawStore(cfg, rawStore, metricsScope), metricsScope)
-		return NewCompositeDataStore(URLPathConstructor{}, protoStore), nil
+		scheme, _, _, err := rawStore.GetBaseContainerFQN(context.Background()).Split()
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse BaseContainerFQN for [%v]. Error: %w", cfg.Type, err)
+		}
+
+		refCtor := NewURLPathConstructor(scheme)
+		return NewCompositeDataStore(refCtor, protoStore), nil
 	}
 
 	return &emptyStore, fmt.Errorf("type is of an invalid value [%v]", cfg.Type)
 }
 
-// Composes a new DataStore.
+// NewCompositeDataStore composes a new DataStore.
 func NewCompositeDataStore(refConstructor ReferenceConstructor, composedProtobufStore ComposedProtobufStore) *DataStore {
 	return &DataStore{
 		ReferenceConstructor:  refConstructor,
