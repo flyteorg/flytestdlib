@@ -18,7 +18,6 @@ const (
 
 // URLPathConstructor implements ReferenceConstructor that assumes paths are URL-compatible.
 type URLPathConstructor struct {
-	scheme string
 }
 
 func ensureEndingPathSeparator(path DataReference) DataReference {
@@ -49,8 +48,6 @@ func (URLPathConstructor) ConstructReference(ctx context.Context, reference Data
 	return DataReference(u.String()), nil
 }
 
-func NewURLPathConstructor(scheme string) URLPathConstructor {
-	return URLPathConstructor{
-		scheme: scheme,
-	}
+func NewURLPathConstructor() URLPathConstructor {
+	return URLPathConstructor{}
 }

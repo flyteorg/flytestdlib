@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -72,13 +71,7 @@ func NewDataStore(cfg *Config, metricsScope promutils.Scope) (s *DataStore, err 
 		}
 
 		protoStore := NewDefaultProtobufStore(newCachedRawStore(cfg, rawStore, metricsScope), metricsScope)
-		scheme, _, _, err := rawStore.GetBaseContainerFQN(context.Background()).Split()
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse BaseContainerFQN for [%v]. Error: %w", cfg.Type, err)
-		}
-
-		refCtor := NewURLPathConstructor(scheme)
-		return NewCompositeDataStore(refCtor, protoStore), nil
+		return NewCompositeDataStore(NewURLPathConstructor(), protoStore), nil
 	}
 
 	return &emptyStore, fmt.Errorf("type is of an invalid value [%v]", cfg.Type)
