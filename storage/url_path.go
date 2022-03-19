@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -14,23 +13,12 @@ import (
 )
 
 const (
-	separator           = "/"
-	storageURLFormatter = "%s://%s/%s"
-)
-
-type SignedURLPatternMatcher = *regexp.Regexp
-
-var (
-	SignedURLPattern SignedURLPatternMatcher = regexp.MustCompile(`https://((storage\.googleapis\.com/(?P<bucket_gcs>[^/]+))|((?P<bucket_s3>[^\.]+)\.s3\.amazonaws\.com)|(.*\.blob\.core\.windows\.net/(?P<bucket_az>[^/]+)))/(?P<path>[^?]*)`)
+	separator = "/"
 )
 
 // URLPathConstructor implements ReferenceConstructor that assumes paths are URL-compatible.
 type URLPathConstructor struct {
 	scheme string
-}
-
-func formatStorageURL(scheme, bucket, path string) DataReference {
-	return DataReference(fmt.Sprintf(storageURLFormatter, scheme, bucket, path))
 }
 
 func ensureEndingPathSeparator(path DataReference) DataReference {
@@ -39,23 +27,6 @@ func ensureEndingPathSeparator(path DataReference) DataReference {
 	}
 
 	return path + separator
-}
-
-func (c URLPathConstructor) FromSignedURL(_ context.Context, signedURL string) (DataReference, error) {
-	if len(c.scheme) == 0 {
-		return "", fmt.Errorf("scheme cannot be empty in order to interact with SignedURLs")
-	}
-
-	matches := MatchRegex(SignedURLPattern, signedURL)
-	if bucket := matches["bucket"]; len(bucket) == 0 {
-		return "", fmt.Errorf("failed to parse signedURL [%v]. Resulted in an empty bucket", signedURL)
-	} else if path := matches["path"]; len(path) == 0 {
-		return "", fmt.Errorf("failed to parse signedURL [%v]. Resulted in an empty path", signedURL)
-	} else {
-		ref := formatStorageURL(c.scheme, matches["bucket"], matches["path"])
-		_, err := url.Parse(ref.String())
-		return ref, err
-	}
 }
 
 func (URLPathConstructor) ConstructReference(ctx context.Context, reference DataReference, nestedKeys ...string) (DataReference, error) {

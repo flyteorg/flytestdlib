@@ -51,9 +51,9 @@ type mockStowContainer struct {
 }
 
 // CreateSignedURL creates a signed url with the provided properties.
-func (m mockStowContainer) PreSignRequest(_ context.Context, _ stow.ClientMethod, _ string,
+func (m mockStowContainer) PreSignRequest(_ context.Context, _ stow.ClientMethod, s string,
 	_ stow.PresignRequestParams) (url string, err error) {
-	return "", fmt.Errorf("unsupported")
+	return s, nil
 }
 
 func (m mockStowContainer) ID() string {
@@ -146,6 +146,58 @@ func TestAwsBucketIsNotFound(t *testing.T) {
 	t.Run("do not detect random errors", func(t *testing.T) {
 		err := awserr.New(s32.ErrCodeInvalidObjectState, "foo", errors2.New("foo"))
 		assert.False(t, awsBucketIsNotFound(err))
+	})
+}
+
+func TestStowStore_CreateSignedURL(t *testing.T) {
+	labeled.SetMetricKeys(contextutils.ProjectKey, contextutils.DomainKey, contextutils.WorkflowIDKey, contextutils.TaskIDKey)
+
+	const container = "container"
+	t.Run("Happy Path", func(t *testing.T) {
+		testScope := promutils.NewTestScope()
+		fn := fQNFn["s3"]
+		s, err := NewStowRawStore(fn(container), &mockStowLoc{
+			ContainerCb: func(id string) (stow.Container, error) {
+				if id == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+		}, false, testScope)
+		assert.NoError(t, err)
+
+		actual, err := s.CreateSignedURL(context.TODO(), DataReference("https://container/path"), SignedURLProperties{})
+		assert.NoError(t, err)
+		assert.Equal(t, "path", actual.URL.String())
+	})
+
+	t.Run("Invalid URL", func(t *testing.T) {
+		testScope := promutils.NewTestScope()
+		fn := fQNFn["s3"]
+		s, err := NewStowRawStore(fn(container), &mockStowLoc{
+			ContainerCb: func(id string) (stow.Container, error) {
+				if id == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+		}, false, testScope)
+		assert.NoError(t, err)
+
+		_, err = s.CreateSignedURL(context.TODO(), DataReference("://container/path"), SignedURLProperties{})
+		assert.Error(t, err)
 	})
 }
 

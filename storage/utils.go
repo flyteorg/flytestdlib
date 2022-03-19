@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"os"
-	"regexp"
 
 	stdErrs "github.com/flyteorg/flytestdlib/errors"
 	"github.com/flyteorg/flytestdlib/promutils/labeled"
@@ -20,26 +19,6 @@ var (
 const (
 	genericFailureTypeLabel = "Generic"
 )
-
-type SubexpName = string
-type MatchedString = string
-
-// MatchRegex returns all matches for the sub-expressions within the regex.
-func MatchRegex(reg *regexp.Regexp, input string) map[SubexpName]MatchedString {
-	names := reg.SubexpNames()
-	res := reg.FindAllStringSubmatch(input, -1)
-	if len(res) == 0 {
-		return nil
-	}
-
-	dict := make(map[string]string, len(names))
-	// Start from 1 since names[0] is always empty per docs on reg.SubexpNames()
-	for i := 1; i < len(res[0]); i++ {
-		dict[names[i]] = res[0][i]
-	}
-
-	return dict
-}
 
 // IsNotFound gets a value indicating whether the underlying error is a Not Found error.
 func IsNotFound(err error) bool {
