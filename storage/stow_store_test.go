@@ -199,6 +199,29 @@ func TestStowStore_CreateSignedURL(t *testing.T) {
 		_, err = s.CreateSignedURL(context.TODO(), DataReference("://container/path"), SignedURLProperties{})
 		assert.Error(t, err)
 	})
+
+	t.Run("Non existing container", func(t *testing.T) {
+		testScope := promutils.NewTestScope()
+		fn := fQNFn["s3"]
+		s, err := NewStowRawStore(fn(container), &mockStowLoc{
+			ContainerCb: func(id string) (stow.Container, error) {
+				if id == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+			CreateContainerCb: func(name string) (stow.Container, error) {
+				if name == container {
+					return newMockStowContainer(container), nil
+				}
+				return nil, fmt.Errorf("container is not supported")
+			},
+		}, false, testScope)
+		assert.NoError(t, err)
+
+		_, err = s.CreateSignedURL(context.TODO(), DataReference("s3://container2/path"), SignedURLProperties{})
+		assert.Error(t, err)
+	})
 }
 
 func TestStowStore_ReadRaw(t *testing.T) {
