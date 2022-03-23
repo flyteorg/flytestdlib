@@ -13,8 +13,7 @@ jobs:
           fetch-depth: "0"
       - uses: actions/setup-go@v2
       - name: Unit Tests
-        with:
-          args: make mod_download && make test_unit_codecov
+        run: make mod_download && make test_unit_codecov
       - name: Push CodeCov
         uses: codecov/codecov-action@v1
         with:
@@ -23,15 +22,9 @@ jobs:
           fail_ci_if_error: true
       - uses: actions/setup-go@v2
       - name: Lint
-        env:
-          GO111MODULE: "on"
-        with:
-          args: make install && make lint
+        run: make install && make lint
       - name: Bench tests
-        env:
-          GO111MODULE: "on"
-        with:
-          args: make install && make test_benchmark
+        run: make install && make test_benchmark
   test-generate-integrity:
     name: Ensure go generate has run
     runs-on: ubuntu-latest
