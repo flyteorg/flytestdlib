@@ -12,9 +12,7 @@ jobs:
         with:
           fetch-depth: "0"
       - name: Unit Tests
-        uses: cedrickring/golang-action@1.6.0
-        env:
-          GO111MODULE: "on"
+        uses: actions/setup-go@v2
         with:
           args: make mod_download && make test_unit_codecov
       - name: Push CodeCov
