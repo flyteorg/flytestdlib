@@ -12,16 +12,21 @@ const (
 	postgres = "postgres"
 )
 
-var Config = config.MustRegisterSection(database, &DbConfig{
-	DeprecatedPort:         5432,
-	DeprecatedUser:         postgres,
-	DeprecatedHost:         postgres,
-	DeprecatedDbName:       postgres,
-	DeprecatedExtraOptions: "sslmode=disable",
-	MaxIdleConnections:     10,
-	MaxOpenConnections:     1000,
-	ConnMaxLifeTime:        config.Duration{Duration: time.Hour},
-})
+//go:generate pflags DbConfig --default-var=defaultConfig
+
+var defaultConfig = &DbConfig{
+	MaxIdleConnections: 10,
+	MaxOpenConnections: 1000,
+	ConnMaxLifeTime:    config.Duration{Duration: time.Hour},
+	PostgresConfig: &PostgresConfig{
+		Port:         5432,
+		User:         postgres,
+		Host:         postgres,
+		DbName:       postgres,
+		ExtraOptions: "sslmode=disable",
+	},
+}
+var configSection = config.MustRegisterSection(database, defaultConfig)
 
 // DbConfig is used to for initiating the database connection with the store that holds registered
 // entities (e.g. workflows, tasks, launch plans...)
@@ -63,5 +68,33 @@ type PostgresConfig struct {
 }
 
 func GetConfig() *DbConfig {
-	return Config.GetConfig().(*DbConfig)
+	databaseConfig := configSection.GetConfig().(*DbConfig)
+	if databaseConfig.PostgresConfig == nil && databaseConfig.SQLiteConfig == nil {
+		databaseConfig.PostgresConfig = &PostgresConfig{}
+	}
+	if len(databaseConfig.DeprecatedHost) > 0 {
+		databaseConfig.PostgresConfig.Host = databaseConfig.DeprecatedHost
+	}
+	if databaseConfig.DeprecatedPort != 0 {
+		databaseConfig.PostgresConfig.Port = databaseConfig.DeprecatedPort
+	}
+	if len(databaseConfig.DeprecatedDbName) > 0 {
+		databaseConfig.PostgresConfig.DbName = databaseConfig.DeprecatedDbName
+	}
+	if len(databaseConfig.DeprecatedUser) > 0 {
+		databaseConfig.PostgresConfig.User = databaseConfig.DeprecatedUser
+	}
+	if len(databaseConfig.DeprecatedPassword) > 0 {
+		databaseConfig.PostgresConfig.Password = databaseConfig.DeprecatedPassword
+	}
+	if len(databaseConfig.DeprecatedPasswordPath) > 0 {
+		databaseConfig.PostgresConfig.PasswordPath = databaseConfig.DeprecatedPasswordPath
+	}
+	if len(databaseConfig.DeprecatedExtraOptions) > 0 {
+		databaseConfig.PostgresConfig.ExtraOptions = databaseConfig.DeprecatedExtraOptions
+	}
+	if databaseConfig.DeprecatedDebug != false {
+		databaseConfig.PostgresConfig.Debug = databaseConfig.DeprecatedDebug
+	}
+	return databaseConfig
 }
