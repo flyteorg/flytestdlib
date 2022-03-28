@@ -18,7 +18,7 @@ var defaultConfig = &DbConfig{
 	MaxIdleConnections: 10,
 	MaxOpenConnections: 1000,
 	ConnMaxLifeTime:    config.Duration{Duration: time.Hour},
-	PostgresConfig: &PostgresConfig{
+	Postgres: &PostgresConfig{
 		Port:         5432,
 		User:         postgres,
 		Host:         postgres,
@@ -45,8 +45,8 @@ type DbConfig struct {
 	MaxOpenConnections                      int             `json:"maxOpenConnections" pflag:",maxOpenConnections sets the maximum number of open connections to the database."`
 	ConnMaxLifeTime                         config.Duration `json:"connMaxLifeTime" pflag:",sets the maximum amount of time a connection may be reused"`
 	LogLevel                                logger.LogLevel `json:"log_level" pflag:"-,"`
-	PostgresConfig                          *PostgresConfig `json:"postgres,omitempty"`
-	SQLiteConfig                            *SQLiteConfig   `json:"sqlite,omitempty"`
+	Postgres                                *PostgresConfig `json:"postgres,omitempty"`
+	SQLite                                  *SQLiteConfig   `json:"sqlite,omitempty"`
 }
 
 // SQLiteConfig can be used to configure
@@ -69,32 +69,32 @@ type PostgresConfig struct {
 
 func GetConfig() *DbConfig {
 	databaseConfig := configSection.GetConfig().(*DbConfig)
-	if databaseConfig.PostgresConfig == nil && databaseConfig.SQLiteConfig == nil {
-		databaseConfig.PostgresConfig = &PostgresConfig{}
+	if databaseConfig.Postgres == nil && databaseConfig.SQLite == nil {
+		databaseConfig.Postgres = &PostgresConfig{}
 	}
 	if len(databaseConfig.DeprecatedHost) > 0 {
-		databaseConfig.PostgresConfig.Host = databaseConfig.DeprecatedHost
+		databaseConfig.Postgres.Host = databaseConfig.DeprecatedHost
 	}
 	if databaseConfig.DeprecatedPort != 0 {
-		databaseConfig.PostgresConfig.Port = databaseConfig.DeprecatedPort
+		databaseConfig.Postgres.Port = databaseConfig.DeprecatedPort
 	}
 	if len(databaseConfig.DeprecatedDbName) > 0 {
-		databaseConfig.PostgresConfig.DbName = databaseConfig.DeprecatedDbName
+		databaseConfig.Postgres.DbName = databaseConfig.DeprecatedDbName
 	}
 	if len(databaseConfig.DeprecatedUser) > 0 {
-		databaseConfig.PostgresConfig.User = databaseConfig.DeprecatedUser
+		databaseConfig.Postgres.User = databaseConfig.DeprecatedUser
 	}
 	if len(databaseConfig.DeprecatedPassword) > 0 {
-		databaseConfig.PostgresConfig.Password = databaseConfig.DeprecatedPassword
+		databaseConfig.Postgres.Password = databaseConfig.DeprecatedPassword
 	}
 	if len(databaseConfig.DeprecatedPasswordPath) > 0 {
-		databaseConfig.PostgresConfig.PasswordPath = databaseConfig.DeprecatedPasswordPath
+		databaseConfig.Postgres.PasswordPath = databaseConfig.DeprecatedPasswordPath
 	}
 	if len(databaseConfig.DeprecatedExtraOptions) > 0 {
-		databaseConfig.PostgresConfig.ExtraOptions = databaseConfig.DeprecatedExtraOptions
+		databaseConfig.Postgres.ExtraOptions = databaseConfig.DeprecatedExtraOptions
 	}
 	if databaseConfig.DeprecatedDebug != false {
-		databaseConfig.PostgresConfig.Debug = databaseConfig.DeprecatedDebug
+		databaseConfig.Postgres.Debug = databaseConfig.DeprecatedDebug
 	}
 	return databaseConfig
 }

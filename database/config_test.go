@@ -26,10 +26,10 @@ func TestParseDatabaseConfig(t *testing.T) {
 	assert.Equal(t, 10, GetConfig().MaxIdleConnections)
 	assert.Equal(t, config.Duration{Duration: 3600000000000}, GetConfig().ConnMaxLifeTime)
 
-	assert.Equal(t, 5432, GetConfig().PostgresConfig.Port)
-	assert.Equal(t, "postgres", GetConfig().PostgresConfig.User)
-	assert.Equal(t, "postgres", GetConfig().PostgresConfig.Host)
-	assert.Equal(t, "postgres", GetConfig().PostgresConfig.DbName)
-	assert.Equal(t, "sslmode=disable", GetConfig().PostgresConfig.ExtraOptions)
-	assert.Equal(t, "admin.db", GetConfig().SQLiteConfig.File)
+	assert.Equal(t, 5432, GetConfig().Postgres.Port)
+	assert.Equal(t, "postgres", GetConfig().Postgres.User)
+	assert.Equal(t, "postgres", GetConfig().Postgres.Host)
+	assert.Equal(t, "postgres", GetConfig().Postgres.DbName)
+	assert.Equal(t, "sslmode=disable", GetConfig().Postgres.ExtraOptions)
+	assert.Equal(t, "admin.db", GetConfig().SQLite.File)
 }
