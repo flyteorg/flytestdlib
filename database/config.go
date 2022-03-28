@@ -31,14 +31,22 @@ var configSection = config.MustRegisterSection(database, defaultConfig)
 // DbConfig is used to for initiating the database connection with the store that holds registered
 // entities (e.g. workflows, tasks, launch plans...)
 type DbConfig struct {
-	DeprecatedHost         string `json:"host" pflag:",deprecated"`
-	DeprecatedPort         int    `json:"port" pflag:",deprecated"`
-	DeprecatedDbName       string `json:"dbname" pflag:",deprecated"`
-	DeprecatedUser         string `json:"username" pflag:",deprecated"`
-	DeprecatedPassword     string `json:"password" pflag:",deprecated"`
+	// deprecated: Please use Postgres.Host
+	DeprecatedHost string `json:"host" pflag:",deprecated"`
+	// deprecated: Please use Postgres.Port
+	DeprecatedPort int `json:"port" pflag:",deprecated"`
+	// deprecated: Please use Postgres.DbName
+	DeprecatedDbName string `json:"dbname" pflag:",deprecated"`
+	// deprecated: Please use Postgres.User
+	DeprecatedUser string `json:"username" pflag:",deprecated"`
+	// deprecated: Please use Postgres.Password
+	DeprecatedPassword string `json:"password" pflag:",deprecated"`
+	// deprecated: Please use Postgres.PasswordPath
 	DeprecatedPasswordPath string `json:"passwordPath" pflag:",deprecated"`
+	// deprecated: Please use Postgres.ExtraOptions
 	DeprecatedExtraOptions string `json:"options" pflag:",deprecated"`
-	DeprecatedDebug        bool   `json:"debug" pflag:",deprecated"`
+	// deprecated: Please use Postgres.Debug
+	DeprecatedDebug bool `json:"debug" pflag:",deprecated"`
 
 	EnableForeignKeyConstraintWhenMigrating bool            `json:"enableForeignKeyConstraintWhenMigrating" pflag:",Whether to enable gorm foreign keys when migrating the db"`
 	MaxIdleConnections                      int             `json:"maxIdleConnections" pflag:",maxIdleConnections sets the maximum number of connections in the idle connection pool."`
