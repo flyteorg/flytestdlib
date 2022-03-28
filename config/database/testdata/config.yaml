@@ -1,3 +1,7 @@
+enableForeignKeyConstraintWhenMigrating: true
+maxIdleConnections: 5
+maxOpenConnections: 5
+ConnMaxLifeTime: 10s
 postgres:
   port: 5432
   username: postgres

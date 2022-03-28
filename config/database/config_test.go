@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -21,9 +20,11 @@ func TestParseDatabaseConfig(t *testing.T) {
 	})
 
 	assert.NoError(t, accessor.UpdateConfig(context.Background()))
-	fmt.Println(GetConfig())
-	fmt.Println(GetConfig().PostgresConfig)
-	fmt.Println(GetConfig().SQLiteConfig)
+
+	assert.Equal(t, true, GetConfig().EnableForeignKeyConstraintWhenMigrating)
+	assert.Equal(t, 5, GetConfig().MaxOpenConnections)
+	assert.Equal(t, 5, GetConfig().MaxIdleConnections)
+	assert.Equal(t, config.Duration(config.Duration{Duration: 10000000000}), GetConfig().ConnMaxLifeTime)
 
 	assert.Equal(t, 5432, GetConfig().PostgresConfig.Port)
 	assert.Equal(t, "postgres", GetConfig().PostgresConfig.User)
