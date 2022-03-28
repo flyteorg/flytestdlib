@@ -31,5 +31,9 @@ func TestParseDatabaseConfig(t *testing.T) {
 	assert.Equal(t, "postgres", GetConfig().Postgres.Host)
 	assert.Equal(t, "postgres", GetConfig().Postgres.DbName)
 	assert.Equal(t, "sslmode=disable", GetConfig().Postgres.ExtraOptions)
+	assert.Equal(t, "password", GetConfig().Postgres.Password)
+	assert.Equal(t, "/etc/secret", GetConfig().Postgres.PasswordPath)
+	assert.Equal(t, true, GetConfig().Postgres.Debug)
+
 	assert.Equal(t, "admin.db", GetConfig().SQLite.File)
 }
