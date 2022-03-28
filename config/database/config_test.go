@@ -24,7 +24,7 @@ func TestParseDatabaseConfig(t *testing.T) {
 	assert.Equal(t, true, GetConfig().EnableForeignKeyConstraintWhenMigrating)
 	assert.Equal(t, 5, GetConfig().MaxOpenConnections)
 	assert.Equal(t, 5, GetConfig().MaxIdleConnections)
-	assert.Equal(t, config.Duration(config.Duration{Duration: 10000000000}), GetConfig().ConnMaxLifeTime)
+	assert.Equal(t, config.Duration{Duration: 10000000000}, GetConfig().ConnMaxLifeTime)
 
 	assert.Equal(t, 5432, GetConfig().PostgresConfig.Port)
 	assert.Equal(t, "postgres", GetConfig().PostgresConfig.User)
