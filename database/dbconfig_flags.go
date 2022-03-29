@@ -50,14 +50,6 @@ func (DbConfig) mustMarshalJSON(v json.Marshaler) string {
 // flags is json-name.json-sub-name... etc.
 func (cfg DbConfig) GetPFlagSet(prefix string) *pflag.FlagSet {
 	cmdFlags := pflag.NewFlagSet("DbConfig", pflag.ExitOnError)
-	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "host"), defaultConfig.DeprecatedHost, "deprecated")
-	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "port"), defaultConfig.DeprecatedPort, "deprecated")
-	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "dbname"), defaultConfig.DeprecatedDbName, "deprecated")
-	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "username"), defaultConfig.DeprecatedUser, "deprecated")
-	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "password"), defaultConfig.DeprecatedPassword, "deprecated")
-	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "passwordPath"), defaultConfig.DeprecatedPasswordPath, "deprecated")
-	cmdFlags.String(fmt.Sprintf("%v%v", prefix, "options"), defaultConfig.DeprecatedExtraOptions, "deprecated")
-	cmdFlags.Bool(fmt.Sprintf("%v%v", prefix, "debug"), defaultConfig.DeprecatedDebug, "deprecated")
 	cmdFlags.Bool(fmt.Sprintf("%v%v", prefix, "enableForeignKeyConstraintWhenMigrating"), defaultConfig.EnableForeignKeyConstraintWhenMigrating, "Whether to enable gorm foreign keys when migrating the db")
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "maxIdleConnections"), defaultConfig.MaxIdleConnections, "maxIdleConnections sets the maximum number of connections in the idle connection pool.")
 	cmdFlags.Int(fmt.Sprintf("%v%v", prefix, "maxOpenConnections"), defaultConfig.MaxOpenConnections, "maxOpenConnections sets the maximum number of open connections to the database.")

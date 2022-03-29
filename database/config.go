@@ -32,21 +32,21 @@ var configSection = config.MustRegisterSection(database, defaultConfig)
 // entities (e.g. workflows, tasks, launch plans...)
 type DbConfig struct {
 	// deprecated: Please use Postgres.Host
-	DeprecatedHost string `json:"host" pflag:",deprecated"`
+	DeprecatedHost string `json:"host" pflag:"-,deprecated"`
 	// deprecated: Please use Postgres.Port
-	DeprecatedPort int `json:"port" pflag:",deprecated"`
+	DeprecatedPort int `json:"port" pflag:"-,deprecated"`
 	// deprecated: Please use Postgres.DbName
-	DeprecatedDbName string `json:"dbname" pflag:",deprecated"`
+	DeprecatedDbName string `json:"dbname" pflag:"-,deprecated"`
 	// deprecated: Please use Postgres.User
-	DeprecatedUser string `json:"username" pflag:",deprecated"`
+	DeprecatedUser string `json:"username" pflag:"-,deprecated"`
 	// deprecated: Please use Postgres.Password
-	DeprecatedPassword string `json:"password" pflag:",deprecated"`
+	DeprecatedPassword string `json:"password" pflag:"-,deprecated"`
 	// deprecated: Please use Postgres.PasswordPath
-	DeprecatedPasswordPath string `json:"passwordPath" pflag:",deprecated"`
+	DeprecatedPasswordPath string `json:"passwordPath" pflag:"-,deprecated"`
 	// deprecated: Please use Postgres.ExtraOptions
-	DeprecatedExtraOptions string `json:"options" pflag:",deprecated"`
+	DeprecatedExtraOptions string `json:"options" pflag:"-,deprecated"`
 	// deprecated: Please use Postgres.Debug
-	DeprecatedDebug bool `json:"debug" pflag:",deprecated"`
+	DeprecatedDebug bool `json:"debug" pflag:"-,deprecated"`
 
 	EnableForeignKeyConstraintWhenMigrating bool            `json:"enableForeignKeyConstraintWhenMigrating" pflag:",Whether to enable gorm foreign keys when migrating the db"`
 	MaxIdleConnections                      int             `json:"maxIdleConnections" pflag:",maxIdleConnections sets the maximum number of connections in the idle connection pool."`
