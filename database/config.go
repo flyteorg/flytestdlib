@@ -18,7 +18,7 @@ var defaultConfig = &DbConfig{
 	MaxIdleConnections: 10,
 	MaxOpenConnections: 1000,
 	ConnMaxLifeTime:    config.Duration{Duration: time.Hour},
-	Postgres: &PostgresConfig{
+	Postgres: PostgresConfig{
 		Port:         5432,
 		User:         postgres,
 		Host:         postgres,
@@ -53,8 +53,8 @@ type DbConfig struct {
 	MaxOpenConnections                      int             `json:"maxOpenConnections" pflag:",maxOpenConnections sets the maximum number of open connections to the database."`
 	ConnMaxLifeTime                         config.Duration `json:"connMaxLifeTime" pflag:",sets the maximum amount of time a connection may be reused"`
 	LogLevel                                logger.LogLevel `json:"log_level" pflag:"-,"`
-	Postgres                                *PostgresConfig `json:"postgres,omitempty"`
-	SQLite                                  *SQLiteConfig   `json:"sqlite,omitempty"`
+	Postgres                                PostgresConfig  `json:"postgres,omitempty"`
+	SQLite                                  SQLiteConfig    `json:"sqlite,omitempty"`
 }
 
 // SQLiteConfig can be used to configure
@@ -75,11 +75,19 @@ type PostgresConfig struct {
 	Debug        bool   `json:"debug" pflag:" Whether or not to start the database connection with debug mode enabled."`
 }
 
+var emptySQLiteCfg = SQLiteConfig{}
+var emptyPostgresConfig = PostgresConfig{}
+
+func (s SQLiteConfig) IsEmpty() bool {
+	return s == emptySQLiteCfg
+}
+
+func (s PostgresConfig) IsEmpty() bool {
+	return s == emptyPostgresConfig
+}
+
 func GetConfig() *DbConfig {
 	databaseConfig := configSection.GetConfig().(*DbConfig)
-	if databaseConfig.Postgres == nil && databaseConfig.SQLite == nil {
-		databaseConfig.Postgres = &PostgresConfig{}
-	}
 	if len(databaseConfig.DeprecatedHost) > 0 {
 		databaseConfig.Postgres.Host = databaseConfig.DeprecatedHost
 	}
