@@ -3,6 +3,8 @@ package labeled
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"github.com/flyteorg/flytestdlib/contextutils"
 	"github.com/flyteorg/flytestdlib/promutils"
 	"github.com/prometheus/client_golang/prometheus"
@@ -45,15 +47,6 @@ func (c Counter) Add(ctx context.Context, v float64) {
 	}
 }
 
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
-
 // NewCounter  creates a new labeled counter. Label keys must be set before instantiating a counter. See labeled.SetMetricsKeys for
 // information about to configure that.
 func NewCounter(name, description string, scope promutils.Scope, opts ...MetricOption) Counter {
@@ -68,9 +61,10 @@ func NewCounter(name, description string, scope promutils.Scope, opts ...MetricO
 		if _, emitUnlabeledMetric := opt.(EmitUnlabeledMetricOption); emitUnlabeledMetric {
 			c.Counter = scope.MustNewCounter(GetUnlabeledMetricName(name), description)
 		} else if additionalLabels, casted := opt.(AdditionalLabelsOption); casted {
-			var labels []string
+			labels := make([]string, 0, len(additionalLabels.Labels))
+			metricKeysSet := sets.NewString(metricStringKeys...)
 			for _, label := range additionalLabels.Labels {
-				if contains(metricStringKeys, label) == false {
+				if !metricKeysSet.Has(label) {
 					labels = append(labels, label)
 				}
 			}
