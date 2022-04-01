@@ -45,6 +45,15 @@ func (c Counter) Add(ctx context.Context, v float64) {
 	}
 }
 
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
 // NewCounter  creates a new labeled counter. Label keys must be set before instantiating a counter. See labeled.SetMetricsKeys for
 // information about to configure that.
 func NewCounter(name, description string, scope promutils.Scope, opts ...MetricOption) Counter {
@@ -59,8 +68,15 @@ func NewCounter(name, description string, scope promutils.Scope, opts ...MetricO
 		if _, emitUnlabeledMetric := opt.(EmitUnlabeledMetricOption); emitUnlabeledMetric {
 			c.Counter = scope.MustNewCounter(GetUnlabeledMetricName(name), description)
 		} else if additionalLabels, casted := opt.(AdditionalLabelsOption); casted {
-			c.CounterVec = scope.MustNewCounterVec(name, description, append(metricStringKeys, additionalLabels.Labels...)...)
-			c.additionalLabels = contextutils.MetricKeysFromStrings(additionalLabels.Labels)
+			var labels []string
+			for _, label := range additionalLabels.Labels {
+				if contains(metricStringKeys, label) == false {
+					labels = append(labels, label)
+				}
+			}
+			// Here we only append the labels that don't exist in metricStringKeys
+			c.CounterVec = scope.MustNewCounterVec(name, description, append(metricStringKeys, labels...)...)
+			c.additionalLabels = contextutils.MetricKeysFromStrings(labels)
 		}
 	}
 
