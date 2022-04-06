@@ -20,7 +20,7 @@ var update = flag.Bool("update", false, "Updates testdata")
 func TestMarshal(t *testing.T) {
 	expected := Config{
 		Type: "s3",
-		DeprecatedConnection: ConnectionConfig{
+		Connection: ConnectionConfig{
 			Endpoint:   config.URL{URL: utils.MustParseURL("http://minio:9000")},
 			AuthType:   "accesskey",
 			AccessKey:  "minio",

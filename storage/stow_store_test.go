@@ -520,7 +520,7 @@ func Test_newStowRawStore(t *testing.T) {
 		{"minio", args{&Config{
 			Type:          TypeMinio,
 			InitContainer: "some-container",
-			DeprecatedConnection: ConnectionConfig{
+			Connection: ConnectionConfig{
 				Endpoint: config.URL{URL: utils.MustParseURL("http://minio:9000")},
 			},
 		}, promutils.NewTestScope()}, true},

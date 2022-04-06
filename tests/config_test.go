@@ -31,7 +31,7 @@ func TestStorageAndLoggerConfig(t *testing.T) {
 	expected := CompositeConfig{
 		Storage: storage.Config{
 			Type: "s3",
-			DeprecatedConnection: storage.ConnectionConfig{
+			Connection: storage.ConnectionConfig{
 				Endpoint:   config.URL{URL: utils.MustParseURL("http://minio:9000")},
 				AuthType:   "accesskey",
 				AccessKey:  "minio",

@@ -395,7 +395,7 @@ func newStowRawStore(cfg *Config, metricsScope promutils.Scope) (RawStore, error
 		logger.Warnf(context.TODO(), "stow configuration section missing, defaulting to legacy s3/minio connection config")
 		// This is for supporting legacy configurations which configure S3 via connection config
 		kind = s3.Kind
-		cfgMap = legacyS3ConfigMap(cfg.DeprecatedConnection)
+		cfgMap = legacyS3ConfigMap(cfg.Connection)
 	}
 
 	fn, ok := fQNFn[kind]
