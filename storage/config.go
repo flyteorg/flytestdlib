@@ -66,7 +66,7 @@ type Config struct {
 
 // SignedURLConfig encapsulates configs specifically used for SignedURL behavior.
 type SignedURLConfig struct {
-	StowConfigOverride map[string]string `json:"stowConfigOverride,omitempty" pflag:",Configuration for stow backend. Refer to github/flyteorg/stow"`
+	StowConfigOverride map[string]string `json:"stowConfigOverride,omitempty" pflag:"-,Configuration for stow backend. Refer to github/flyteorg/stow"`
 }
 
 // HTTPClientConfig encapsulates common settings that can be applied to an HTTP Client.
