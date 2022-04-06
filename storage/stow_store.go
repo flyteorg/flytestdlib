@@ -160,11 +160,11 @@ func (s *StowStore) loadContainer(ctx context.Context, locID locationID, contain
 }
 
 func (s *StowStore) getContainer(ctx context.Context, locID locationID, container string) (c stow.Container, err error) {
-	if s.baseContainer != nil && s.baseContainer.Name() == container {
+	if s.baseContainer != nil && s.baseContainer.Name() == container && locID == locationIDMain {
 		return s.baseContainer, nil
 	}
 
-	if !s.enableDynamicContainerLoading {
+	if !s.enableDynamicContainerLoading && locID == locationIDMain {
 		s.metrics.BadContainer.Inc(ctx)
 		return nil, errs.Wrapf(stow.ErrNotFound, "Conf container:%v != Passed Container:%v. Dynamic loading is disabled", s.baseContainer.Name(), container)
 	}

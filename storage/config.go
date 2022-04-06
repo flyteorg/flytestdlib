@@ -45,7 +45,8 @@ var (
 
 // Config is a common storage config.
 type Config struct {
-	Type       Type             `json:"type" pflag:",Sets the type of storage to configure [s3/minio/local/mem/stow]."`
+	Type Type `json:"type" pflag:",Sets the type of storage to configure [s3/minio/local/mem/stow]."`
+	// Deprecated: Please use StowConfig instead
 	Connection ConnectionConfig `json:"connection"`
 	Stow       StowConfig       `json:"stow,omitempty" pflag:",Storage config for stow backend."`
 	// Container here is misleading, it refers to a Bucket (AWS S3) like blobstore entity. In some terms it could be a table
@@ -60,7 +61,7 @@ type Config struct {
 	Cache             CachingConfig    `json:"cache"`
 	Limits            LimitsConfig     `json:"limits" pflag:",Sets limits for stores."`
 	DefaultHTTPClient HTTPClientConfig `json:"defaultHttpClient" pflag:",Sets the default http client config."`
-	SignedURL         SignedURLConfig  `json:"signedUrlConfig" pflag:",Sets config for SignedURL."`
+	SignedURL         SignedURLConfig  `json:"signedUrl" pflag:",Sets config for SignedURL."`
 }
 
 // SignedURLConfig encapsulates configs specifically used for SignedURL behavior.
