@@ -410,8 +410,7 @@ func newStowRawStore(cfg *Config, metricsScope promutils.Scope) (RawStore, error
 
 	var signedURLLoc stow.Location
 	if len(cfg.SignedURL.StowConfigOverride) > 0 {
-		var newCfg stow.ConfigMap
-		newCfg = make(map[string]string, len(cfgMap))
+		var newCfg stow.ConfigMap = make(map[string]string, len(cfgMap))
 		MergeMaps(newCfg, cfgMap, cfg.SignedURL.StowConfigOverride)
 		signedURLLoc, err = stow.Dial(kind, newCfg)
 		if err != nil {
