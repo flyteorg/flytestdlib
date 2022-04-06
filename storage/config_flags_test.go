@@ -116,11 +116,11 @@ func TestConfig_SetFlags(t *testing.T) {
 	t.Run("Test_connection.endpoint", func(t *testing.T) {
 
 		t.Run("Override", func(t *testing.T) {
-			testValue := defaultConfig.Connection.Endpoint.String()
+			testValue := defaultConfig.DeprecatedConnection.Endpoint.String()
 
 			cmdFlags.Set("connection.endpoint", testValue)
 			if vString, err := cmdFlags.GetString("connection.endpoint"); err == nil {
-				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.Connection.Endpoint)
+				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.DeprecatedConnection.Endpoint)
 
 			} else {
 				assert.FailNow(t, err.Error())
@@ -134,7 +134,7 @@ func TestConfig_SetFlags(t *testing.T) {
 
 			cmdFlags.Set("connection.auth-type", testValue)
 			if vString, err := cmdFlags.GetString("connection.auth-type"); err == nil {
-				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.Connection.AuthType)
+				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.DeprecatedConnection.AuthType)
 
 			} else {
 				assert.FailNow(t, err.Error())
@@ -148,7 +148,7 @@ func TestConfig_SetFlags(t *testing.T) {
 
 			cmdFlags.Set("connection.access-key", testValue)
 			if vString, err := cmdFlags.GetString("connection.access-key"); err == nil {
-				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.Connection.AccessKey)
+				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.DeprecatedConnection.AccessKey)
 
 			} else {
 				assert.FailNow(t, err.Error())
@@ -162,7 +162,7 @@ func TestConfig_SetFlags(t *testing.T) {
 
 			cmdFlags.Set("connection.secret-key", testValue)
 			if vString, err := cmdFlags.GetString("connection.secret-key"); err == nil {
-				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.Connection.SecretKey)
+				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.DeprecatedConnection.SecretKey)
 
 			} else {
 				assert.FailNow(t, err.Error())
@@ -176,7 +176,7 @@ func TestConfig_SetFlags(t *testing.T) {
 
 			cmdFlags.Set("connection.region", testValue)
 			if vString, err := cmdFlags.GetString("connection.region"); err == nil {
-				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.Connection.Region)
+				testDecodeJson_Config(t, fmt.Sprintf("%v", vString), &actual.DeprecatedConnection.Region)
 
 			} else {
 				assert.FailNow(t, err.Error())
@@ -190,7 +190,7 @@ func TestConfig_SetFlags(t *testing.T) {
 
 			cmdFlags.Set("connection.disable-ssl", testValue)
 			if vBool, err := cmdFlags.GetBool("connection.disable-ssl"); err == nil {
-				testDecodeJson_Config(t, fmt.Sprintf("%v", vBool), &actual.Connection.DisableSSL)
+				testDecodeJson_Config(t, fmt.Sprintf("%v", vBool), &actual.DeprecatedConnection.DisableSSL)
 
 			} else {
 				assert.FailNow(t, err.Error())
