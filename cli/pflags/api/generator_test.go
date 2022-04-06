@@ -174,7 +174,7 @@ func TestBuildFieldForMap(t *testing.T) {
 		defaultValue := ""
 		fieldInfo, err := buildFieldForMap(ctx, typesMap, name, goName, usage, defaultValue, false)
 		assert.NotNil(t, err)
-		assert.Equal(t, fmt.Errorf("map of type [interface{/* incomplete */}] is not supported."+
+		assert.Contains(t, fmt.Errorf("is not supported."+
 			" Only basic slices or slices of json-unmarshalable types are supported"), err)
 		assert.NotNil(t, fieldInfo)
 		assert.Equal(t, "", fieldInfo.FlagMethodName)
