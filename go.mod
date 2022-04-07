@@ -9,7 +9,7 @@ require (
 	github.com/ernesto-jimenez/gogen v0.0.0-20180125220232-d7d4131e6607
 	github.com/fatih/color v1.10.0
 	github.com/fatih/structtag v1.2.0
-	github.com/flyteorg/stow v0.3.1
+	github.com/flyteorg/stow v0.3.2
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-test/deep v1.0.7
@@ -98,5 +98,3 @@ require (
 	k8s.io/klog/v2 v2.5.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.0.3 // indirect
 )
-
-replace github.com/flyteorg/stow => github.com/flyteorg/stow v0.3.2-0.20220407003938-b9d38a1a8951
