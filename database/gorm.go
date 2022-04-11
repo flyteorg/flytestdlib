@@ -10,7 +10,8 @@ import (
 	gormLogger "gorm.io/gorm/logger"
 )
 
-// GetGormLogger converts between the flytestdlib configured log level to the equivalent gorm log level.
+// GetGormLogger converts between the flytestdlib configured log level to the equivalent gorm log level and outputs
+// a gorm/logger implementation accordingly configured.
 func GetGormLogger(ctx context.Context, logConfig *logger.Config) gormLogger.Interface {
 	logConfigLevel := logger.ErrorLevel
 	if logConfig != nil {
