@@ -2,10 +2,11 @@ package database
 
 import (
 	"context"
-	"github.com/flyteorg/flytestdlib/logger"
 	"log"
 	"os"
 	"time"
+
+	"github.com/flyteorg/flytestdlib/logger"
 
 	gormLogger "gorm.io/gorm/logger"
 )
