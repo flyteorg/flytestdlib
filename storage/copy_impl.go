@@ -53,7 +53,7 @@ func (c copyImpl) CopyRaw(ctx context.Context, source, destination DataReference
 		length = int64(len(raw))
 	}
 
-	err = c.rawStore.WriteRaw(ctx, destination, length, Options{}, rc)
+	err = c.rawStore.WriteRaw(ctx, destination, length, opts, rc)
 
 	if err != nil && !IsFailedWriteToCache(err) {
 		logger.Errorf(ctx, "Failed to write to the raw store when copying. Error: %v", err)
