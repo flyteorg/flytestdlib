@@ -103,10 +103,10 @@ func TestLabeledStopWatch(t *testing.T) {
 		assert.NotNil(t, s)
 
 		ctx := context.TODO()
-		const header = `
+		/*const header = `
 			# HELP testscope_stopwatch:s2_m some desc
 			# TYPE testscope_stopwatch:s2_m summary
-		`
+		`*/
 
 		w := s.Start(ctx)
 		w.Stop()
