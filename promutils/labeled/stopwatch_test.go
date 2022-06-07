@@ -99,7 +99,7 @@ func TestLabeledStopWatch(t *testing.T) {
 
 	t.Run("Unlabeled", func(t *testing.T) {
 		scope := promutils.NewScope("testscope_stopwatch")
-		s := NewStopWatch("s2", "some desc", time.Minute, scope, EmitUnlabeledMetricOption{})
+		s := NewStopWatch("s2", "some desc", time.Minute, scope, EmitUnlabeledMetric)
 		assert.NotNil(t, s)
 
 		ctx := context.TODO()

@@ -62,7 +62,7 @@ func TestLabeledCounter(t *testing.T) {
 
 	t.Run("Unlabeled", func(t *testing.T) {
 		scope := promutils.NewScope("testscope_counter")
-		c := NewCounter("c2", "some desc", scope, EmitUnlabeledMetricOption{})
+		c := NewCounter("c2", "some desc", scope, EmitUnlabeledMetric)
 		assert.NotNil(t, c)
 
 		ctx := context.TODO()

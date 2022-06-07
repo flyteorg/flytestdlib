@@ -75,7 +75,7 @@ func TestLabeledGauge(t *testing.T) {
 
 	t.Run("Unlabeled", func(t *testing.T) {
 		scope := promutils.NewScope("testscope_gauge")
-		g := NewGauge("g2", "some desc", scope, EmitUnlabeledMetricOption{})
+		g := NewGauge("g2", "some desc", scope, EmitUnlabeledMetric)
 		assert.NotNil(t, g)
 
 		ctx := context.TODO()
