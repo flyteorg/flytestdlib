@@ -113,10 +113,10 @@ func TestLabeledStopWatch(t *testing.T) {
 		// promutils.StopWatch does not implement prometheus.Collector
 		/*var expected = `
 			testscope_stopwatch:s2_m{quantile="0.5"} 0
-            testscope_stopwatch:s2_m{quantile="0.9"} 0
-            testscope_stopwatch:s2_m{quantile="0.99"} 0
-            testscope_stopwatch:s2_m_sum 0
-            testscope_stopwatch:s2_m_count 1
+			testscope_stopwatch:s2_m{quantile="0.9"} 0
+			testscope_stopwatch:s2_m{quantile="0.99"} 0
+			testscope_stopwatch:s2_m_sum 0
+			testscope_stopwatch:s2_m_count 1
 		`
 		err := testutil.CollectAndCompare(s.StopWatch, strings.NewReader(header+expected))
 		assert.NoError(t, err)*/
