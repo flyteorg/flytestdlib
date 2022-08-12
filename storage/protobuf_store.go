@@ -4,16 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"time"
-
-	"github.com/flyteorg/flytestdlib/logger"
-
-	"github.com/flyteorg/flytestdlib/ioutils"
-	"github.com/flyteorg/flytestdlib/promutils"
-	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/golang/protobuf/proto"
 	errs "github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/flyteorg/flytestdlib/ioutils"
+	"github.com/flyteorg/flytestdlib/logger"
+	"github.com/flyteorg/flytestdlib/promutils"
 )
 
 type protoMetrics struct {
@@ -81,17 +79,9 @@ func (s DefaultProtobufStore) WriteProtobuf(ctx context.Context, reference DataR
 	return nil
 }
 
-func NewDefaultProtobufStore(store RawStore, metricsScope promutils.Scope) DefaultProtobufStore {
+func NewDefaultProtobufStore(store RawStore, metrics *DataStoreMetrics) DefaultProtobufStore {
 	return DefaultProtobufStore{
 		RawStore: store,
-		metrics: &protoMetrics{
-			FetchLatency:                 metricsScope.MustNewStopWatch("proto_fetch", "Time to read data before unmarshalling", time.Millisecond),
-			MarshalTime:                  metricsScope.MustNewStopWatch("marshal", "Time incurred in marshalling data before writing", time.Millisecond),
-			UnmarshalTime:                metricsScope.MustNewStopWatch("unmarshal", "Time incurred in unmarshalling received data", time.Millisecond),
-			MarshalFailure:               metricsScope.MustNewCounter("marshal_failure", "Failures when marshalling"),
-			UnmarshalFailure:             metricsScope.MustNewCounter("unmarshal_failure", "Failures when unmarshalling"),
-			WriteFailureUnrelatedToCache: metricsScope.MustNewCounter("write_failure_unrelated_to_cache", "Raw store write failures that are not caused by ErrFailedToWriteCache"),
-			ReadFailureUnrelatedToCache:  metricsScope.MustNewCounter("read_failure_unrelated_to_cache", "Raw store read failures that are not caused by ErrFailedToWriteCache"),
-		},
+		metrics:  metrics.protoMetrics,
 	}
 }

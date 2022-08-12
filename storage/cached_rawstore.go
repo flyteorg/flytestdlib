@@ -3,19 +3,15 @@ package storage
 import (
 	"bytes"
 	"context"
+	"github.com/flyteorg/flytestdlib/errors"
 	"io"
 	"runtime/debug"
-	"time"
-
-	"github.com/flyteorg/flytestdlib/errors"
-
-	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/flyteorg/flytestdlib/promutils"
 
 	"github.com/coocood/freecache"
 	"github.com/flyteorg/flytestdlib/ioutils"
 	"github.com/flyteorg/flytestdlib/logger"
+	"github.com/flyteorg/flytestdlib/promutils"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const neverExpire = 0
@@ -31,7 +27,6 @@ type cacheMetrics struct {
 type cachedRawStore struct {
 	RawStore
 	cache   *freecache.Cache
-	scope   promutils.Scope
 	metrics *cacheMetrics
 }
 
@@ -103,23 +98,16 @@ func (s *cachedRawStore) WriteRaw(ctx context.Context, reference DataReference, 
 }
 
 // Creates a CachedStore if Caching is enabled, otherwise returns a RawStore
-func newCachedRawStore(cfg *Config, store RawStore, scope promutils.Scope) RawStore {
+func newCachedRawStore(cfg *Config, store RawStore, metrics *DataStoreMetrics) RawStore {
 	if cfg.Cache.MaxSizeMegabytes > 0 {
-		c := &cachedRawStore{
-			RawStore: store,
-			cache:    freecache.NewCache(cfg.Cache.MaxSizeMegabytes * 1024 * 1024),
-			scope:    scope,
-			metrics: &cacheMetrics{
-				FetchLatency:    scope.MustNewStopWatch("remote_fetch", "Total Time to read from remote metastore", time.Millisecond),
-				CacheHit:        scope.MustNewCounter("cache_hit", "Number of times metadata was found in cache"),
-				CacheMiss:       scope.MustNewCounter("cache_miss", "Number of times metadata was not found in cache and remote fetch was required"),
-				CacheWriteError: scope.MustNewCounter("cache_write_err", "Failed to write to cache"),
-			},
-		}
 		if cfg.Cache.TargetGCPercent > 0 {
 			debug.SetGCPercent(cfg.Cache.TargetGCPercent)
 		}
-		return c
+		return &cachedRawStore{
+			RawStore: store,
+			cache:    freecache.NewCache(cfg.Cache.MaxSizeMegabytes * 1024 * 1024),
+			metrics:  metrics.cacheMetrics,
+		}
 	}
 	return store
 }
