@@ -340,7 +340,7 @@ func (s *StowStore) getLocation(id locationID) stow.Location {
 	}
 }
 
-func NewStowRawStore(baseContainerFQN DataReference, loc, signedURLLoc stow.Location, enableDynamicContainerLoading bool, metrics *DataStoreMetrics) (*StowStore, error) {
+func NewStowRawStore(baseContainerFQN DataReference, loc, signedURLLoc stow.Location, enableDynamicContainerLoading bool, metrics *dataStoreMetrics) (*StowStore, error) {
 	self := &StowStore{
 		loc:                           loc,
 		signedURLLoc:                  signedURLLoc,
@@ -350,7 +350,7 @@ func NewStowRawStore(baseContainerFQN DataReference, loc, signedURLLoc stow.Loca
 		metrics:                       metrics.stowMetrics,
 	}
 
-	self.copyImpl = copyImpl{rawStore: self, metrics: metrics.copyMetrics}
+	self.copyImpl = newCopyImpl(self, metrics.copyMetrics)
 	_, c, _, err := baseContainerFQN.Split()
 	if err != nil {
 		return nil, err
@@ -364,7 +364,7 @@ func NewStowRawStore(baseContainerFQN DataReference, loc, signedURLLoc stow.Loca
 }
 
 // Constructor for the StowRawStore
-func newStowRawStore(cfg *Config, metrics *DataStoreMetrics) (RawStore, error) {
+func newStowRawStore(cfg *Config, metrics *dataStoreMetrics) (RawStore, error) {
 	if cfg.InitContainer == "" {
 		return nil, fmt.Errorf("initContainer is required even with `enable-multicontainer`")
 	}

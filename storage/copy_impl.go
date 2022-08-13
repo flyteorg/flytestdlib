@@ -72,3 +72,10 @@ func newCopyMetrics(scope promutils.Scope) *copyMetrics {
 		ReadFailureUnrelatedToCache:  scope.MustNewCounter("read_failure_unrelated_to_cache", "Raw store read failures that are not caused by ErrFailedToWriteCache"),
 	}
 }
+
+func newCopyImpl(store RawStore, metrics *copyMetrics) copyImpl {
+	return copyImpl{
+		rawStore: store,
+		metrics:  metrics,
+	}
+}

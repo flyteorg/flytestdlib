@@ -79,9 +79,9 @@ func (s DefaultProtobufStore) WriteProtobuf(ctx context.Context, reference DataR
 	return nil
 }
 
-func NewDefaultProtobufStore(store RawStore, metrics *DataStoreMetrics) DefaultProtobufStore {
+func NewDefaultProtobufStore(store RawStore, metrics *protoMetrics) DefaultProtobufStore {
 	return DefaultProtobufStore{
 		RawStore: store,
-		metrics:  metrics.protoMetrics,
+		metrics:  metrics,
 	}
 }

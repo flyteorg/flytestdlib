@@ -68,14 +68,11 @@ func (s *InMemoryStore) CreateSignedURL(ctx context.Context, reference DataRefer
 	return SignedURLResponse{}, fmt.Errorf("unsupported")
 }
 
-func NewInMemoryRawStore(_ *Config, metrics *DataStoreMetrics) (RawStore, error) {
+func NewInMemoryRawStore(_ *Config, metrics *dataStoreMetrics) (RawStore, error) {
 	self := &InMemoryStore{
 		cache: map[DataReference]rawFile{},
 	}
 
-	self.copyImpl = copyImpl{
-		rawStore: self,
-		metrics:  metrics.copyMetrics,
-	}
+	self.copyImpl = newCopyImpl(self, metrics.copyMetrics)
 	return self, nil
 }

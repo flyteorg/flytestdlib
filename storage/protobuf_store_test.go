@@ -107,8 +107,7 @@ func TestDefaultProtobufStore_HardErrors(t *testing.T) {
 			return nil, fmt.Errorf(dummyReadErrorMsg)
 		},
 	}
-	testScope := promutils.NewTestScope()
-	pbErroneousStore := NewDefaultProtobufStore(store, testScope)
+	pbErroneousStore := NewDefaultProtobufStore(store, metrics.protoMetrics)
 	t.Run("Test if hard write errors are handled correctly", func(t *testing.T) {
 		err := pbErroneousStore.WriteProtobuf(ctx, k1, Options{}, &mockProtoMessage{X: 5})
 		assert.False(t, IsFailedWriteToCache(err))

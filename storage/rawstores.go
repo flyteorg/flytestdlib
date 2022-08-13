@@ -9,7 +9,7 @@ import (
 	"github.com/flyteorg/flytestdlib/promutils/labeled"
 )
 
-type dataStoreCreateFn func(cfg *Config, metrics *DataStoreMetrics) (RawStore, error)
+type dataStoreCreateFn func(cfg *Config, metrics *dataStoreMetrics) (RawStore, error)
 
 var stores = map[string]dataStoreCreateFn{
 	TypeMemory: NewInMemoryRawStore,
@@ -56,17 +56,17 @@ func createHTTPClient(cfg HTTPClientConfig) *http.Client {
 	return c
 }
 
-type DataStoreMetrics struct {
+type dataStoreMetrics struct {
 	cacheMetrics *cacheMetrics
 	protoMetrics *protoMetrics
 	copyMetrics  *copyMetrics
 	stowMetrics  *stowMetrics
 }
 
-// NewDataStoreMetrics initialises all metrics required for DataStore
-func NewDataStoreMetrics(scope promutils.Scope) *DataStoreMetrics {
+// newDataStoreMetrics initialises all metrics required for DataStore
+func newDataStoreMetrics(scope promutils.Scope) *dataStoreMetrics {
 	failureTypeOption := labeled.AdditionalLabelsOption{Labels: []string{FailureTypeLabel.String()}}
-	return &DataStoreMetrics{
+	return &dataStoreMetrics{
 		cacheMetrics: &cacheMetrics{
 			FetchLatency:    scope.MustNewStopWatch("remote_fetch", "Total Time to read from remote metastore", time.Millisecond),
 			CacheHit:        scope.MustNewCounter("cache_hit", "Number of times metadata was found in cache"),
@@ -100,26 +100,9 @@ func NewDataStoreMetrics(scope promutils.Scope) *DataStoreMetrics {
 }
 
 // NewDataStore creates a new Data Store with the supplied config.
-func NewDataStore(cfg *Config, metrics *DataStoreMetrics) (s *DataStore, err error) {
-	defaultClient := http.DefaultClient
-	defer func() {
-		http.DefaultClient = defaultClient
-	}()
-
-	http.DefaultClient = createHTTPClient(cfg.DefaultHTTPClient)
-
-	var rawStore RawStore
-	if fn, found := stores[cfg.Type]; found {
-		rawStore, err = fn(cfg, metrics)
-		if err != nil {
-			return &emptyStore, err
-		}
-
-		protoStore := NewDefaultProtobufStore(newCachedRawStore(cfg, rawStore, metrics), metrics)
-		return NewCompositeDataStore(NewURLPathConstructor(), protoStore), nil
-	}
-
-	return &emptyStore, fmt.Errorf("type is of an invalid value [%v]", cfg.Type)
+func NewDataStore(cfg *Config, scope promutils.Scope) (s *DataStore, err error) {
+	ds := &DataStore{metrics: newDataStoreMetrics(scope)}
+	return ds, ds.RefreshConfig(cfg)
 }
 
 // NewCompositeDataStore composes a new DataStore.
@@ -128,4 +111,29 @@ func NewCompositeDataStore(refConstructor ReferenceConstructor, composedProtobuf
 		ReferenceConstructor:  refConstructor,
 		ComposedProtobufStore: composedProtobufStore,
 	}
+}
+
+func (ds *DataStore) RefreshConfig(cfg *Config) error {
+	defaultClient := http.DefaultClient
+	defer func() {
+		http.DefaultClient = defaultClient
+	}()
+
+	http.DefaultClient = createHTTPClient(cfg.DefaultHTTPClient)
+
+	fn, found := stores[cfg.Type]
+	if !found {
+		return fmt.Errorf("type is of an invalid value [%v]", cfg.Type)
+	}
+
+	rawStore, err := fn(cfg, ds.metrics)
+	if err != nil {
+		return err
+	}
+
+	rawStore = newCachedRawStore(cfg, rawStore, ds.metrics.cacheMetrics)
+	protoStore := NewDefaultProtobufStore(rawStore, ds.metrics.protoMetrics)
+	newDS := NewCompositeDataStore(NewURLPathConstructor(), protoStore)
+	*ds = *newDS
+	return nil
 }

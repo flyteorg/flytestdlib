@@ -3,15 +3,17 @@ package storage
 import (
 	"bytes"
 	"context"
-	"github.com/flyteorg/flytestdlib/errors"
 	"io"
 	"runtime/debug"
 
+	"github.com/flyteorg/flytestdlib/errors"
+
 	"github.com/coocood/freecache"
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/flyteorg/flytestdlib/ioutils"
 	"github.com/flyteorg/flytestdlib/logger"
 	"github.com/flyteorg/flytestdlib/promutils"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const neverExpire = 0
@@ -98,7 +100,7 @@ func (s *cachedRawStore) WriteRaw(ctx context.Context, reference DataReference, 
 }
 
 // Creates a CachedStore if Caching is enabled, otherwise returns a RawStore
-func newCachedRawStore(cfg *Config, store RawStore, metrics *DataStoreMetrics) RawStore {
+func newCachedRawStore(cfg *Config, store RawStore, metrics *cacheMetrics) RawStore {
 	if cfg.Cache.MaxSizeMegabytes > 0 {
 		if cfg.Cache.TargetGCPercent > 0 {
 			debug.SetGCPercent(cfg.Cache.TargetGCPercent)
@@ -106,7 +108,7 @@ func newCachedRawStore(cfg *Config, store RawStore, metrics *DataStoreMetrics) R
 		return &cachedRawStore{
 			RawStore: store,
 			cache:    freecache.NewCache(cfg.Cache.MaxSizeMegabytes * 1024 * 1024),
-			metrics:  metrics.cacheMetrics,
+			metrics:  metrics,
 		}
 	}
 	return store
