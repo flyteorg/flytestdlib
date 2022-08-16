@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	errs "github.com/pkg/errors"
@@ -77,6 +78,18 @@ func (s DefaultProtobufStore) WriteProtobuf(ctx context.Context, reference DataR
 		return err
 	}
 	return nil
+}
+
+func newProtoMetrics(scope promutils.Scope) *protoMetrics {
+	return &protoMetrics{
+		FetchLatency:                 scope.MustNewStopWatch("proto_fetch", "Time to read data before unmarshalling", time.Millisecond),
+		MarshalTime:                  scope.MustNewStopWatch("marshal", "Time incurred in marshalling data before writing", time.Millisecond),
+		UnmarshalTime:                scope.MustNewStopWatch("unmarshal", "Time incurred in unmarshalling received data", time.Millisecond),
+		MarshalFailure:               scope.MustNewCounter("marshal_failure", "Failures when marshalling"),
+		UnmarshalFailure:             scope.MustNewCounter("unmarshal_failure", "Failures when unmarshalling"),
+		WriteFailureUnrelatedToCache: scope.MustNewCounter("write_failure_unrelated_to_cache", "Raw store write failures that are not caused by ErrFailedToWriteCache"),
+		ReadFailureUnrelatedToCache:  scope.MustNewCounter("read_failure_unrelated_to_cache", "Raw store read failures that are not caused by ErrFailedToWriteCache"),
+	}
 }
 
 func NewDefaultProtobufStore(store RawStore, metrics *protoMetrics) DefaultProtobufStore {

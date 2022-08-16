@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"runtime/debug"
+	"time"
 
 	"github.com/flyteorg/flytestdlib/errors"
 
@@ -97,6 +98,15 @@ func (s *cachedRawStore) WriteRaw(ctx context.Context, reference DataReference, 
 	}
 
 	return err
+}
+
+func newCacheMetrics(scope promutils.Scope) *cacheMetrics {
+	return &cacheMetrics{
+		FetchLatency:    scope.MustNewStopWatch("remote_fetch", "Total Time to read from remote metastore", time.Millisecond),
+		CacheHit:        scope.MustNewCounter("cache_hit", "Number of times metadata was found in cache"),
+		CacheMiss:       scope.MustNewCounter("cache_miss", "Number of times metadata was not found in cache and remote fetch was required"),
+		CacheWriteError: scope.MustNewCounter("cache_write_err", "Failed to write to cache"),
+	}
 }
 
 // Creates a CachedStore if Caching is enabled, otherwise returns a RawStore
