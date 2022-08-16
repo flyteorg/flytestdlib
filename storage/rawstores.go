@@ -85,6 +85,8 @@ func NewCompositeDataStore(refConstructor ReferenceConstructor, composedProtobuf
 	}
 }
 
+// RefreshConfig re-initialises the data store client leaving metrics untouched.
+// This is NOT thread-safe!
 func (ds *DataStore) RefreshConfig(cfg *Config) error {
 	defaultClient := http.DefaultClient
 	defer func() {
