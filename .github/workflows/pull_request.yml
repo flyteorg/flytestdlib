@@ -22,10 +22,11 @@ jobs:
           file: coverage.txt
           flags: unittests
           fail_ci_if_error: true
-      - name: Lint
-        run: make install && make lint
       - name: Bench tests
         run: make install && make test_benchmark
+  lint:
+    name: Lint
+    uses: flyteorg/flytetools/.github/workflows/lint.yml@master
   test-generate-integrity:
     name: Ensure go generate has run
     runs-on: ubuntu-latest
@@ -36,7 +37,7 @@ jobs:
           fetch-depth: "0"
       - uses: actions/setup-go@v2
         with:
-          go-version: '1.17'
+          go-version: '1.18'
       - name: Go generate and diff
         run: DELTA_CHECK=true make generate
 
