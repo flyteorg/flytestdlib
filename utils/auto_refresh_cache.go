@@ -47,7 +47,7 @@ const (
 	Delete
 )
 
-// Your implementation of this function for your cache instance is responsible for returning
+// CacheSyncItem is a func type. Your implementation of this function for your cache instance is responsible for returning
 // 1. The new CacheItem, and
 // 2. What action should be taken.  The sync function has no insight into your object, and needs to be
 //    told explicitly if the new item is different from the old one.

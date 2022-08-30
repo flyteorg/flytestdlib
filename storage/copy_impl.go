@@ -27,7 +27,7 @@ type copyMetrics struct {
 	ReadFailureUnrelatedToCache  prometheus.Counter
 }
 
-// A naiive implementation for copy that reads all data locally then writes them to destination.
+// CopyRaw is a naiive implementation for copy that reads all data locally then writes them to destination.
 // TODO: We should upstream an API change to stow to implement copy more natively. E.g. Use s3 copy:
 // 	https://docs.aws.amazon.com/AmazonS3/latest/dev/CopyingObjectUsingREST.html
 func (c copyImpl) CopyRaw(ctx context.Context, source, destination DataReference, opts Options) error {
