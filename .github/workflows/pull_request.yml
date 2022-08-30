@@ -27,6 +27,8 @@ jobs:
   lint:
     name: Lint
     uses: flyteorg/flytetools/.github/workflows/lint.yml@master
+    with:
+      go-version: '1.18'
   test-generate-integrity:
     name: Ensure go generate has run
     runs-on: ubuntu-latest

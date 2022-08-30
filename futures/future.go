@@ -1,4 +1,4 @@
-// This module implements a simple Async Futures for golang
+// Package futures implements a simple Async Futures for golang
 // Usage:
 // f := NewAsyncFuture(childCtx, func(ctx2 context.Context) (interface{}, error) {
 // can do large async / non blocking work
