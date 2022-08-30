@@ -33,7 +33,7 @@ func ExampleStopWatch_Start() {
 		defer timer.Stop()
 
 		// Do the operation you want to measure
-		time.Sleep(time.Hour)
+		time.Sleep(time.Second)
 	}
 }
 

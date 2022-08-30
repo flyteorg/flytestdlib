@@ -14,7 +14,7 @@ func Example() {
 	ctx := context.Background()
 	f := NewAsyncFuture(ctx, func(ctx2 context.Context) (interface{}, error) {
 		// can do large async / non-blocking work
-		time.Sleep(time.Hour)
+		time.Sleep(time.Second)
 		return "hello", nil
 	})
 
