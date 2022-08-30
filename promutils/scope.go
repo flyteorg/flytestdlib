@@ -34,9 +34,9 @@ type StopWatch struct {
 // Start creates a new Instance of the StopWatch called a Timer that is closeable/stoppable.
 // Common pattern to time a scope would be
 // {
-//   timer := stopWatch.Start()
-//   defer timer.Stop()
-//   ....
+//     timer := stopWatch.Start()
+//     defer timer.Stop()
+//     ....
 // }
 func (s StopWatch) Start() Timer {
 	return Timer{

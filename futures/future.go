@@ -1,9 +1,9 @@
 // Package futures implements a simple Async Futures for golang
 // Usage:
 // f := NewAsyncFuture(childCtx, func(ctx2 context.Context) (interface{}, error) {
-// can do large async / non blocking work
-//			return ...
-//		}
+//  	// can do large async / non blocking work
+//  	return ...
+// }
 // f.Ready() // can be checked for completion
 // f.Get() .. will block till the given sub-routine returns
 package futures
