@@ -4,7 +4,7 @@ on: pull_request
 
 jobs:
   tests-lint:
-    name: Run tests and lint
+    name: Run tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
