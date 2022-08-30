@@ -27,7 +27,7 @@ echo "Using temp directory ${tmp_dir}"
 cp -R boilerplate/flyte/golang_support_tools/* $tmp_dir
 pushd "$tmp_dir"
 
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.49.0
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.49.0
 
 for tool in "${tools[@]}"
 do
