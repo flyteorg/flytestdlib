@@ -558,12 +558,13 @@ func changeSymLink(targetPath, symLink string) error {
 	return exec.Command("ln", "-sfn", filepath.Clean(targetPath), filepath.Clean(symLink)).Run()
 }
 
-// 1. Create Dir structure:
-//    |_ data1
-//       |_ config.yaml
-//    |_ data (symlink for data1)
-//    |_ config.yaml (symlink for data/config.yaml -recursively a symlink of data1/config.yaml)
 func newSymlinkedConfigFile(t *testing.T) (watchDir, configFile string, cleanup func()) {
+	// 1. Create Dir structure:
+	//    |_ data1
+	//       |_ config.yaml
+	//    |_ data (symlink for data1)
+	//    |_ config.yaml (symlink for data/config.yaml -recursively a symlink of data1/config.yaml)
+
 	watchDir, err := ioutil.TempDir("", "config-test-")
 	assert.NoError(t, err)
 
