@@ -246,7 +246,7 @@ func TestStowStore_ReadRaw(t *testing.T) {
 			},
 		}, nil, false, metrics)
 		assert.NoError(t, err)
-		dataReference := writeTestFile(t, ctx, s, "s3://container/path")
+		dataReference := writeTestFile(ctx, t, s, "s3://container/path")
 		raw, err := s.ReadRaw(ctx, dataReference)
 		assert.NoError(t, err)
 		rawBytes, err := ioutil.ReadAll(raw)
@@ -274,7 +274,7 @@ func TestStowStore_ReadRaw(t *testing.T) {
 			},
 		}, nil, false, metrics)
 		assert.NoError(t, err)
-		dataReference := writeTestFileWithSize(t, ctx, s, "s3://container/path", 3*MiB)
+		dataReference := writeTestFileWithSize(ctx, t, s, "s3://container/path", 3*MiB)
 		_, err = s.ReadRaw(ctx, dataReference)
 		assert.Error(t, err)
 		assert.True(t, IsExceedsLimit(err))
@@ -301,7 +301,7 @@ func TestStowStore_ReadRaw(t *testing.T) {
 			},
 		}, nil, false, metrics)
 		assert.NoError(t, err)
-		dataReference := writeTestFileWithSize(t, ctx, s, "s3://container/path", 3*MiB)
+		dataReference := writeTestFileWithSize(ctx, t, s, "s3://container/path", 3*MiB)
 		_, err = s.ReadRaw(ctx, dataReference)
 		assert.Nil(t, err)
 	})
@@ -326,7 +326,7 @@ func TestStowStore_ReadRaw(t *testing.T) {
 			},
 		}, nil, true, metrics)
 		assert.NoError(t, err)
-		dataReference := writeTestFile(t, ctx, s, "s3://bad-container/path")
+		dataReference := writeTestFile(ctx, t, s, "s3://bad-container/path")
 		raw, err := s.ReadRaw(context.TODO(), dataReference)
 		assert.NoError(t, err)
 		rawBytes, err := ioutil.ReadAll(raw)
@@ -655,7 +655,7 @@ func TestStowStore_Delete(t *testing.T) {
 		}, nil, false, metrics)
 		assert.NoError(t, err)
 
-		dataReference := writeTestFile(t, ctx, s, "s3://container/path")
+		dataReference := writeTestFile(ctx, t, s, "s3://container/path")
 
 		err = s.Delete(ctx, dataReference)
 		assert.NoError(t, err)
@@ -687,8 +687,8 @@ func TestStowStore_Delete(t *testing.T) {
 		}, nil, true, metrics)
 		assert.NoError(t, err)
 
-		dataReference := writeTestFile(t, ctx, s, "s3://container/path")
-		dataReference2 := writeTestFile(t, ctx, s, "s3://bad-container/path")
+		dataReference := writeTestFile(ctx, t, s, "s3://container/path")
+		dataReference2 := writeTestFile(ctx, t, s, "s3://bad-container/path")
 
 		err = s.Delete(ctx, dataReference)
 		assert.NoError(t, err)
@@ -723,7 +723,7 @@ func TestStowStore_Delete(t *testing.T) {
 		}, nil, false, metrics)
 		assert.NoError(t, err)
 
-		dataReference := writeTestFile(t, ctx, s, "s3://container/path")
+		dataReference := writeTestFile(ctx, t, s, "s3://container/path")
 
 		err = s.Delete(ctx, DataReference("s3://container/bad-path"))
 		assert.Error(t, err)
@@ -754,7 +754,7 @@ func TestStowStore_Delete(t *testing.T) {
 		}, nil, false, metrics)
 		assert.NoError(t, err)
 
-		dataReference := writeTestFile(t, ctx, s, "s3://container/path")
+		dataReference := writeTestFile(ctx, t, s, "s3://container/path")
 
 		err = s.Delete(ctx, DataReference("s3://bad-container/path"))
 		assert.Error(t, err)
@@ -790,11 +790,11 @@ func TestStowStore_Delete(t *testing.T) {
 	})
 }
 
-func writeTestFile(t *testing.T, ctx context.Context, s *StowStore, path string) DataReference {
-	return writeTestFileWithSize(t, ctx, s, path, 0)
+func writeTestFile(ctx context.Context, t *testing.T, s *StowStore, path string) DataReference {
+	return writeTestFileWithSize(ctx, t, s, path, 0)
 }
 
-func writeTestFileWithSize(t *testing.T, ctx context.Context, s *StowStore, path string, size int64) DataReference {
+func writeTestFileWithSize(ctx context.Context, t *testing.T, s *StowStore, path string, size int64) DataReference {
 	reference := DataReference(path)
 
 	err := s.WriteRaw(ctx, reference, size, Options{}, bytes.NewReader([]byte{}))
