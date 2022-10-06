@@ -141,6 +141,23 @@ func (g *Generic[T]) Load() T {
 	return g.v.Load().(T)
 }
 
+func (g *Generic[T]) Empty() bool {
+	return g.v.Load() == nil
+}
+
+func (g *Generic[T]) CompareAndSwap(old, new T) (swapped bool) {
+	return g.v.CompareAndSwap(old, new)
+}
+
+func (g *Generic[T]) Swap(new T) (old T) {
+	oldV := g.v.Swap(new)
+	if oldV == nil {
+		return
+	}
+
+	return oldV.(T)
+}
+
 func NewGenericEmpty[T any]() Generic[T] {
 	return Generic[T]{}
 }
