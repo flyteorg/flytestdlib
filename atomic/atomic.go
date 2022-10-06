@@ -127,3 +127,29 @@ func (i *Int32) Store(v int32) {
 func NewInt32(v int32) Int32 {
 	return Int32{v: v}
 }
+
+// Generic represents an atomic.Value object leveraging Go Generics to provide a convenient and type-safe layer.
+type Generic[T any] struct {
+	v atomic.Value
+}
+
+func (g *Generic[T]) Store(v T) {
+	g.v.Store(v)
+}
+
+func (g *Generic[T]) Load() T {
+	return g.v.Load().(T)
+}
+
+func NewGenericEmpty[T any]() Generic[T] {
+	return Generic[T]{}
+}
+
+func NewGeneric[T any](a T) Generic[T] {
+	v := atomic.Value{}
+	v.Store(a)
+
+	return Generic[T]{
+		v: v,
+	}
+}
