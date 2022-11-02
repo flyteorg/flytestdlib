@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/flyteorg/flytestdlib/errors"
+	"github.com/flyteorg/flytestdlib/telemetryutils"
 
 	"github.com/coocood/freecache"
 	"github.com/prometheus/client_golang/prometheus"
@@ -49,6 +50,9 @@ func (s *cachedRawStore) Head(ctx context.Context, reference DataReference) (Met
 
 // ReadRaw retrieves a byte array from the Blob store or an error
 func (s *cachedRawStore) ReadRaw(ctx context.Context, reference DataReference) (io.ReadCloser, error) {
+	ctx, span := telemetryutils.NewSpan(ctx, "github.com/flyteorg/flytestdlib", "ReadRaw")
+	defer span.End()
+
 	key := []byte(reference)
 	if oRaw, err := s.cache.Get(key); err == nil {
 		// Found, Cache hit
@@ -84,6 +88,9 @@ func (s *cachedRawStore) ReadRaw(ctx context.Context, reference DataReference) (
 
 // WriteRaw stores a raw byte array.
 func (s *cachedRawStore) WriteRaw(ctx context.Context, reference DataReference, size int64, opts Options, raw io.Reader) error {
+	ctx, span := telemetryutils.NewSpan(ctx, "github.com/flyteorg/flytestdlib", "WriteRaw")
+	defer span.End()
+
 	var buf bytes.Buffer
 	teeReader := io.TeeReader(raw, &buf)
 	err := s.RawStore.WriteRaw(ctx, reference, size, opts, teeReader)

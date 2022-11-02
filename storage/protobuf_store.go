@@ -13,6 +13,7 @@ import (
 	"github.com/flyteorg/flytestdlib/ioutils"
 	"github.com/flyteorg/flytestdlib/logger"
 	"github.com/flyteorg/flytestdlib/promutils"
+	"github.com/flyteorg/flytestdlib/telemetryutils"
 )
 
 type protoMetrics struct {
@@ -32,6 +33,9 @@ type DefaultProtobufStore struct {
 }
 
 func (s DefaultProtobufStore) ReadProtobuf(ctx context.Context, reference DataReference, msg proto.Message) error {
+	ctx, span := telemetryutils.NewSpan(ctx, "github.com/flyteorg/flytestdlib", "ReadProtobuf")
+	defer span.End()
+
 	rc, err := s.ReadRaw(ctx, reference)
 	if err != nil && !IsFailedWriteToCache(err) {
 		logger.Errorf(ctx, "Failed to read from the raw store [%s] Error: %v", reference, err)
@@ -63,6 +67,9 @@ func (s DefaultProtobufStore) ReadProtobuf(ctx context.Context, reference DataRe
 }
 
 func (s DefaultProtobufStore) WriteProtobuf(ctx context.Context, reference DataReference, opts Options, msg proto.Message) error {
+	ctx, span := telemetryutils.NewSpan(ctx, "github.com/flyteorg/flytestdlib", "WriteProtobuf")
+	defer span.End()
+
 	t := s.metrics.MarshalTime.Start()
 	raw, err := proto.Marshal(msg)
 	t.Stop()
