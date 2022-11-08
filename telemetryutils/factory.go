@@ -11,12 +11,16 @@ import (
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
+	rawtrace "go.opentelemetry.io/otel/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 )
 
-func NewTracerProvider(appName string, config *Config) (*trace.TracerProvider, error) {
+var tracerProviders = make(map[string]*trace.TracerProvider)
+var noopTracerProvider = rawtrace.NewNoopTracerProvider()
+
+func RegisterTracerProvider(serviceName string, config *Config) error {
 	if config == nil {
-		return nil, nil
+		return nil
 	}
 
 	var opts []trace.TracerProviderOption
@@ -24,7 +28,7 @@ func NewTracerProvider(appName string, config *Config) (*trace.TracerProvider, e
 		// configure file exporter
 		f, err := os.Create(config.FileConfig.Filename)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		exporter, err := stdouttrace.New(
@@ -32,7 +36,7 @@ func NewTracerProvider(appName string, config *Config) (*trace.TracerProvider, e
 			stdouttrace.WithPrettyPrint(),
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		opts = append(opts, trace.WithBatcher(exporter))
@@ -46,29 +50,31 @@ func NewTracerProvider(appName string, config *Config) (*trace.TracerProvider, e
 			),
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		opts = append(opts, trace.WithBatcher(exporter))
 	}
 
-	// if no exporters are enabled then we return a nil TracerProvider
+	// if no exporters are enabled then we can return
 	if len(opts) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	telemetryResource, err := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(appName),
+			semconv.ServiceNameKey.String(serviceName),
 			semconv.ServiceVersionKey.String(version.Version),
 		),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	opts = append(opts, trace.WithResource(telemetryResource))
-	return trace.NewTracerProvider(opts...), nil
+	tracerProviders[serviceName] = trace.NewTracerProvider(opts...)
+
+	return nil
 }
