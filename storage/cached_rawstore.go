@@ -50,7 +50,7 @@ func (s *cachedRawStore) Head(ctx context.Context, reference DataReference) (Met
 
 // ReadRaw retrieves a byte array from the Blob store or an error
 func (s *cachedRawStore) ReadRaw(ctx context.Context, reference DataReference) (io.ReadCloser, error) {
-	ctx, span := telemetryutils.NewSpan(ctx, "blobstore", "ReadRaw")
+	ctx, span := telemetryutils.NewSpan(ctx, "blobstore", "cachedRawStore.ReadRaw")
 	defer span.End()
 
 	key := []byte(reference)
@@ -88,7 +88,7 @@ func (s *cachedRawStore) ReadRaw(ctx context.Context, reference DataReference) (
 
 // WriteRaw stores a raw byte array.
 func (s *cachedRawStore) WriteRaw(ctx context.Context, reference DataReference, size int64, opts Options, raw io.Reader) error {
-	ctx, span := telemetryutils.NewSpan(ctx, "blobstore", "WriteRaw")
+	ctx, span := telemetryutils.NewSpan(ctx, "blobstore", "cachedRawStore.WriteRaw")
 	defer span.End()
 
 	var buf bytes.Buffer

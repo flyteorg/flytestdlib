@@ -33,7 +33,7 @@ type DefaultProtobufStore struct {
 }
 
 func (s DefaultProtobufStore) ReadProtobuf(ctx context.Context, reference DataReference, msg proto.Message) error {
-	ctx, span := telemetryutils.NewSpan(ctx, "blobstore", "ReadProtobuf")
+	ctx, span := telemetryutils.NewSpan(ctx, "blobstore", "DefaultProtobufStore.ReadProtobuf")
 	defer span.End()
 
 	rc, err := s.ReadRaw(ctx, reference)
@@ -67,7 +67,7 @@ func (s DefaultProtobufStore) ReadProtobuf(ctx context.Context, reference DataRe
 }
 
 func (s DefaultProtobufStore) WriteProtobuf(ctx context.Context, reference DataReference, opts Options, msg proto.Message) error {
-	ctx, span := telemetryutils.NewSpan(ctx, "blobstore", "WriteProtobuf")
+	ctx, span := telemetryutils.NewSpan(ctx, "blobstore", "DefaultProtobufStore.WriteProtobuf")
 	defer span.End()
 
 	t := s.metrics.MarshalTime.Start()
