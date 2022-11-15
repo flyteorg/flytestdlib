@@ -74,7 +74,17 @@ func RegisterTracerProvider(serviceName string, config *Config) error {
 	}
 
 	opts = append(opts, trace.WithResource(telemetryResource))
-	tracerProviders[serviceName] = trace.NewTracerProvider(opts...)
+	tracerProvider := trace.NewTracerProvider(opts...)
 
+	tracerProviders[serviceName] = tracerProvider
 	return nil
+}
+
+func GetTracerProvider(serviceName string) rawtrace.TracerProvider {
+	if t, ok := tracerProviders[serviceName]; ok {
+		return t
+	}
+
+	// TODO @hamersaw - add warning "tracerProvider 'foo' not registered"
+	return noopTracerProvider
 }

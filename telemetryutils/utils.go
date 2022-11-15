@@ -23,14 +23,6 @@ import (
 
 func NewSpan(ctx context.Context, serviceName string, spanName string) (context.Context, trace.Span) {
 	// TODO @hamersaw - can check ctx.IDK to see if tracing is enabled on
-	// if not -> use a NoopTracerProvider
-	var tracerProvider trace.TracerProvider
-	if t, ok := tracerProviders[serviceName]; ok {
-		tracerProvider = t
-	} else {
-		// TODO @hamersaw - add warning "tracerProvider 'foo' not registered"
-		tracerProvider = noopTracerProvider
-	}
 
 	var attributes []attribute.KeyValue
 	for key, value := range contextutils.GetLogFields(ctx) {
@@ -39,5 +31,7 @@ func NewSpan(ctx context.Context, serviceName string, spanName string) (context.
 		}
 	}
 
+	tracerProvider := GetTracerProvider(serviceName)
 	return tracerProvider.Tracer("default").Start(ctx, spanName, trace.WithAttributes(attributes...))
+	// TODO @hamersaw - tracer should be the library name - ex. github.com/flyteorg/flytepropeller
 }
