@@ -18,6 +18,8 @@ var (
 	Version = "unknown"
 	// Build timestamp
 	BuildTime = time.Now().String()
+	// Git branch that was used to build the binary
+	GitBranch = ""
 )
 
 // Use this method to log the build information for the current app. The app name should be provided. To inject the build
