@@ -1,6 +1,7 @@
 package version
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -26,6 +27,10 @@ var (
 // and version information refer to the top-level comment in this file
 func LogBuildInformation(appName string) {
 	logrus.Info("------------------------------------------------------------------------")
-	logrus.Infof("App [%s], Version [%s], BuildSHA [%s], BuildTS [%s]", appName, Version, Build, BuildTime)
+	msg := fmt.Sprintf("App [%s], Version [%s], BuildSHA [%s], BuildTS [%s]", appName, Version, Build, BuildTime)
+	if GitBranch != "" {
+		msg += fmt.Sprintf(", Git Branch [%s]", GitBranch)
+	}
+	logrus.Info(msg)
 	logrus.Info("------------------------------------------------------------------------")
 }
