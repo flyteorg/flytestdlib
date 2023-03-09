@@ -5,14 +5,20 @@ import (
 
 	"github.com/flyteorg/flytestdlib/version"
 
-	//"go.opentelemetry.io/otel"
-	//"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	rawtrace "go.opentelemetry.io/otel/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+)
+
+const (
+	AdminClientTracer       = "admin-client"
+	BlobstoreClientTracer   = "blobstore-client"
+	DataCatalogClientTracer = "datacatalog-client"
+	FlytePropellerTracer    = "flytepropeller"
+	K8sClientTracer         = "k8s-client"
 )
 
 var tracerProviders = make(map[string]*trace.TracerProvider)
@@ -85,6 +91,5 @@ func GetTracerProvider(serviceName string) rawtrace.TracerProvider {
 		return t
 	}
 
-	// TODO @hamersaw - add warning "tracerProvider 'foo' not registered"
 	return noopTracerProvider
 }

@@ -28,18 +28,18 @@ var (
 )
 
 type Config struct {
-	FileConfig   FileConfig `json:"file", pflag:",TODO"`
-	JaegerConfig JaegerConfig `json:"jaeger", pflag:",TODO"`
+	FileConfig   FileConfig `json:"file" pflag:",Configuration for exporting telemetry traces to a file"`
+	JaegerConfig JaegerConfig `json:"jaeger" pflag:",Configuration for exporting telemetry traces to a jaeger"`
 }
 
 type FileConfig struct {
-	Enabled  bool   `json:"enabled" pflag:",TODO"`
-	Filename string `json:"filename" pflag:",TODO"`
+	Enabled  bool   `json:"enabled" pflag:",Set to true to enable the file exporter"`
+	Filename string `json:"filename" pflag:",Filename to store exported telemetry traces"`
 }
 
 type JaegerConfig struct {
-	Enabled  bool   `json:"enabled" pflag:",TODO"`
-	Endpoint string `json:"endpoint" pflag:",TODO"`
+	Enabled  bool   `json:"enabled" pflag:",Set to true to enable the jaeger exporter"`
+	Endpoint string `json:"endpoint" pflag:",Endpoint for the jaeger telemtry trace ingestor"`
 }
 
 func GetConfig() *Config {
