@@ -28,7 +28,7 @@ var (
 )
 
 type Config struct {
-	FileConfig   FileConfig `json:"file" pflag:",Configuration for exporting telemetry traces to a file"`
+	FileConfig   FileConfig   `json:"file" pflag:",Configuration for exporting telemetry traces to a file"`
 	JaegerConfig JaegerConfig `json:"jaeger" pflag:",Configuration for exporting telemetry traces to a jaeger"`
 }
 

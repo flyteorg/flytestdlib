@@ -5,12 +5,12 @@ import (
 
 	"github.com/flyteorg/flytestdlib/version"
 
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	rawtrace "go.opentelemetry.io/otel/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+	rawtrace "go.opentelemetry.io/otel/trace"
 )
 
 const (
