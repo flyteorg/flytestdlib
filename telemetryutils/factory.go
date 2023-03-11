@@ -1,10 +1,13 @@
 package telemetryutils
 
 import (
+	"context"
 	"os"
 
+	"github.com/flyteorg/flytestdlib/contextutils"
 	"github.com/flyteorg/flytestdlib/version"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -92,4 +95,16 @@ func GetTracerProvider(serviceName string) rawtrace.TracerProvider {
 	}
 
 	return noopTracerProvider
+}
+
+func NewSpan(ctx context.Context, serviceName string, spanName string) (context.Context, rawtrace.Span) {
+	var attributes []attribute.KeyValue
+	for key, value := range contextutils.GetLogFields(ctx) {
+		if value, ok := value.(string); ok {
+			attributes = append(attributes, attribute.String(key, value))
+		}
+	}
+
+	tracerProvider := GetTracerProvider(serviceName)
+	return tracerProvider.Tracer("default").Start(ctx, spanName, rawtrace.WithAttributes(attributes...))
 }
