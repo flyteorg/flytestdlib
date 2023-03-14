@@ -25,6 +25,7 @@ func getMysqlDsn(ctx context.Context, mysqlConfig MysqlConfig) string {
 		Collation:               "",
 		AllowCleartextPasswords: true,
 		MultiStatements:         true,
+		ParseTime:               true,
 	}
 	return sqlConfig.FormatDSN()
 }
@@ -43,7 +44,12 @@ func CreateMysqlDbIfNotExists(ctx context.Context, gormConfig *gorm.Config, mysq
 				Password: mysqlConfig.Password,
 			}
 			dsn := getMysqlDsn(ctx, withDefaultDB)
-			defaultDB, err := gorm.Open(mysql.Open(dsn), gormConfig)
+			
+			defaultDB, err := gorm.Open(mysql.New(mysql.Config{
+				DSN: dsn,
+				DefaultStringSize: 100,
+				// TODO: do we need to set DefaultDatetimePrecision? What about other fields?
+			}), gormConfig)
 			if err != nil {
 				return nil, fmt.Errorf("error creating connection to default database for %s:%d",
 					withDefaultDB.Host, withDefaultDB.Port)
