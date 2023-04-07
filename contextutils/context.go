@@ -4,6 +4,7 @@ package contextutils
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/metadata"
 	"runtime/pprof"
 )
 
@@ -136,7 +137,7 @@ func WithSignalID(ctx context.Context, signalID string) context.Context {
 
 // WithRequestID gets a new context with RequestID set.
 func WithRequestID(ctx context.Context, requestID string) context.Context {
-	return context.WithValue(ctx, RequestIDKey, requestID)
+	return metadata.AppendToOutgoingContext(context.WithValue(ctx, RequestIDKey, requestID), requestID)
 }
 
 // WithGoroutineLabel gets a new context with Go Routine label key set and a label assigned to the context using
