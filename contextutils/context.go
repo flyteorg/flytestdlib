@@ -1,11 +1,12 @@
-// Contains common flyte context utils.
+// Package contextutils contains common flyte context utils.
 package contextutils
 
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/metadata"
 	"runtime/pprof"
+
+	"google.golang.org/grpc/metadata"
 )
 
 type Key string
