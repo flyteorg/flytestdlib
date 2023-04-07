@@ -137,7 +137,7 @@ func WithSignalID(ctx context.Context, signalID string) context.Context {
 
 // WithRequestID gets a new context with RequestID set.
 func WithRequestID(ctx context.Context, requestID string) context.Context {
-	return metadata.AppendToOutgoingContext(context.WithValue(ctx, RequestIDKey, requestID), requestID)
+	return metadata.AppendToOutgoingContext(context.WithValue(ctx, RequestIDKey, requestID), RequestIDKey.String(), requestID)
 }
 
 // WithGoroutineLabel gets a new context with Go Routine label key set and a label assigned to the context using
