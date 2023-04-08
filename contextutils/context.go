@@ -27,7 +27,7 @@ const (
 	LaunchPlanIDKey    Key = "lp"
 	ResourceVersionKey Key = "res_ver"
 	SignalIDKey        Key = "signal"
-	RequestIDKey       Key = "request_id"
+	RequestIDKey       Key = "x-request-id"
 )
 
 func (k Key) String() string {
