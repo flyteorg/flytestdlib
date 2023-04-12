@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	database = "database"
-	postgres = "postgres"
+	database     = "database"
+	postgresText = "postgres"
 )
 
 //go:generate pflags DbConfig --default-var=defaultConfig
@@ -19,9 +19,9 @@ var defaultConfig = &DbConfig{
 	ConnMaxLifeTime:    config.Duration{Duration: time.Hour},
 	Postgres: PostgresConfig{
 		Port:         5432,
-		User:         postgres,
-		Host:         postgres,
-		DbName:       postgres,
+		User:         postgresText,
+		Host:         postgresText,
+		DbName:       postgresText,
 		ExtraOptions: "sslmode=disable",
 	},
 }
@@ -53,6 +53,7 @@ type DbConfig struct {
 	ConnMaxLifeTime                         config.Duration `json:"connMaxLifeTime" pflag:",sets the maximum amount of time a connection may be reused"`
 	Postgres                                PostgresConfig  `json:"postgres,omitempty"`
 	SQLite                                  SQLiteConfig    `json:"sqlite,omitempty"`
+	Mysql                                   MysqlConfig     `json:"mysql,omitempty"`
 }
 
 // SQLiteConfig can be used to configure
@@ -73,8 +74,18 @@ type PostgresConfig struct {
 	Debug        bool   `json:"debug" pflag:" Whether or not to start the database connection with debug mode enabled."`
 }
 
+type MysqlConfig struct {
+	Host   string `json:"host" pflag:",The host name of the database server"`
+	Port   int    `json:"port" pflag:",The port name of the database server"`
+	DbName string `json:"dbname" pflag:",The database name"`
+	User   string `json:"username" pflag:",The database user who is connecting to the server."`
+	// Either Password or PasswordPath must be set.
+	Password string `json:"password" pflag:",The database password."`
+}
+
 var emptySQLiteCfg = SQLiteConfig{}
 var emptyPostgresConfig = PostgresConfig{}
+var emptyMysqlConfig = MysqlConfig{}
 
 func (s SQLiteConfig) IsEmpty() bool {
 	return s == emptySQLiteCfg
@@ -82,6 +93,10 @@ func (s SQLiteConfig) IsEmpty() bool {
 
 func (s PostgresConfig) IsEmpty() bool {
 	return s == emptyPostgresConfig
+}
+
+func (s MysqlConfig) IsEmpty() bool {
+	return s == emptyMysqlConfig
 }
 
 func GetConfig() *DbConfig {
