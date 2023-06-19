@@ -3,6 +3,8 @@ package storage
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/base32"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,6 +21,7 @@ type InMemoryStore struct {
 type MemoryMetadata struct {
 	exists bool
 	size   int64
+	etag   string
 }
 
 func (m MemoryMetadata) Size() int64 {
@@ -29,9 +32,18 @@ func (m MemoryMetadata) Exists() bool {
 	return m.exists
 }
 
+func (m MemoryMetadata) Etag() string {
+	return m.etag
+}
+
 func (s *InMemoryStore) Head(ctx context.Context, reference DataReference) (Metadata, error) {
 	data, found := s.cache[reference]
-	return MemoryMetadata{exists: found, size: int64(len(data))}, nil
+	var hash [md5.Size]byte
+	if found {
+		hash = md5.Sum(data)
+	}
+
+	return MemoryMetadata{exists: found, size: int64(len(data)), etag: base32.StdEncoding.EncodeToString(hash[:])}, nil
 }
 
 func (s *InMemoryStore) ReadRaw(ctx context.Context, reference DataReference) (io.ReadCloser, error) {

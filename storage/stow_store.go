@@ -92,10 +92,11 @@ type stowMetrics struct {
 	DeleteLatency labeled.StopWatch
 }
 
-// Metadata that will be returned
+// StowMetadata that will be returned
 type StowMetadata struct {
 	exists bool
 	size   int64
+	etag   string
 }
 
 func (s StowMetadata) Size() int64 {
@@ -104,6 +105,10 @@ func (s StowMetadata) Size() int64 {
 
 func (s StowMetadata) Exists() bool {
 	return s.exists
+}
+
+func (s StowMetadata) Etag() string {
+	return s.etag
 }
 
 // Implements DataStore to talk to stow location store.
@@ -216,8 +221,13 @@ func (s *StowStore) Head(ctx context.Context, reference DataReference) (Metadata
 		return StowMetadata{exists: false}, nil
 	}
 
+	etag, err := item.ETag()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get etag for item %s, error %s", k, err)
+	}
+
 	incFailureCounterForError(ctx, s.metrics.HeadFailure, err)
-	return StowMetadata{exists: false}, errs.Wrapf(err, "path:%v", k)
+	return StowMetadata{exists: false, etag: etag}, errs.Wrapf(err, "path:%v", k)
 }
 
 func (s *StowStore) ReadRaw(ctx context.Context, reference DataReference) (io.ReadCloser, error) {
