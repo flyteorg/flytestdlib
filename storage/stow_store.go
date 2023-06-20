@@ -205,15 +205,19 @@ func (s *StowStore) Head(ctx context.Context, reference DataReference) (Metadata
 	t := s.metrics.HeadLatency.Start(ctx)
 	item, err := container.Item(k)
 	if err == nil {
-		if _, err = item.Metadata(); err == nil {
-			size, err := item.Size()
-			if err == nil {
-				t.Stop()
-				return StowMetadata{
-					exists: true,
-					size:   size,
-				}, nil
-			}
+		if _, err = item.Metadata(); err != nil {
+			// Err will be caught below
+		} else if size, err := item.Size(); err != nil {
+			// Err will be caught below
+		} else if etag, err := item.ETag(); err != nil {
+			// Err will be caught below
+		} else {
+			t.Stop()
+			return StowMetadata{
+				exists: true,
+				size:   size,
+				etag:   etag,
+			}, nil
 		}
 	}
 
@@ -221,13 +225,8 @@ func (s *StowStore) Head(ctx context.Context, reference DataReference) (Metadata
 		return StowMetadata{exists: false}, nil
 	}
 
-	etag, err := item.ETag()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get etag for item %s, error %s", k, err)
-	}
-
 	incFailureCounterForError(ctx, s.metrics.HeadFailure, err)
-	return StowMetadata{exists: false, etag: etag}, errs.Wrapf(err, "path:%v", k)
+	return StowMetadata{exists: false}, errs.Wrapf(err, "path:%v", k)
 }
 
 func (s *StowStore) ReadRaw(ctx context.Context, reference DataReference) (io.ReadCloser, error) {
