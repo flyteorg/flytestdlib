@@ -26,6 +26,7 @@ require (
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324
 	golang.org/x/tools v0.1.12
+	google.golang.org/grpc v1.46.0
 	google.golang.org/protobuf v1.28.0
 	gorm.io/gorm v1.22.4
 	k8s.io/api v0.20.2
@@ -94,7 +95,6 @@ require (
 	google.golang.org/api v0.76.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220426171045-31bebdecfb46 // indirect
-	google.golang.org/grpc v1.46.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
