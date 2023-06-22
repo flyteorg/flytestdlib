@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/unionai-oss/unionidl/api/grpc"
 
 	"github.com/flyteorg/flytestdlib/config"
 	"github.com/flyteorg/flytestdlib/logger"
@@ -16,11 +17,12 @@ type Type = string
 const configSectionKey = "Storage"
 
 const (
-	TypeMemory Type = "mem"
-	TypeS3     Type = "s3"
-	TypeLocal  Type = "local"
-	TypeMinio  Type = "minio"
-	TypeStow   Type = "stow"
+	TypeMemory    Type = "mem"
+	TypeS3        Type = "s3"
+	TypeLocal     Type = "local"
+	TypeMinio     Type = "minio"
+	TypeStow      Type = "stow"
+	TypeUnionMeta Type = "unionmeta"
 )
 
 const (
@@ -49,6 +51,8 @@ type Config struct {
 	// Deprecated: Please use StowConfig instead
 	Connection ConnectionConfig `json:"connection"`
 	Stow       StowConfig       `json:"stow,omitempty" pflag:",Storage config for stow backend."`
+	UnionMeta  UnionMetaConfig  `json:"unionmeta,omitempty" pflag:",Storage config for unionmeta backend."`
+
 	// Container here is misleading, it refers to a Bucket (AWS S3) like blobstore entity. In some terms it could be a table
 	InitContainer string `json:"container" pflag:",Initial container (in s3 a bucket) to create -if it doesn't exist-.'"`
 	// By default if this is not enabled, multiple containers are not supported by the storage layer. Only the configured `container` InitContainer will be allowed to requests data from. But, if enabled then data will be loaded to written to any
@@ -62,6 +66,10 @@ type Config struct {
 	Limits            LimitsConfig     `json:"limits" pflag:",Sets limits for stores."`
 	DefaultHTTPClient HTTPClientConfig `json:"defaultHttpClient" pflag:",Sets the default http client config."`
 	SignedURL         SignedURLConfig  `json:"signedUrl" pflag:",Sets config for SignedURL."`
+}
+
+type UnionMetaConfig struct {
+	Connection grpc.Config `json:"connection" pflag:",Sets the connection config for unionmeta."`
 }
 
 // SignedURLConfig encapsulates configs specifically used for SignedURL behavior.

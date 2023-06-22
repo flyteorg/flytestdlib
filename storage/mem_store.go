@@ -91,7 +91,7 @@ func (s *InMemoryStore) CreateSignedURL(ctx context.Context, reference DataRefer
 	return SignedURLResponse{}, fmt.Errorf("unsupported")
 }
 
-func NewInMemoryRawStore(_ *Config, metrics *dataStoreMetrics) (RawStore, error) {
+func NewInMemoryRawStore(_ context.Context, _ *Config, metrics *dataStoreMetrics) (RawStore, error) {
 	self := &InMemoryStore{
 		cache: map[DataReference]rawFile{},
 	}

@@ -422,7 +422,7 @@ func newStowMetrics(scope promutils.Scope) *stowMetrics {
 }
 
 // Constructor for the StowRawStore
-func newStowRawStore(cfg *Config, metrics *dataStoreMetrics) (RawStore, error) {
+func newStowRawStore(_ context.Context, cfg *Config, metrics *dataStoreMetrics) (RawStore, error) {
 	if cfg.InitContainer == "" {
 		return nil, fmt.Errorf("initContainer is required even with `enable-multicontainer`")
 	}
