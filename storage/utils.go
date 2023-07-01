@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"os"
 
@@ -31,7 +32,7 @@ func IsNotFound(err error) bool {
 		return true
 	}
 
-	if status.Code(err) == status.Code(stow.ErrNotFound) {
+	if status.Code(err) == codes.NotFound {
 		return true
 	}
 
