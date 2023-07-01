@@ -52,6 +52,16 @@ var fQNFn = map[string]func(string) DataReference{
 	},
 }
 
+// RegisterStowKind registers a new kind of stow store.
+func RegisterStowKind(kind string, f func(string) DataReference) error {
+	if _, ok := fQNFn[kind]; ok {
+		return fmt.Errorf("kind [%v] already registered", kind)
+	}
+
+	fQNFn[kind] = f
+	return nil
+}
+
 // Checks if the error is AWS S3 bucket not found error
 func awsBucketIsNotFound(err error) bool {
 	if awsErr, errOk := errs.Cause(err).(awserr.Error); errOk {
