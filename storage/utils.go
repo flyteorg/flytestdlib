@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"google.golang.org/grpc/status"
 	"os"
 
 	stdErrs "github.com/flyteorg/flytestdlib/errors"
@@ -27,6 +28,10 @@ func IsNotFound(err error) bool {
 	}
 
 	if stdErrs.IsCausedByError(err, stow.ErrNotFound) {
+		return true
+	}
+
+	if status.Code(err) == status.Code(stow.ErrNotFound) {
 		return true
 	}
 
