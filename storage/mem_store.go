@@ -3,7 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/md5" // #nosec
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -40,7 +40,7 @@ func (s *InMemoryStore) Head(ctx context.Context, reference DataReference) (Meta
 	data, found := s.cache[reference]
 	var hash [md5.Size]byte
 	if found {
-		hash = md5.Sum(data)
+		hash = md5.Sum(data) // #nosec
 	}
 
 	return MemoryMetadata{
