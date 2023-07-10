@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/base32"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -43,7 +43,10 @@ func (s *InMemoryStore) Head(ctx context.Context, reference DataReference) (Meta
 		hash = md5.Sum(data)
 	}
 
-	return MemoryMetadata{exists: found, size: int64(len(data)), etag: base32.StdEncoding.EncodeToString(hash[:])}, nil
+	return MemoryMetadata{
+		exists: found, size: int64(len(data)),
+		etag: hex.EncodeToString(hash[:]),
+	}, nil
 }
 
 func (s *InMemoryStore) ReadRaw(ctx context.Context, reference DataReference) (io.ReadCloser, error) {
