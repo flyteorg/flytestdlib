@@ -11,12 +11,11 @@ import (
 type dataStoreCreateFn func(ctx context.Context, cfg *Config, metrics *dataStoreMetrics) (RawStore, error)
 
 var stores = map[string]dataStoreCreateFn{
-	TypeMemory:    NewInMemoryRawStore,
-	TypeLocal:     newStowRawStore,
-	TypeMinio:     newStowRawStore,
-	TypeS3:        newStowRawStore,
-	TypeStow:      newStowRawStore,
-	TypeUnionMeta: NewUnionMetaStore,
+	TypeMemory: NewInMemoryRawStore,
+	TypeLocal:  newStowRawStore,
+	TypeMinio:  newStowRawStore,
+	TypeS3:     newStowRawStore,
+	TypeStow:   newStowRawStore,
 }
 
 type proxyTransport struct {
