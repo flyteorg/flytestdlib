@@ -36,8 +36,6 @@ func IsNotFound(err error) bool {
 		return true
 	}
 
-	awsBucketIsNotFound()
-
 	return false
 }
 
