@@ -104,3 +104,7 @@ require (
 	k8s.io/klog/v2 v2.5.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.0.3 // indirect
 )
+
+//  go mod edit -replace=github.com/flyteorg/stow=github.com/gvashishtha/stow@78e3158
+// followed by go mod tidy
+replace github.com/flyteorg/stow => github.com/gvashishtha/stow v0.0.0-20230801152247-78e3158c973a
