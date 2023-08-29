@@ -265,6 +265,7 @@ func (w *autoRefresh) sync(ctx context.Context) (err error) {
 			return nil
 		default:
 			item, shutdown := w.workqueue.Get()
+			logger.Infof(ctx, "Got item from workqueue: %v", (*item.(*Batch))[0].GetID())
 			if shutdown {
 				return nil
 			}
