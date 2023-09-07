@@ -56,7 +56,9 @@ type metrics struct {
 	scope       promutils.Scope
 }
 
-type Item interface{}
+type Item interface {
+	isTerminal() bool
+}
 
 // Items are wrapped inside an ItemWrapper to be stored in the cache.
 type ItemWrapper interface {
@@ -164,7 +166,7 @@ func (w *autoRefresh) Start(ctx context.Context) error {
 	go wait.Until(func() {
 		err := w.enqueueBatches(enqueueCtx)
 		if err != nil {
-			logger.Errorf(enqueueCtx, "Failed to sync. Error: %v", err)
+			logger.Errorf(enqueueCtx, "Failed to enqueue. Error: %v", err)
 		}
 	}, w.syncPeriod, enqueueCtx.Done())
 
@@ -265,11 +267,16 @@ func (w *autoRefresh) sync(ctx context.Context) (err error) {
 			return nil
 		default:
 			item, shutdown := w.workqueue.Get()
-			logger.Infof(ctx, "Got item from workqueue: %v", (*item.(*Batch))[0].GetID())
+			batch := (*item.(*Batch))[0]
+			logger.Infof(ctx, "Got item from workqueue: %v", batch.GetID())
 			if shutdown {
 				return nil
 			}
-
+			if batch.GetItem().isTerminal() {
+				w.workqueue.Forget(item)
+				w.workqueue.Done(item)
+				continue
+			}
 			t := w.metrics.SyncLatency.Start()
 			updatedBatch, err := w.syncCb(ctx, *item.(*Batch))
 
@@ -297,7 +304,6 @@ func (w *autoRefresh) sync(ctx context.Context) (err error) {
 				w.toDelete.Remove(key)
 				return true
 			})
-
 			t.Stop()
 		}
 	}
