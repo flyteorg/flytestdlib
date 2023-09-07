@@ -57,7 +57,7 @@ type metrics struct {
 }
 
 type Item interface {
-	isTerminal() bool
+	IsTerminal() bool
 }
 
 // Items are wrapped inside an ItemWrapper to be stored in the cache.
