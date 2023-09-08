@@ -81,6 +81,9 @@ const (
 
 	// The item returned has been updated and should be updated in the cache
 	Update
+
+	// The item should be removed from the cache
+	Delete
 )
 
 // SyncFunc func type. Your implementation of this function for your cache instance is responsible for returning
@@ -272,7 +275,7 @@ func (w *autoRefresh) sync(ctx context.Context) (err error) {
 			if shutdown {
 				return nil
 			}
-			if batch.GetItem().isTerminal() {
+			if batch.GetItem().IsTerminal() {
 				w.workqueue.Forget(item)
 				w.workqueue.Done(item)
 				continue
