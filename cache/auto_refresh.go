@@ -216,7 +216,7 @@ func (w *autoRefresh) enqueueBatches(ctx context.Context) error {
 	for _, k := range keys {
 		// If not ok, it means evicted between the item was evicted between getting the keys and this update loop
 		// which is fine, we can just ignore.
-		if value, ok := w.lruMap.Peek(k); ok && !w.toDelete.Contains(k) {
+		if value, ok := w.lruMap.Peek(k); ok && !w.toDelete.Contains(k) && !value.(Item).IsTerminal() {
 			snapshot = append(snapshot, itemWrapper{
 				id:   k.(ItemID),
 				item: value.(Item),
@@ -275,11 +275,7 @@ func (w *autoRefresh) sync(ctx context.Context) (err error) {
 			if shutdown {
 				return nil
 			}
-			if batch.GetItem().IsTerminal() {
-				w.workqueue.Forget(item)
-				w.workqueue.Done(item)
-				continue
-			}
+
 			t := w.metrics.SyncLatency.Start()
 			updatedBatch, err := w.syncCb(ctx, *item.(*Batch))
 
