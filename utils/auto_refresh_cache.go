@@ -42,9 +42,6 @@ const (
 
 	// The item returned has been updated and should be updated in the cache
 	Update
-
-	// The item should be removed from the cache
-	Delete
 )
 
 // CacheSyncItem is a func type. Your implementation of this function for your cache instance is responsible for returning

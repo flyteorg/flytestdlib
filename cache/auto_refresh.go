@@ -270,8 +270,6 @@ func (w *autoRefresh) sync(ctx context.Context) (err error) {
 			return nil
 		default:
 			item, shutdown := w.workqueue.Get()
-			batch := (*item.(*Batch))[0]
-			logger.Infof(ctx, "Got item from workqueue: %v", batch.GetID())
 			if shutdown {
 				return nil
 			}
@@ -303,6 +301,7 @@ func (w *autoRefresh) sync(ctx context.Context) (err error) {
 				w.toDelete.Remove(key)
 				return true
 			})
+
 			t.Stop()
 		}
 	}
