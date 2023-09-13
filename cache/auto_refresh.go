@@ -211,9 +211,14 @@ func (w *autoRefresh) enqueueBatches(ctx context.Context) error {
 
 	snapshot := make([]ItemWrapper, 0, len(keys))
 	for _, k := range keys {
+		if w.toDelete.Contains(k) {
+			w.lruMap.Remove(k)
+			w.toDelete.Remove(k)
+			continue
+		}
 		// If not ok, it means evicted between the item was evicted between getting the keys and this update loop
 		// which is fine, we can just ignore.
-		if value, ok := w.lruMap.Peek(k); ok && !w.toDelete.Contains(k) && !value.(Item).IsTerminal() {
+		if value, ok := w.lruMap.Peek(k); ok && !value.(Item).IsTerminal() {
 			snapshot = append(snapshot, itemWrapper{
 				id:   k.(ItemID),
 				item: value.(Item),
