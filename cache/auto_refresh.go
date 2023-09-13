@@ -218,11 +218,13 @@ func (w *autoRefresh) enqueueBatches(ctx context.Context) error {
 		}
 		// If not ok, it means evicted between the item was evicted between getting the keys and this update loop
 		// which is fine, we can just ignore.
-		if value, ok := w.lruMap.Peek(k); ok && !value.(Item).IsTerminal() {
-			snapshot = append(snapshot, itemWrapper{
-				id:   k.(ItemID),
-				item: value.(Item),
-			})
+		if value, ok := w.lruMap.Peek(k); ok {
+			if item, ok := value.(Item); ok && item.IsTerminal() {
+				snapshot = append(snapshot, itemWrapper{
+					id:   k.(ItemID),
+					item: value.(Item),
+				})
+			}
 		}
 	}
 
