@@ -62,7 +62,7 @@ func syncTerminalItem(_ context.Context, batch Batch) ([]ItemSyncResponse, error
 	panic("This should never be called")
 }
 
-func TestCacheTwo(t *testing.T) {
+func TestCacheThree(t *testing.T) {
 	testResyncPeriod := time.Millisecond
 	rateLimiter := workqueue.DefaultControllerRateLimiter()
 
