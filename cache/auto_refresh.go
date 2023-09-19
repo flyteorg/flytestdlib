@@ -212,6 +212,7 @@ func (w *autoRefresh) enqueueBatches(ctx context.Context) error {
 		// If not ok, it means evicted between the item was evicted between getting the keys and this update loop
 		// which is fine, we can just ignore.
 		if value, ok := w.lruMap.Peek(k); ok && !w.toDelete.Contains(k) {
+			logger.Infof(ctx, "Adding item [%v] to snapshot.", k.(ItemID))
 			snapshot = append(snapshot, itemWrapper{
 				id:   k.(ItemID),
 				item: value.(Item),
@@ -270,6 +271,8 @@ func (w *autoRefresh) sync(ctx context.Context) (err error) {
 			}
 
 			t := w.metrics.SyncLatency.Start()
+			logger.Infof(ctx, "Get Item from workqueue: %s", (*item.(*Batch))[0].GetID())
+
 			updatedBatch, err := w.syncCb(ctx, *item.(*Batch))
 
 			// Since we create batches every time we sync, we will just remove the item from the queue here
