@@ -236,7 +236,7 @@ func (w *autoRefresh) enqueueBatches(ctx context.Context) error {
 	for _, batch := range batches {
 		b := batch
 		logger.Debugf(ctx, "Enqueuing batch with id: %v", b[0].GetID())
-		w.workqueue.Add(b[0].GetID())
+		w.workqueue.Add(b)
 	}
 
 	return nil
@@ -274,22 +274,13 @@ func (w *autoRefresh) sync(ctx context.Context) (err error) {
 		case <-ctx.Done():
 			return nil
 		default:
-			itemId, shutdown := w.workqueue.Get()
+			item, shutdown := w.workqueue.Get()
 			if shutdown {
 				return nil
 			}
 
 			t := w.metrics.SyncLatency.Start()
-			item, ok := w.lruMap.Get(itemId)
-			if !ok {
-				logger.Debugf(ctx, "item with id [%v] not found in cache", itemId)
-				return nil
-			}
-			updatedBatch, err := w.syncCb(ctx, Batch{itemWrapper{
-				id:   itemId.(ItemID),
-				item: item.(Item),
-			}})
-
+			updatedBatch, err := w.syncCb(ctx, item.(Batch))
 			// Since we create batches every time we sync, we will just remove the item from the queue here
 			// regardless of whether it succeeded the sync or not.
 			w.workqueue.Forget(item)
