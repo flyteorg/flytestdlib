@@ -1,3 +1,6 @@
+| 🗑  As of Oct-23 we moved the development of this component to the [monorepo](https://github.com/flyteorg/flyte). 🗑  |
+| - |
+
 Common Go Tools
 =====================
 [![Current Release](https://img.shields.io/github/release/flyteorg/flytestdlib.svg)](https://github.com/flyteorg/flytestdlib/releases/latest)
